@@ -15,7 +15,6 @@ public class PerformanceIndex
 {
     public static void main(String[] args) throws IOException
     {
-
         ArrayList<ServiceClassPeriod> highPI = new ArrayList<ServiceClassPeriod>();
         try (SmfRecordReader reader = 
                 args.length == 0 ?
@@ -36,13 +35,12 @@ public class PerformanceIndex
                         {
                             // if performance index > 2 and:
                             if (section.performanceIndex() > 2
-                                    &&
-                                    // either not a velocity goal or
-                                    (!section.r723cvel() ||
-                                    // using + delay is > 5% of total samples
-                                    section.r723ctot() + section.r723ctou() > r72
-                                            .workloadManagerControlSection()
-                                            .r723mtvNum() / 20))
+                                &&
+                                // either not a velocity goal or
+                                (!section.r723cvel() ||
+                                // using + delay is > 5% of total samples
+                                section.r723ctot() + section.r723ctou() > 
+                                   r72.workloadManagerControlSection().r723mtvNum() / 20))
                             {
                                 highPI.add(new ServiceClassPeriod(r72, section));
                             }
@@ -50,9 +48,7 @@ public class PerformanceIndex
                     }
                 }
             }
-            ;
-
-            }
+        }
         writeReport(highPI);
     }
 
@@ -160,5 +156,4 @@ public class PerformanceIndex
             return result;
         }
     }
-
 }

@@ -12,10 +12,10 @@ import com.blackhillsoftware.smf.smf30.Smf30Record;
 public class PrimeShiftTopJobs
 {
     public static void main(String[] args) throws IOException
-    {      
-        Map< DayOfWeek, 
-            HashMap<String, JobData> > jobsByDay 
-                = new HashMap< DayOfWeek, HashMap< String, JobData > >();
+    {
+
+        // We need a Jobname->JobData map for each day of the week.           
+        Map<DayOfWeek, HashMap<String, JobData>> jobsByDay = new HashMap<DayOfWeek, HashMap<String, JobData>>();
 
         // Read and process the data
 
