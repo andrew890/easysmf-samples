@@ -3,11 +3,10 @@ package com.blackhillsoftware.samples;
 import java.io.IOException;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.db2.*;
-import com.ibm.jzos.ZFileException;
 
 public class Db2Select 
 {
-	public static void main(String[] args) throws ZFileException, IOException 
+	public static void main(String[] args) throws IOException 
 	{
         int in = 0;
         int out = 0;        
