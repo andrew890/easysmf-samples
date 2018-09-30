@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
 
 import java.io.IOException;
 import com.blackhillsoftware.smf.SmfRecord;

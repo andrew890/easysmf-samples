@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
 
 import java.io.IOException;
 import java.time.*;
@@ -24,9 +24,17 @@ public class PrimeShiftDailyCpu
                         DayOfWeek.TUESDAY, 
                         DayOfWeek.WEDNESDAY,
                         DayOfWeek.THURSDAY, 
-                        DayOfWeek.FRIDAY);
-        
-        // Data systems - typically one from each CEC
+                        DayOfWeek.FRIDAY);   
+
+        // Change to match your system name or you will not see any data!
+        //                   |||
+        //                   |||
+        //                  VVVVV
+        //                   VVV
+        //                    V
+        //
+        // Use RMF data from these systems - typically one from each CEC
+        //        
         List<String> datasystems = Arrays.asList("SYSA", "SYSB");
         
         // map Date -> System -> CPU Type -> List of Durations
@@ -126,16 +134,19 @@ public class PrimeShiftDailyCpu
                    });
            
            });
-
     }
 
     private static String hhhmmss(Duration dur)
     {
         // format Duration to hhh:mm:ss
         long hours = dur.toHours();
-        long minutes = dur.minus(Duration.ofHours(hours)).toMinutes();
-        long seconds = dur.minus(Duration.ofHours(hours))
-                .minus(Duration.ofMinutes(minutes)).toMillis() / 1000;
+        long minutes = 
+            dur.minus(Duration.ofHours(hours))
+                .toMinutes();
+        long seconds = 
+            dur.minus(Duration.ofHours(hours))
+               .minus(Duration.ofMinutes(minutes))
+               .toMillis() / 1000;
         return String.format("%d:%02d:%02d", hours, minutes, seconds);
     }
 }
