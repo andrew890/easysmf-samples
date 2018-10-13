@@ -22,7 +22,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/Git/easysmf-samples/java/dependencies/easysmf-je-1.8.1.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/Git/easysmf-samples/java/dependencies/easysmf-je-1.9.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/Git/easysmf-samples/java/dependencies/slf4j-api-1.7.21.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Andrew/Documents/Git/easysmf-samples/java/dependencies/slf4j-simple-1.7.21.jar"/>
 	<classpathentry kind="output" path="target/classes"/>

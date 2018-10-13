@@ -17,7 +17,6 @@ public class JobsByJobname
 
         // If we received no arguments, open DD INPUT
         // otherwise use the argument as a file name.
-
         try (SmfRecordReader reader = args.length == 0 ? 
             SmfRecordReader.fromDD("INPUT") :
             SmfRecordReader.fromName(args[0]))

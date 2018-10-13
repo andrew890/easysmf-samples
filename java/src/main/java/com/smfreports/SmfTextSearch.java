@@ -1,54 +1,52 @@
 package com.smfreports;
 
 import java.io.IOException;
-import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.SmfRecordReader;
 
+/**
+ *
+ * Search all SMF records for a text string, 
+ * print Time, System, Type and Subtype for 
+ * each record found.
+ *
+ */
 public class SmfTextSearch                                                                            
 {                                                                                               
     public static void main(String[] args) throws IOException                                   
     {
-        String searchString = "SYS1.PARMLIB";
-        int dumpContextBytes = 64;
-        int maxResults = 1000;
+        if (args.length < 1 || args.length > 2)
+        {
+            System.out.println("Usage: SmfTextSearch string [input-file]");
+            System.out.println("If input-file is omitted DD INPUT will be used.");          
+            return;
+        }
         
+        String searchString = args[0];
+
+        // The first argument is the dataset name
+        // If we received only 1 argument, open DD INPUT
+        // otherwise use the second argument as the file 
+        // name to search.        
         try (SmfRecordReader reader = 
-                args.length == 0 ?
-                    SmfRecordReader.fromDD("INPUT") :
-                    SmfRecordReader.fromName(args[0])) 
-        { 
-            int count = 0;
+                args.length == 1 ?
+                        SmfRecordReader.fromDD("INPUT") :
+                        SmfRecordReader.fromName(args[1])) 
+        {  
+            reader
+            .stream()
+            .filter(record -> record.recordType() != 14) // Exclude type 14 (read dataset)
+            .filter(record -> record.toString().contains(searchString))
+            .limit(1000)
+            .forEach(record -> 
+                // print record time, system, type and subtype
+                System.out.format("%-24s %s Type: %3d Subtype: %3s%n",                                  
+                        record.smfDateTime(), 
+                        record.system(),
+                        record.recordType(),
+                        record.hasSubtypes() ? 
+                                Integer.toString(record.subType()) : ""));
 
-            for (SmfRecord record : reader)
-            {
-                if (record.recordType() != 14)
-                {
-                    int location = record.toString().indexOf(searchString);
-                    if (location != -1)
-                    {
-                        count++;
-                        // print record time, system, type and subtype
-                        System.out.format("%-24s %s Type: %3d Subtype: %3s%n",                                  
-                                record.smfDateTime(), 
-                                record.system(),
-                                record.recordType(),
-                                record.hasSubtypes() ? 
-                                        Integer.toString(record.subType()) : "");
-                        // dump bytes surrounding found string
-                        System.out.format("%n%s%n",
-                                record.dump(
-                                        Math.max(0, location - dumpContextBytes),
-                                        Math.min(dumpContextBytes * 2, 
-                                                record.recordLength() - location)));
-                    }  		
-                }
-                if (count >= maxResults)
-                {
-                    break;
-                }
-            }
-
-            System.out.format("Found: %d%n", count);                  
+            System.out.format("Done");                  
         }                                   
     }                                                                                           
 }                                                                                               
