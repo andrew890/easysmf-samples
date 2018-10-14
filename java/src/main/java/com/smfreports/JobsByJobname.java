@@ -6,6 +6,10 @@ import java.util.*;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.smf30.Smf30Record;
 
+/**
+ * Summarize Job statistics by job name
+ *
+ */
 public class JobsByJobname
 {
     public static void main(String[] args) throws IOException
@@ -34,7 +38,6 @@ public class JobsByJobname
                 });
 
         }
-
         writeReport(jobs);
     }
 
@@ -54,8 +57,8 @@ public class JobsByJobname
 
         jobs.entrySet().stream()
             // sort by CP Time
-            // reverse a and b in the comparison so sort is descending
-            .sorted((a, b) -> Float.compare(b.getValue().cpTime, a.getValue().cpTime))
+            // reversing a and b in the comparison so sort is descending
+            .sorted((a, b) -> Double.compare(b.getValue().cpTime, a.getValue().cpTime))
             .limit(100) // take top 100
             .forEachOrdered(jobname ->
             {
@@ -75,31 +78,15 @@ public class JobsByJobname
     }
 
     /**
-     * Format a duration as hhh:mm:ss. Fractional seconds are truncated to whole
-     * seconds.
-     * 
-     * @param duration
-     * @return The formatted duration.
-     */
-    private static String hhhmmss(float duration)
-    {
-        final int SECONDS_PER_MINUTE = 60;
-        final int SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
-
-        int hours = (int) (duration / SECONDS_PER_HOUR);
-        int minutes = (int) ((duration % SECONDS_PER_HOUR)) / SECONDS_PER_MINUTE;
-        float seconds = duration % SECONDS_PER_MINUTE;
-
-        return String.format("%d:%02d:%05.2f", hours, minutes, seconds);
-    }
-
-    /**
      * A class to accumulate information about a group of jobs.
      */
     private static class JobData
     {
         /**
          * Add information from a SMF 30 record.
+         * One job can have many SMF records so we might get called multiple times
+         * for the same job, but some of the SMF sections will occur only
+         * once per job e.g. ProcessorAccountingSection.
          * 
          * @param r30
          *            The Smf30Record
@@ -121,10 +108,29 @@ public class JobsByJobname
         }
 
         int   count       = 0;
-        float cpTime      = 0;
-        float ziipTime    = 0;
-        float connectTime = 0;
+        double cpTime      = 0;
+        double ziipTime    = 0;
+        double connectTime = 0;
         long  excps       = 0;
     }
 
+    /**
+     * Format seconds as hhh:mm:ss. Seconds value is reported
+     * to 2 decimal places.
+     * 
+     * @param totalseconds
+     * @return The formatted value.
+     */
+    private static String hhhmmss(double totalseconds)
+    {
+        final int SECONDS_PER_MINUTE = 60;
+        final int SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
+
+        int hours = (int) (totalseconds / SECONDS_PER_HOUR);
+        int minutes = (int) ((totalseconds % SECONDS_PER_HOUR)) / SECONDS_PER_MINUTE;
+        double seconds = totalseconds % SECONDS_PER_MINUTE;
+
+        return String.format("%d:%02d:%05.2f", hours, minutes, seconds);
+    }
+    
 }

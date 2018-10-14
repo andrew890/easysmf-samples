@@ -26,14 +26,13 @@ public class PrimeShiftDailyCpu
                         DayOfWeek.THURSDAY, 
                         DayOfWeek.FRIDAY);   
 
+        // Use RMF data from these systems - typically one from each CEC
         // Change to match your system name or you will not see any data!
         //                   |||
         //                   |||
         //                  VVVVV
         //                   VVV
         //                    V
-        //
-        // Use RMF data from these systems - typically one from each CEC
         //        
         List<String> datasystems = Arrays.asList("SYSA", "SYSB");
         
@@ -46,7 +45,9 @@ public class PrimeShiftDailyCpu
                 >
             > dailyCpuStatistics = new HashMap<LocalDate, Map<String, Map<String, List<Duration>>>>();
         
-        // Read and process the data        
+        // If we received no arguments, open DD INPUT
+        // otherwise use the first argument as the file 
+        // name to read.   
         try (SmfRecordReader reader = 
                 args.length == 0 ?
                 SmfRecordReader.fromDD("INPUT") :
@@ -76,7 +77,7 @@ public class PrimeShiftDailyCpu
                             String cputype = cpuIdSections.get(lpSection.smf70cix()-1)
                                     .smf70cin();                                    
                             dailyCpuStatistics
-                                // get existing entry or add missing entry to maps
+                                // get existing entry or add new entry to maps
                                 .computeIfAbsent(r70.smfDate(), day -> new HashMap<>()) 
                                 .computeIfAbsent(partition.smf70lpm(), system -> new HashMap<>())
                                 .computeIfAbsent(cputype, cpu -> new ArrayList<>())
@@ -90,6 +91,7 @@ public class PrimeShiftDailyCpu
         }
 
         writeReport(dailyCpuStatistics);
+        System.out.println("Done");
     }
 
     private static void writeReport(Map<LocalDate, Map<String, Map<String, List<Duration>>>> dailyCpuStatistics)
@@ -124,9 +126,9 @@ public class PrimeShiftDailyCpu
                                // use Duration.plus(Duration) to add each entry
                                // to the previous total giving a new total.
                                Duration total = cpuType.getValue().stream()
-                                       .reduce(Duration.ZERO, (x, y) -> x.plus(y));
+                                       .reduce(Duration.ZERO, (a, b) -> a.plus(b));
                                
-                               // write the total for this day - LPAR - CPU type
+                               // write the total for this (day/LPAR/CPU type)
                                System.out.format("        %-4s %12s%n", 
                                        cpuType.getKey(), hhhmmss(total));   
                            });
@@ -136,6 +138,11 @@ public class PrimeShiftDailyCpu
            });
     }
 
+    /**
+     * Format a Duration as hhh:mm:ss. Fractional seconds are truncated to a whole number. 
+     * @param The Duration to format
+     * @return The formatted value
+     */
     private static String hhhmmss(Duration dur)
     {
         // format Duration to hhh:mm:ss
@@ -146,7 +153,7 @@ public class PrimeShiftDailyCpu
         long seconds = 
             dur.minus(Duration.ofHours(hours))
                .minus(Duration.ofMinutes(minutes))
-               .toMillis() / 1000;
+               .toMillis() / 1000; // No toSeconds function, so get milliseconds and divide
         return String.format("%d:%02d:%02d", hours, minutes, seconds);
     }
 }

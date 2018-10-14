@@ -6,7 +6,7 @@ import com.blackhillsoftware.smf.SmfRecordReader;
 /**
  *
  * Search all SMF records for a text string, 
- * print Time, System, Type and Subtype for 
+ * and print Time, System, Type and Subtype for 
  * each record found.
  *
  */

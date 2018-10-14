@@ -23,7 +23,7 @@ import com.blackhillsoftware.smf.smf30.Smf30Record;
  * The report checks all type 30 subtypes, on the assumption that there
  * will not be a large number of jobs using user key common storage, and
  * it could be useful to see when the flag was first set.
- * If there are a large number of records reported it could be useful to 
+ * If there are a large number of records reported you could 
  * restrict the report to subtype 5 job end records:
  * <code>reader.include(30,5)</code>
  * 
@@ -35,6 +35,9 @@ public class UserKeyCommon
 {
     public static void main(String[] args) throws IOException
     {
+        // If we received no arguments, open DD INPUT
+        // otherwise use the first argument as the file 
+        // name to read.    
         try (SmfRecordReader reader = 
                 args.length == 0 ?
                 SmfRecordReader.fromDD("INPUT") :
