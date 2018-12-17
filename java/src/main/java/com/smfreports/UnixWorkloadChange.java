@@ -88,7 +88,7 @@ public class UnixWorkloadChange
                         x -> new ArrayList<JobData>())
                     .add(job);
             }
-            else
+            else if (job.sessionId != null)
             {
                 others.add(job);
             }   
@@ -142,7 +142,7 @@ public class UnixWorkloadChange
         // for each service classes used by session leader jobs 
         for (String serviceClass : serviceClassList)
         {
-            System.out.format("%s%n", serviceClass);
+            System.out.format("%n%s%n", serviceClass);
             
             // group jobs by session leader job names
             Map<String, List<JobData>> bySessionLeaderName = mismatchesByServiceClass.get(serviceClass).stream()
@@ -155,7 +155,7 @@ public class UnixWorkloadChange
             // for each session leader job name
             for (String sessionLeaderName : sessionLeaderNames)
             {
-                System.out.format("%-10s        %-10s%n", sessionLeaderName, serviceClass);
+                System.out.format("%n%-10s        %-10s%n", sessionLeaderName, serviceClass);
                 
                 // group by job name. Typically JOBNAME1, JOBNAME2 etc.
                 Map<String, List<JobData>> byJobName = bySessionLeaderName.get(sessionLeaderName).stream()
@@ -238,7 +238,7 @@ public class UnixWorkloadChange
             }
 
             if (r30.unixProcessSections().size() > 0
-                && (sessionId != null || r30.header().smf30opm() > sessionOpm))
+                && (sessionId == null || r30.header().smf30opm() > sessionOpm))
             {
                 sessionId = r30.unixProcessSections().get(0).smf30osi();
                 sessionOpm = r30.header().smf30opm();            
