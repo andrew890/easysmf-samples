@@ -14,7 +14,7 @@ public class JobsByJobname
 {
     public static void main(String[] args) throws IOException
     {
-        // A map of Job Names to JobData entries to collect information about that
+        // A map of Job Names to JobData entries to collect information about each
         // group of jobs.
 
         Map<String, JobData> jobs = new HashMap<String, JobData>();
@@ -25,18 +25,22 @@ public class JobsByJobname
             SmfRecordReader.fromDD("INPUT") :
             SmfRecordReader.fromName(args[0]))
         {
-            reader.include(30, 5) // SMF 30 subtype 5 = Job End records
-                .stream().map(record -> new Smf30Record(record))
+        	// SMF 30 subtype 5 = Job End records
+        	reader.include(30,5);
+        	
+        	for (SmfRecord record : reader)
+        	{
+        		Smf30Record r30 = new Smf30Record(record); 
+        	
                 // Optionally filter here, e.g. to include only jobs running in job class A:
-                // .filter(r30 -> r30.identificationSection().smf30cl8().equals("A"))
-                .forEach(r30 ->
-                {
-                    JobData job = jobs.computeIfAbsent(
+                // if (r30.identificationSection().smf30cl8().equals("A"))
+                // {
+
+                JobData job = jobs.computeIfAbsent(
                         r30.identificationSection().smf30jbn(), 
                         x -> new JobData());
-                    job.add(r30);
-                });
-
+                job.add(r30);                 
+        	}
         }
         writeReport(jobs);
     }
@@ -76,6 +80,25 @@ public class JobsByJobname
                     jobinfo.excps / jobinfo.count);
             });
     }
+    
+    /**
+     * Format seconds as hhh:mm:ss. Seconds value is reported
+     * to 2 decimal places.
+     * 
+     * @param totalseconds
+     * @return The formatted value.
+     */
+    private static String hhhmmss(double totalseconds)
+    {
+        final int SECONDS_PER_MINUTE = 60;
+        final int SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
+
+        int hours = (int) (totalseconds / SECONDS_PER_HOUR);
+        int minutes = (int) ((totalseconds % SECONDS_PER_HOUR)) / SECONDS_PER_MINUTE;
+        double seconds = totalseconds % SECONDS_PER_MINUTE;
+
+        return String.format("%d:%02d:%05.2f", hours, minutes, seconds);
+    }
 
     /**
      * A class to accumulate information about a group of jobs.
@@ -112,25 +135,5 @@ public class JobsByJobname
         double ziipTime    = 0;
         double connectTime = 0;
         long  excps       = 0;
-    }
-
-    /**
-     * Format seconds as hhh:mm:ss. Seconds value is reported
-     * to 2 decimal places.
-     * 
-     * @param totalseconds
-     * @return The formatted value.
-     */
-    private static String hhhmmss(double totalseconds)
-    {
-        final int SECONDS_PER_MINUTE = 60;
-        final int SECONDS_PER_HOUR = SECONDS_PER_MINUTE * 60;
-
-        int hours = (int) (totalseconds / SECONDS_PER_HOUR);
-        int minutes = (int) ((totalseconds % SECONDS_PER_HOUR)) / SECONDS_PER_MINUTE;
-        double seconds = totalseconds % SECONDS_PER_MINUTE;
-
-        return String.format("%d:%02d:%05.2f", hours, minutes, seconds);
-    }
-    
+    }   
 }
