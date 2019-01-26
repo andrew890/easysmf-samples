@@ -1,75 +1,56 @@
-package com.smfreports;
+package com.smfreports.genericjobsummary;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
-import com.blackhillsoftware.smf.*;
+import com.blackhillsoftware.smf.SmfRecord;
+import com.blackhillsoftware.smf.SmfRecordReader;
 import com.blackhillsoftware.smf.smf30.Smf30Record;
 
-/**
- * Summarize Job statistics by job name
- *
- */
-public class JobsByJobname
-{
-    public static void main(String[] args) throws IOException
-    {
-        // A map of Job Names to JobData entries to collect information about each
-        // group of jobs.
+public class JobSummarizer {
+	
+	public static void jobSummaryReport(SmfRecordReader reader, String keyName, Function<Smf30Record, String> summaryKey) {
+		// A map of keys to JobData entries to collect information about each
+		// group of jobs.
+		Map<String, JobData> jobs = new HashMap<String, JobData>();
+		for (SmfRecord record : reader)
+		{
+			Smf30Record r30 = new Smf30Record(record); 
 
-        Map<String, JobData> jobs = new HashMap<String, JobData>();
-
-        // If we received no arguments, open DD INPUT
-        // otherwise use the argument as a file name.
-        try (SmfRecordReader reader = args.length == 0 ? 
-            SmfRecordReader.fromDD("INPUT") :
-            SmfRecordReader.fromName(args[0]))
-        {
-        	// SMF 30 subtype 5 = Job End records
-        	reader.include(30,5);
-        	
-        	for (SmfRecord record : reader)
-        	{
-        		Smf30Record r30 = new Smf30Record(record); 
-        	
-                // Optionally filter here, e.g. to include only jobs running in job class A:
-                // if (r30.identificationSection().smf30cl8().equals("A"))
-                // {
-
-                JobData job = jobs.computeIfAbsent(
-                        r30.identificationSection().smf30jbn(), 
-                        x -> new JobData());
-                job.add(r30);                 
-        	}
-        }
-        writeReport(jobs);
-    }
+		    JobData jobentry = jobs.computeIfAbsent(
+		    		summaryKey.apply(r30), 
+		            x -> new JobData());
+		    jobentry.accumulateData(r30);                 
+		}
+		writeReport(keyName, jobs);
+	}
 
     /**
      * Write the report
      * 
      * @param jobs
-     *            The map of Job Names to Job Data
+     *            The map of keys to Job Data
      */
-    private static void writeReport(Map<String, JobData> jobs)
+    private static void writeReport(String keyHeader, Map<String, JobData> jobs)
     {
         // Headings
         System.out.format("%n%-8s %6s %14s %14s %14s %14s %14s %14s %14s %14s%n", 
-            "Name", "Count", "CPU", "zIIP",
-            "Connect", "Excp", "Avg CPU", "Avg zIIP",
-            "Avg Connect", "Avg Excp");
+        		keyHeader, "Count", "CPU", "zIIP",
+	            "Connect", "Excp", "Avg CPU", "Avg zIIP",
+	            "Avg Connect", "Avg Excp");
 
         jobs.entrySet().stream()
             // sort by CP Time
             // reversing a and b in the comparison so sort is descending
             .sorted((a, b) -> Double.compare(b.getValue().cpTime, a.getValue().cpTime))
             .limit(100) // take top 100
-            .forEachOrdered(jobname ->
+            .forEachOrdered(entry ->
             {
-                JobData jobinfo = jobname.getValue();
+                JobData jobinfo = entry.getValue();
                 // write detail line
                 System.out.format("%-8s %,6d %14s %14s %14s %,14d %14s %14s %14s %,14d%n", 
-                    jobname.getKey(),
+                    entry.getKey(),
                     jobinfo.count, 
                     hhhmmss(jobinfo.cpTime), 
                     hhhmmss(jobinfo.ziipTime),
@@ -114,7 +95,7 @@ public class JobsByJobname
          * @param r30
          *            The Smf30Record
          */
-        public void add(Smf30Record r30)
+        public void accumulateData(Smf30Record r30)
         {
             if (r30.processorAccountingSection() != null)
             {
@@ -136,4 +117,5 @@ public class JobsByJobname
         double connectTime = 0;
         long  excps       = 0;
     }   
+	
 }
