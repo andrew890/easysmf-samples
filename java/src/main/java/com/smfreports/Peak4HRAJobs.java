@@ -136,9 +136,26 @@ public class Peak4HRAJobs {
                                 hour.format(DateTimeFormatter.ISO_LOCAL_DATE),
                                 hour.format(DateTimeFormatter.ISO_LOCAL_TIME),
                                 fourHourMSU);
+                        Map<LocalDateTime, Map<String, JobnameTotals>> hourJobname 
+                        	= systemHourJobnameTotals.get(systemInfo.getKey());
+                        // Get jobs for previous 4 hours
+                        List<JobnameTotals> fourHourJobs = new ArrayList<>();       
+                        for (int i = 0; i < 4; i++)
+                        {
+                            if (hourJobname.containsKey(hour.minusHours(i)))
+                            {
+                                fourHourJobs.addAll(hourJobname.get(hour.minusHours(i)).values());
+                            }
+                        }
+                                       
+                        // Calculate total CP time for all jobs during the 4 hours
+                        double fourHourTotalCpTime = 
+                        	fourHourJobs
+                        		.stream()
+                                .collect(Collectors.summingDouble(JobnameTotals::getCpTime));
                         
-                        // find and list top jobs by CPU time		        
-                        reportTopJobsPrevious4Hours(hour, fourHourMSU, systemHourJobnameTotals.get(systemInfo.getKey()));
+                        reportTopCpJobs(fourHourMSU, fourHourJobs, fourHourTotalCpTime);
+                        reportTopZiipOnCpJobs(fourHourMSU, fourHourJobs, fourHourTotalCpTime);    
                     });
             }
             );
@@ -149,24 +166,7 @@ public class Peak4HRAJobs {
             long msuvalue,
             Map<LocalDateTime, Map<String, JobnameTotals>> hourJobname) 
     {       
-        // Get jobs for previous 4 hours
-        List<JobnameTotals> fourHourJobs = new ArrayList<>();       
-        for (int i = 0; i < 4; i++)
-        {
-            if (hourJobname.containsKey(hour.minusHours(i)))
-            {
-                fourHourJobs.addAll(hourJobname.get(hour.minusHours(i)).values());
-            }
-        }
-                       
-        // Calculate total CP time for all jobs during the 4 hours
-        double fourHourTotalCpTime = 
-        	fourHourJobs
-        		.stream()
-                .collect(Collectors.summingDouble(JobnameTotals::getCpTime));
-        
-        reportTopCpJobs(msuvalue, fourHourJobs, fourHourTotalCpTime);
-        reportTopZiipOnCpJobs(msuvalue, fourHourJobs, fourHourTotalCpTime);    
+
     }
 
 	private static void reportTopCpJobs(long msuvalue, List<JobnameTotals> fourHourJobs, double fourHourTotalCpTime) {
