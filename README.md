@@ -14,7 +14,7 @@ The summary code can be extracted into a separate class and then used to summari
 
 The function to extract the specific field to use for the summary is passed as a parameter to the report method.
 
-[JobSummarizer](./java/src/main/java/com/smfreports/genericjobsummary/JobSummarizer.java)
+[JobGroupReport](./java/src/main/java/com/smfreports/genericjobsummary/JobGroupReport.java)
 
 #### Classes to call the job summaries ####
 
@@ -24,6 +24,12 @@ These programs use SMF 30 subtype 5 records to summarize data at the job level b
 
 [Jobs by Job Class](./java/src/main/java/com/smfreports/genericjobsummary/JobsByJobClass.java)
 
-Steps by Program Name uses SMF 30 subtype 4 to gather information by Program Name from the step end records.
+Steps by Program Name uses SMF 30 subtype 4 to summarize information by Program Name from the step end records.
 
 [Steps by Program Name](./java/src/main/java/com/smfreports/genericjobsummary/StepsByProgramName.java)
+
+Interval by Userid uses SMF 30 subtype 2 and 3 to summarize information by Userid from the interval records.
+It shows usage for the time period covered by the SMF data, rather than all usage for jobs that ended in the
+time period.
+
+[Interval by Userid](./java/src/main/java/com/smfreports/genericjobsummary/IntervalByUserid.java.java)
