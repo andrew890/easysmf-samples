@@ -1,6 +1,14 @@
 # easysmf-samples
 
-Sample code for EasySMF
+This repository contains sample code for EasySMF:JE.
+
+EasySMF:JE is a commercial product developed by [Black Hill Software](https://www.blackhillsoftware.com) which provides a Java API to map z/OS SMF records. To run these samples, you will require the EasySMF:JE jar file and a EasySMF:JE license key.
+
+A free, 30 day trial is available. You can request a trial here: [EasySMF 30 Day Trial](https://www.blackhillsoftware.com/30-day-trial/)
+
+## Sample SMF Reports
+
+Various reports are provided to demonstrate how to use EasySMF:JE.
 
 ### Summarizing Data ###
 
