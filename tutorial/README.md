@@ -33,6 +33,8 @@ The supplied JCL assumes that the samples are in a subdirectoy called **easysmf-
 
 ## Sample 1: Read, extract and print SMF data
 
+[Source: sample1.java](./src/sample1.java)
+
 Sample 1 shows the basics of reading SMF data and extracting sections and fields.
 
 Various CPU times are extracted and printed from the Processor Accounting section in the SMF type 30 subtype 5 (Job End) records. The data is printed in CSV format.
