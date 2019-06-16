@@ -33,7 +33,7 @@ The supplied JCL assumes that the samples are in a subdirectoy called **easysmf-
 
 ## Sample 1: Read, extract and print SMF data
 
-[Source: sample1.java](./src/sample1.java)
+[Sample 1 Source Code: sample1.java](./src/sample1.java)
 
 Sample 1 shows the basics of reading SMF data and extracting sections and fields.
 
@@ -113,7 +113,7 @@ if (r30.processorAccountingSection() != null)
 
 ## Sample 2: Filter and print SMF data
 
-[Source: sample2.java](./src/sample2.java)
+[Sample 2 Source Code: sample2.java](./src/sample2.java)
 
 Sample 2 shows how you can use Java Streams to filter and process SMF data.
 
@@ -145,8 +145,23 @@ This sequence tells the SmfRecordReader to include SMF type 14 and type 15 recor
 - **limit** stop after this number of matches.
 - **forEach** process each record. In this case, print the output.
 
-
 ## Sample 3: Search SMF for a Text String 
+
+[Sample 3 Source Code: sample3.java](./src/sample3.java)
+
+Sample 3 shows how you can search for specific text when you don't know which specific record types might be relevant.
+
+It is similar to sample 2, except that the processing is done on the base SMF record.
+
+Filtering is applied to ignore types 14, 15 and 42 subtype 6 records because we already know the dataset name will be found in those records.
+
+For each match we write a header with the time, system, record type and subtype then dump the record. We stop after 100 matches to avoid excessive output.
+
+#### Notes
+
+The entire record is translated to a Java string before searching for the text. For performance reasons it is best to do all other filtering e.g. record types before the string search - this avoids doing the translation unnecessarily.
+
+When running this sample, start with a limited amount of data and monitor the CPU time consumed.
 
 ## Sample 4: Group and Summarize SMF data
 
