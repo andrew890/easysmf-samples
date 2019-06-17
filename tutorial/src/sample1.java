@@ -1,8 +1,15 @@
 import java.io.IOException;
-
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.SmfRecordReader;
 import com.blackhillsoftware.smf.smf30.Smf30Record;
+
+/**
+ * 
+ * This sample shows the basics of reading SMF data and extracting sections and fields.
+ * Various CPU times are extracted and printed from the Processor Accounting section 
+ * in the SMF type 30 subtype 5 (Job End) records. The data is printed in CSV format.
+ *
+ */
 
 public class sample1 
 {
@@ -30,9 +37,13 @@ public class sample1
         	
         	reader.include(30,5); // SMF type 30 subtype 5 : Job End records
         	
+        	// read and process records
         	for (SmfRecord record : reader)
         	{
+        		// create a type 30 record 
         		Smf30Record r30 = Smf30Record.from(record);
+        		
+        		// if Processor Accounting section exists, print various data
         		if (r30.processorAccountingSection() != null)
         		{
                     System.out.format("%s,%s,%s,%s,%.2f,%.2f,%.2f%n",                                  
@@ -50,5 +61,4 @@ public class sample1
         }
         System.out.println("Done");
     }
-
 }
