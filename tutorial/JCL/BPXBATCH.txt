@@ -1,0 +1,58 @@
+//JOBNAME  JOB CLASS=A,
+//             MSGCLASS=H,
+//             NOTIFY=&SYSUID
+//*
+//* ***** Edit with CAPS OFF and NUMBER OFF *****
+//*
+// EXPORT SYMLIST=*
+//*
+//* Class to compile and run
+// SET CLASS='sample1'
+//*
+//* Java source and target directories.
+//* As distributed, they are relative to user's home directory
+//*
+// SET SRC='./java/src'
+// SET TGT='./java/target'
+//*
+//* EasySMF directory and jar file:
+// SET EZSMFDIR='./java/easysmf-je-1-9-3/jar'
+// SET EZSMFJAR='easysmf-je-1.9.3.jar'
+//*
+//* Location of Java:
+// SET JAVA='/usr/lpp/java/J8.0'
+//*
+//* SMF data to process
+// SET SMFDATA=SMF.RECORDS
+//*
+//* Location of EasySMF Key e.g. FB 80 PDS
+// SET KEYDSN=EASYSMF.INSTALL(EZSMFK)
+//*
+//* Compile a Java class using BPXBATCH.
+//*
+//COMPILE  EXEC PGM=BPXBATCH,REGION=0M
+//STDPARM  DD *,SYMBOLS=JCLONLY
+SH &JAVA./bin/javac
+ -Xlint -verbose
+ -cp '&EZSMFDIR/*'
+ -d &TGT
+ &SRC./&CLASS..java
+//STDENV   DD *
+//STDOUT   DD SYSOUT=*
+//STDERR   DD SYSOUT=*
+//*
+//* Run a Java program under BPXBATCH
+//*
+//G   EXEC PGM=BPXBATCH,REGION=512M
+//STDPARM DD *,SYMBOLS=JCLONLY
+SH CP="&TGT.";
+ CP="$CP":"&EZSMFDIR./*";
+ export CLASSPATH="$CP";
+ &JAVA./bin/java
+ &CLASS
+ "//'&SMFDATA'"
+//STDOUT    DD SYSOUT=*
+//STDERR    DD SYSOUT=*
+//STDENV    DD *,SYMBOLS=JCLONLY
+EASYSMFKEY=//'&KEYDSN'
+//
