@@ -26,7 +26,9 @@ The samples in this tutorial use the **default package** i.e. no package. This m
 
 JCL is supplied to compile and run the code on z/OS.
 
-There are jobs for both the JZOS Batch Launcher and BPXBATCH. The JZOS Batch Launcher is recommended because it allows the Java program to use regular z/OS JCL, with DD statements to define input and output files. BPXBATCH runs Java under a Unix shell, which means you do not have access to most DDs defined in the JCL.
+There are jobs for both the [JZOS Batch Launcher](./JCL/JZOS.txt) and [BPXBATCH](./JCL/BPXBATCH.txt). 
+
+The JZOS Batch Launcher is recommended because it allows the Java program to use regular z/OS JCL, with DD statements to define input and output files. BPXBATCH runs Java under a Unix shell, which means you do not have access to most DDs defined in the JCL.
 
 The supplied JCL assumes that the samples are in a subdirectoy called **easysmf-samples** under your Unix home directory. Source code is in **easysmf-samples/src** and the java compiler creates class files in **easysmf-samples/target**.
 
@@ -161,7 +163,7 @@ For each match we write a header with the time, system, record type and subtype 
 
 The entire record is translated to a Java string before searching for the text. For performance reasons it is best to do all other filtering e.g. record types before the string search - this avoids doing the translation unnecessarily.
 
-When running this sample, start with a limited amount of data and monitor the CPU time consumed.
+When running this sample, start with a limited amount of data and monitor the CPU time consumed. In testing, the program used about 10 seconds of CPU time per GB of SMF data on the IBM Dallas RDP system. 90% of that was on a zIIP.
 
 ## Sample 4: Group and Summarize SMF data
 
