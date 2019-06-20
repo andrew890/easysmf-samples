@@ -20,7 +20,7 @@ public class sample1
 
 The full class name becomes **com.blackhillsoftware.samples.sample1**. The source file needs to be **com/blackhillsoftware/samples/sample1.java** and it will be compiled to file **com/blackhillsoftware/samples/sample1.class**.
 
-The samples in this tutorial use the **default package** i.e. no package. This means you don't have to search through subdirectories to find the code. It simplifies the tutorials but is not recommended for prodution code. 
+The samples in this tutorial use the **default package** i.e. no package. This means you don't have to search through subdirectories to find the code. It simplifies compiling and running the tutorials but is not recommended for production code. 
 
 ## JCL
 
@@ -163,8 +163,86 @@ For each match we write a header with the time, system, record type and subtype 
 
 The entire record is translated to a Java string before searching for the text. For performance reasons it is best to do all other filtering e.g. record types before the string search - this avoids doing the translation unnecessarily.
 
-When running this sample, start with a limited amount of data and monitor the CPU time consumed. In testing, the program used about 10 seconds of CPU time per GB of SMF data on the IBM Dallas RDP system. 90% of that was on a zIIP.
+When running this sample, start with a limited amount of data and monitor the CPU time consumed. In testing, the program used about 10 seconds of CPU time per GB of SMF data on the IBM Dallas Remote Development system. 90% of that was on a zIIP.
 
 ## Sample 4: Group and Summarize SMF data
 
-## Sample 5: Advanced Grouping
+[Sample 4 Source Code: sample4.java](./src/sample4.java)
+
+Sample 4 shows how group and summarize SMF data in Java.
+
+The program reports statistics for each program name, taken from SMF type 30 subtype 4 (Step End) records. Data does not need to be sorted, and the program information is collected in a `java.util.HashMap<>`. This means that CPU usage will scale approximately linearly with the amount of data processed, and memory requirements will depend on the number of different program names encountered.
+
+Statistics for each program are collected in a class called **ProgramStatistics**. There is an instance of the class for each program, kept in the HashMap with the program name as the key.
+
+```
+Map<String, ProgramStatistics> programs = new HashMap<String, ProgramStatistics>();
+```
+
+We read and process the records the same way as in sample1.
+
+We use the Map.computeIfAbsent() method to get the ProgramStatistics entry for the program name. It checks whether the key is present in the map. If it is present, the existing entry is returned. If it is not present, a new instance is created, added to the map with the corresponding key, and returned. 
+
+```
+ProgramStatistics program = programs
+   .computeIfAbsent(
+      r30.identificationSection().smf30pgm(), // program name
+      x -> new ProgramStatistics());
+```
+We then accumulate the information from the record into the ProgramStatistics entry:
+```
+program.accumulateData(r30);
+```
+
+
+```
+private static class ProgramStatistics
+{
+    ...
+    public void accumulateData(Smf30Record r30)
+    {        	
+        if (r30.processorAccountingSection() != null)
+        {
+            count++;
+            cpTime += r30.processorAccountingSection().smf30cptSeconds()
+                    + r30.processorAccountingSection().smf30cpsSeconds();
+            ziipTime += r30.processorAccountingSection().smf30TimeOnZiipSeconds();   
+            normalizedZiipTime += 
+                r30.processorAccountingSection().smf30TimeOnZiipSeconds() 
+                    * r30.performanceSection().smf30snf() / 256;
+        }
+        if (r30.ioActivitySection() != null)
+        {
+            excps += r30.ioActivitySection().smf30tex();
+            connectTime += r30.ioActivitySection().smf30aicSeconds();
+        }
+    }
+    ...
+}
+```
+
+We use Java Streams again to write the report:
+```
+programs.entrySet().stream()
+    .sorted((a, b) -> Double.compare(b.getValue().cpTime, a.getValue().cpTime))
+    .limit(100)
+    .forEachOrdered(program ->
+    {
+        ProgramStatistics programinfo = program.getValue();
+        System.out.format("%-8s %,8d %14s %14s %14s %,14d %14s %14s %14s %,14d %14.3f%n", 
+            program.getKey(),
+            programinfo.count, 
+            ...
+    });
+```
+- stream the entries from the map,
+- sort by total CP Time (reversing a and b to sort descending)
+- take the first 100 entries
+- print the statistics.
+
+**forEachOrdered(...)** guarantees that the order of the entries is maintained - which is important after the sort. **forEach** does not guarantee that the order is maintained - although in simple cases it seems to be.  
+
+The principles used in this sample can be adapted to many different situations, simply by changing the data accumulated in the Statistics class and the data used for the key in the Map. 
+  
+
+## Sample 5: A/B Reporting
