@@ -9,7 +9,7 @@ import com.blackhillsoftware.smf.SmfRecordReader;
 import com.blackhillsoftware.smf.smf30.Smf30Record;
 
 /**
- * Sample 5 shows A/B reporting, in this case before/after a specific date.
+ * Sample 6 shows A/B reporting, in this case before/after a specific date.
  * 
  * The sample reports CP time, zIIP time, zIIP on CP time, EXCP count, 
  * zIIP and zIIP on CP time as a percentage of total (normalized) CPU time,
@@ -23,7 +23,7 @@ import com.blackhillsoftware.smf.smf30.Smf30Record;
  *
  */
 
-public class sample5
+public class sample6
 {
     public static void main(String[] args) throws IOException
     {
