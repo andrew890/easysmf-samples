@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import static java.util.Optional.ofNullable;
+import java.util.Optional;
 
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.SmfRecordReader;
@@ -82,12 +82,12 @@ public class sample5
     		Map<String, ProgramStatistics> bPrograms)
     {
     	// format strings for heading and detail lines.
-    	String headerformat =  "%n%-8s %8s %14s %14s %14s %14s %14s %14s %14s%n";
-    	String detailformat =  "%-8s %,8d %14s %14s %14s %,14d %13.1f%% %13.1f%% %14.3f%n";
-    	String changeformat =  "%-77s %14s %14s %14s%n%n";
+    	String headerFormatString =  "%n%-8s %8s %14s %14s %14s %14s %14s %14s %14s%n";
+    	String detailFormatString =  "%-8s %,8d %14s %14s %14s %,14d %13.1f%% %13.1f%% %14s%n";
+    	String changeFormatString =  "%-77s %14s %14s %14s%n%n";
 
         // Headings
-        System.out.format(headerformat, 
+        System.out.format(headerFormatString, 
             "Program", "Count", "CP", "zIIP", "zIIP on CP",
             "EXCP", "zIIP%", "zIIP on CP%", "CPU ms/IO");
 
@@ -103,7 +103,7 @@ public class sample5
             .limit(100) // take top 100
             .forEachOrdered(aProgram ->
             {
-            	// Get statistics from A and B
+            	// Get A statistics and matching B statistics
                 ProgramStatistics programAInfo = aProgram.getValue();
                 ProgramStatistics programBInfo = bPrograms.get(aProgram.getKey());
                 
@@ -111,7 +111,7 @@ public class sample5
                         aProgram.getKey()); // Program name
                 
                 // write Group A detail line
-                System.out.format(detailformat, 
+                System.out.format(detailFormatString, 
                     "A:",
                     programAInfo.count, 
                     hhhmmss(programAInfo.cpTime), 
@@ -120,10 +120,12 @@ public class sample5
                     programAInfo.excps, 
                     programAInfo.getZiipPct(), 
                     programAInfo.getZiipOnCpPct(), 
-                    programAInfo.getCpuMsPerIO() );               
+                    programAInfo.getCpuMsPerIO()
+	            		.map(value -> String.format("%14.3f",value))
+	            		.orElse("") );               
                 
                 // write Group B detail line
-                System.out.format(detailformat, 
+                System.out.format(detailFormatString, 
                     "B:",
                     programBInfo.count, 
                     hhhmmss(programBInfo.cpTime), 
@@ -132,21 +134,24 @@ public class sample5
                     programBInfo.excps, 
                     programBInfo.getZiipPct(), 
                     programBInfo.getZiipOnCpPct(), 
-                    programBInfo.getCpuMsPerIO() );
+                    programBInfo.getCpuMsPerIO()
+	            		.map(value -> String.format("%14.3f",value))
+	            		.orElse("") );
                 
                 // write differences
-                // For each field, we check whether the A and B values are both non-zero.
-                // If they are, calculate and format the difference for output.
+                // Differences are type Optional<Double>. If values are zero
+                // the percentage change is not useful so we don't report it.
+                // If the Optional has a value, format the difference for output.
                 // If not, leave the field blank.
-                System.out.format(changeformat, 
+                System.out.format(changeFormatString, 
                     "Change:",
-                    ofNullable(programBInfo.getZiipPctChange(programAInfo))
+                    programBInfo.getZiipPctChange(programAInfo)
                     		.map(value -> String.format("%+13.1f%%",value))
                     		.orElse(""),
-                    ofNullable(programBInfo.getZiipOnCpPctChange(programAInfo))
+                    programBInfo.getZiipOnCpPctChange(programAInfo)
                     		.map(value -> String.format("%+13.1f%%",value))
                     		.orElse(""),
-                    ofNullable(programBInfo.getCpuMsPerIOChange(programAInfo))
+                    programBInfo.getCpuMsPerIOChange(programAInfo)
                     		.map(value -> String.format("%+13.0f%%",value))
                     		.orElse("")
                 		
@@ -194,24 +199,39 @@ public class sample5
             }
         }
                
-        double getCpuMsPerIO()
+        /**
+         * Calculate CPU time (CP time + normalized zIIP time) in milliseconds
+         * per I/O (EXCP). If EXCP count = 0, return Optional.empty.
+         * @return Optional<Double> CPU milliseconds per I/O, or Optional.empty 
+         * if it cannot be calculated.
+         */
+        Optional<Double> getCpuMsPerIO()
         {
-        	return (cpTime + normalizedZiipTime) * 1000  / excps;
+        	return excps > 0 ? 
+        			Optional.of((cpTime + normalizedZiipTime) * 1000  / excps)
+        			: Optional.empty();
         }
         
         /**
          * Calculate the percentage change in CPU time per I/O. 
          * If this or the previous value are zero,
-         * no value will be calculated and null will be returned.
+         * no value will be calculated and Optional.empty will be returned.
          * 
          * @param prev the previous ProgramStatistics for comparison 
-         * @return Double percentage change, or null if the value cannot be calculated
+         * @return Optional<Double> percentage change, or Optional.empty
+         *  if the value cannot be calculated
          */
-        Double getCpuMsPerIOChange(ProgramStatistics prev)
+        Optional<Double> getCpuMsPerIOChange(ProgramStatistics prev)
         {
-        	return (this.getCpuMsPerIO() > 0 && prev.getCpuMsPerIO() > 0) ? 
-        			((this.getCpuMsPerIO() / prev.getCpuMsPerIO()) - 1) * 100 
-        			: null;
+        	Optional<Double> oldvalue = prev.getCpuMsPerIO();
+           	Optional<Double> newvalue = this.getCpuMsPerIO();
+           	
+           	return (oldvalue.isPresent() 
+           			&& newvalue.isPresent() 
+           			&& oldvalue.get() > 0 
+           			&& newvalue.get() > 0) ?         	
+	        			Optional.of(((newvalue.get() / oldvalue.get()) - 1) * 100)
+	        			: Optional.empty();
         }
         
         double getZiipPct()
@@ -222,16 +242,17 @@ public class sample5
         /**
          * Calculate the change in zIIP time as a percentage of total CPU time. 
          * If this or the previous value are zero,
-         * no value will be calculated and null will be returned.
+         * no value will be calculated and Optional.empty will be returned.
          * 
          * @param prev the previous ProgramStatistics for comparison 
-         * @return Double percentage change, or null if the value cannot be calculated
+         * @return Optional<Double> percentage change, or Optional.empty
+         *  if the value cannot be calculated
          */
-        Double getZiipPctChange(ProgramStatistics prev)
+        Optional<Double> getZiipPctChange(ProgramStatistics prev)
         {
         	return (this.getZiipPct() > 0 && prev.getZiipPct() > 0) ? 
-        			this.getZiipPct() - prev.getZiipPct() 
-        			: null;
+        			Optional.of(this.getZiipPct() - prev.getZiipPct())
+        			: Optional.empty();
         }
         
         double getZiipOnCpPct()
@@ -242,16 +263,17 @@ public class sample5
         /**
          * Calculate the change in zIIP on CP time as a percentage of total CPU time. 
          * If this or the previous value are zero,
-         * no value will be calculated and null will be returned.
+         * no value will be calculated and Optional.empty will be returned.
          * 
          * @param prev the previous ProgramStatistics for comparison 
-         * @return Double percentage change, or null if the value cannot be calculated
+         * @return Optional<Double> percentage change, or Optional.empty
+         *  if the value cannot be calculated
          */
-        Double getZiipOnCpPctChange(ProgramStatistics prev)
+        Optional<Double> getZiipOnCpPctChange(ProgramStatistics prev)
         {
         	return (this.getZiipOnCpPct() > 0 && prev.getZiipOnCpPct() > 0) ? 
-        			this.getZiipOnCpPct() - prev.getZiipOnCpPct() 
-        			: null;
+        			Optional.of(this.getZiipOnCpPct() - prev.getZiipOnCpPct()) 
+        			: Optional.empty();
         }
         
         int    count                 = 0;

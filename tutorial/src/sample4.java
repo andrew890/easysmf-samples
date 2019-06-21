@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.SmfRecordReader;
@@ -69,7 +70,7 @@ public class sample4
             {
                 ProgramStatistics programinfo = program.getValue();
                 // write detail line
-                System.out.format("%-8s %,8d %14s %14s %14s %,14d %14s %14s %14s %,14d %14.3f%n", 
+                System.out.format("%-8s %,8d %14s %14s %14s %,14d %14s %14s %14s %,14d %14s%n", 
                     program.getKey(),
                     programinfo.count, 
                     hhhmmss(programinfo.cpTime), 
@@ -80,7 +81,9 @@ public class sample4
                     hhhmmss(programinfo.ziipTime / programinfo.count), 
                     hhhmmss(programinfo.connectTime / programinfo.count),
                     programinfo.excps / programinfo.count,
-                    (programinfo.cpTime + programinfo.normalizedZiipTime) * 1000  / programinfo.excps );
+                    programinfo.getCpuMsPerIO()
+	            		.map(value -> String.format("%14.3f",value))
+	            		.orElse("")  );
             });
     }
     
@@ -122,6 +125,19 @@ public class sample4
                 excps += r30.ioActivitySection().smf30tex();
                 connectTime += r30.ioActivitySection().smf30aicSeconds();
             }
+        }
+        
+        /**
+         * Calculate CPU time (CP time + normalized zIIP time) in milliseconds
+         * per I/O (EXCP). If EXCP count = 0, return Optional.empty.
+         * @return Optional<Double> CPU milliseconds per I/O, or Optional.empty 
+         * if it cannot be calculated.
+         */
+        Optional<Double> getCpuMsPerIO()
+        {
+        	return excps > 0 ? 
+        			Optional.of((cpTime + normalizedZiipTime) * 1000  / excps)
+        			: Optional.empty();
         }
         
         int    count                 = 0;
