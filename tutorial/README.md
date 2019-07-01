@@ -291,5 +291,50 @@ programs.entrySet().stream()
 The principles used in this sample can be adapted to many different situations, simply by changing the data
 accumulated in the Statistics class and the data used for the key in the Map. 
   
+## Sample 5: Accessing Sections in Lists
 
-## Sample 5: A/B Reporting
+When a SMF record may have multiple instances of a section, the sections will be returned in a `List<T>`. Sometimes a record will have no instances of a particular section - in that case an empty list is returned. 
+
+Sample 5 generates a report based on the SMF type 30 EXCP Section.
+
+The report lists job steps where a STEPLIB entry is found in the EXCP sections. Jobs where the job name begins with the userid are ignored, and each combination of Jobname, Step Number, Step Name and Program Name is listed only once.
+
+(This sample is used to demonstrate various techniques. It is not intended to imply that there is any problem with jobs using a STEPLIB.)
+
+#### Eliminating Duplicates
+
+To eliminate duplicate entries we create a class to contain the job/step/program information, and provide methods to test whether 2 instances are the same. We then accumulate the entries in a `Set`, which does not allow duplicate entries.
+
+```
+private static class JobStepProgram
+{	        
+    private String jobname;
+    private int stepnumber;
+    private String stepname;
+    private String programname;      
+...
+    @Override
+    public int hashCode() {
+        return Objects.hash(jobname, programname, stepname, stepnumber);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        JobStepProgram other = (JobStepProgram) obj;
+        return Objects.equals(jobname, other.jobname)
+            && Objects.equals(programname, other.programname) 
+            && Objects.equals(stepname, other.stepname)
+            && stepnumber == other.stepnumber;
+    }
+...
+}
+```     
+
+
+## Sample 6: A/B Reporting
