@@ -1,16 +1,29 @@
 ## Sample 5: Accessing Sections in Lists
 
-When a SMF record may have multiple instances of a section, the sections will be returned in a `List<T>`. Sometimes a record will have no instances of a particular section - in that case an empty list is returned. 
+[Sample 5 Source Code: sample5.java](./src/sample5.java)
+
+When a SMF record may have multiple instances of a section, the sections will be returned in a `List<T>`.
+Sometimes a record will have no instances of a particular section - in that case an empty list is returned. 
 
 Sample 5 generates a report based on the SMF type 30 EXCP Section.
 
-The report lists job steps with a STEPLIB entry in the EXCP sections. The program ignores jobs where the job name begins with the userid. Each combination of Jobname, Step Number, Step Name and Program Name is listed only once.
+The report lists job steps with a STEPLIB entry in the EXCP sections.
+The program ignores jobs where the job name begins with the userid.
+Each combination of Jobname, Step Number, Step Name and Program Name is listed only once.
 
-(This sample is used to demonstrate various techniques. It is not intended to imply that there is any problem with jobs using a STEPLIB.)
+(This sample is used to demonstrate various techniques.
+It is not intended to imply that there is any problem with jobs using a STEPLIB.)
 
 #### Eliminating Duplicates
 
-To eliminate duplicates, we collect the entries in a `Set<T>`. A Set is a collection which does not allow duplicate entries. We need to create a class to contain the job/step/program information, and provide `hashCode()` and `equals(Object)` methods which the Set will use to test for equality.
+To eliminate duplicates, we collect the entries in a `Set<T>`. 
+A Set is a collection which does not allow duplicate entries. 
+We need to create a class to contain the job/step/program information, 
+and provide `hashCode()` and `equals(Object)` methods which the Set will use to test for equality.
+
+This is an example of creating a class that can be used as a Key in a HashMap.
+You use this technique to summarize based on more complex keys than the simple String used in
+[Sample 4](./Sample4.md).
 
 ```
 private static class JobStepProgram

@@ -19,8 +19,8 @@ public class sample4
 {
     public static void main(String[] args) throws IOException
     {
-        // A map of Program Names to ProgramStatistics entries to collect information about each
-        // program.
+        // Create a map of Program Names to ProgramStatistics entries 
+        // to collect information about each program.
 
         Map<String, ProgramStatistics> programs = new HashMap<String, ProgramStatistics>();
 
@@ -30,18 +30,24 @@ public class sample4
             SmfRecordReader.fromDD("INPUT") :
             SmfRecordReader.fromName(args[0]))
         {
-        	// SMF 30 subtype 4 = Step End records
+        	// Only SMF 30 subtype 4 = Step End records
         	reader.include(30, 4);
         	
         	for (SmfRecord record : reader)
         	{
         		Smf30Record r30 = Smf30Record.from(record); 
         	
-                ProgramStatistics program = programs
-                	.computeIfAbsent(
-                			r30.identificationSection().smf30pgm(), // program name
-                			x -> new ProgramStatistics());
-                program.accumulateData(r30);                 
+        		// Find the entry for the program name and accumulate the data
+        		ProgramStatistics program = 
+        				programs.get(r30.identificationSection().smf30pgm());
+        		
+        		if (program == null)
+        		{
+        			program = new ProgramStatistics();
+        			programs.put(r30.identificationSection().smf30pgm(),
+        					program);
+        		}            
+    			program.accumulateData(r30);
         	}
         }
         writeReport(programs);
@@ -91,7 +97,7 @@ public class sample4
      * A class to accumulate information about a program.
      */
     private static class ProgramStatistics
-    {
+    {   	
         /**
          * Add information from a SMF 30 record.
          * 
@@ -131,7 +137,6 @@ public class sample4
          * Calculate CPU time (CP time + normalized zIIP time) in milliseconds
          * per I/O (EXCP). If EXCP count = 0, return Optional.empty.
          * @return Optional<Double> CPU milliseconds per I/O, or Optional.empty 
-         * if it cannot be calculated.
          */
         Optional<Double> getCpuMsPerIO()
         {

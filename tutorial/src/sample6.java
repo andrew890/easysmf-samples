@@ -10,13 +10,15 @@ import com.blackhillsoftware.smf.smf30.Smf30Record;
 
 /**
  * Sample 6 shows A/B reporting, in this case before/after a specific date.
+ * The A/B criteria can be easily changed by modifying the isA() function,
+ * e.g. to compare information from different systems.
  * 
  * The sample reports CP time, zIIP time, zIIP on CP time, EXCP count, 
  * zIIP and zIIP on CP time as a percentage of total (normalized) CPU time,
  * and CPU milliseconds per I/O for each Program Name.
  * 
- * The A and B values for zIIP%, zIIP on CP% and CPU ms per I/O are compared and the 
- * difference is shown.
+ * The A and B values for zIIP%, zIIP on CP% and CPU milliseconds per I/O are  
+ * compared and the difference is shown.
  * 
  * Statistics are collected in the same way as for sample4, except that we use 2 maps,
  * one for group A and one for B. 
@@ -43,15 +45,20 @@ public class sample6
         	{
         		Smf30Record r30 = Smf30Record.from(record);
         		
-        		// is this record part of group A or B?
+        		// get the target map based on whether this record is part of group A or B
         		Map<String, ProgramStatistics> target = isA(r30) ? aPrograms : bPrograms;
         	
-        		// Find the program name and accumulate the data
-                ProgramStatistics program = target
-                	.computeIfAbsent(
-                			r30.identificationSection().smf30pgm(), // program name
-                			x -> new ProgramStatistics());
-                program.accumulateData(r30);                 
+        		// Find the entry for the program name and accumulate the data
+        		ProgramStatistics program = 
+        				target.get(r30.identificationSection().smf30pgm());
+        		
+        		if (program == null)
+        		{
+        			program = new ProgramStatistics();
+        			target.put(r30.identificationSection().smf30pgm(),
+        					program);
+        		}            
+    			program.accumulateData(r30);
         	}
         }
         writeReport(aPrograms, bPrograms);
@@ -99,16 +106,16 @@ public class sample6
             .sorted((x, y) -> Double.compare(y.getValue().cpTime, x.getValue().cpTime))
             
             // Ignore any entries where there is no Group B equivalent 
-            .filter(aProgram -> bPrograms.containsKey(aProgram.getKey()))
+            .filter(aProgramsEntry -> bPrograms.containsKey(aProgramsEntry.getKey()))
             .limit(100) // take top 100
-            .forEachOrdered(aProgram ->
+            .forEachOrdered(aProgramsEntry ->
             {
             	// Get A statistics and matching B statistics
-                ProgramStatistics programAInfo = aProgram.getValue();
-                ProgramStatistics programBInfo = bPrograms.get(aProgram.getKey());
+                ProgramStatistics programAInfo = aProgramsEntry.getValue();
+                ProgramStatistics programBInfo = bPrograms.get(aProgramsEntry.getKey());
                 
                 System.out.format("%-8s%n", 
-                        aProgram.getKey()); // Program name
+                        aProgramsEntry.getKey()); // Program name
                 
                 // write Group A detail line
                 System.out.format(detailFormatString, 

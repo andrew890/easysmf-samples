@@ -4,13 +4,14 @@
 
 Sample 4 shows how group and summarize SMF data in Java.
 
-The program reports statistics for each program name, taken from SMF type 30 subtype 4 (Step End) records. Data does
-not need to be sorted, and the program information is collected in a `java.util.HashMap<>`. This means that CPU usage
-will scale approximately linearly with the amount of data processed, and memory requirements will depend on the number
-of different program names encountered.
+The program reports statistics for each program name, taken from SMF type 30 subtype 4 (Step End) records.
+Data does not need to be sorted, and the program information is collected in a `java.util.HashMap<>`.
+This means that CPU usage will scale approximately linearly with the amount of data processed, 
+and memory requirements will depend on the number of different program names encountered.
 
-Statistics for each program are collected in a class called **ProgramStatistics**. There is an instance of the class
-for each program, kept in the HashMap with the program name as the key.
+Statistics for each program are collected in a class called **ProgramStatistics**.
+There is an instance of the class for each program,
+kept in the HashMap with the program name as the key.
 
 ```
 Map<String, ProgramStatistics> programs = new HashMap<String, ProgramStatistics>();
@@ -18,21 +19,26 @@ Map<String, ProgramStatistics> programs = new HashMap<String, ProgramStatistics>
 
 We read and process the records the same way as in sample1.
 
-We use the Map.computeIfAbsent() method to get the ProgramStatistics entry for the program name. It checks whether the
-key is present in the map. If it is present, the existing entry is returned. If it is not present, a new instance
-is created, added to the map with the corresponding key, and returned. 
+We attempt to get an existing entry from the Map for the program name. 
+If it is found, we accumulate data in the existing entry.
+If it is not present, a new instance is created and added to the map with the corresponding key. 
 
 ```
-ProgramStatistics program = programs
-   .computeIfAbsent(
-      r30.identificationSection().smf30pgm(), // program name
-      x -> new ProgramStatistics());
+ProgramStatistics program = 
+    programs.get(r30.identificationSection().smf30pgm());
+        		
+if (program == null)
+{
+    program = new ProgramStatistics();
+    programs.put(r30.identificationSection().smf30pgm(),
+        program);
+}            
+
 ```
 We then accumulate the information from the record into the ProgramStatistics entry:
 ```
 program.accumulateData(r30);
 ```
-
 
 ```
 private static class ProgramStatistics
