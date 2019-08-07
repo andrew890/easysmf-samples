@@ -1,4 +1,4 @@
-## Sample 5: Accessing Sections in Lists
+## Sample 5: Repeating Record Sections
 
 [Sample 5 Source Code: sample5.java](./src/sample5.java)
 

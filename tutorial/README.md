@@ -1,18 +1,25 @@
-# Processing SMF Data using Java
+# Tutorial : Processing SMF Data using Java
 
 These tutorials are provided to illustrate the use of the EasySMF:JE Java API to process SMF data.
 
-1. [Introduction](#EasySMF:JE-Introduction)
-2. [JCL](#JCL)
-1. [Sample Code](#Samples)
+1. ##[Introduction](#EasySMF:JE-Introduction)
+1. ##[JCL](#JCL)
+1. ##[Sample Code](#Samples)
+ 1. [Read, extract and print SMF data](Sample-1:-Read,-extract-and-print-SMF-data)
+ 2. Filter and print SMF data
+ 3. Search SMF for a Text String
+ 4. Group and Summarize SMF data
+ 5. Repeating Record Sections
+ 6. A/B Reporting
+ 
 
 ## EasySMF:JE Introduction
 
 EasySMF:JE provides an API for accessing SMF data using Java. It provides Java classes to map SMF records and SMF record sections.
 
-The Java classes aim to provide access to the data in the record, without needing to understand the underlying record structure.
-The classes are designed to provide interfaces that are as consistent as possible across all the different record types.
-Programming techniques learned for one record type should be easily transferrable to other record types.
+The Java classes provide access to the data in the record, without needing to understand the underlying record structure.
+The classes provide interfaces that are as consistent as possible across all the different record types.
+Techniques learned for one record type are easily transferrable to other record types.
 
 ### Data Conversion
 
@@ -119,19 +126,15 @@ prints the time, system, jobname and the type of access.
 
 ### [Sample 3: Search SMF for a Text String](Sample3.md)
 
-[Sample 3 Source Code: sample3.java](./src/sample3.java)
-
 Sample 3 shows how you can search for specific text when you don't know which specific record types might be relevant.
 
 ### [Sample 4: Group and Summarize SMF data](Sample4.md)
-
-[Sample 4 Source Code: sample4.java](./src/sample4.java)
 
 Sample 4 shows how group and summarize SMF data in Java.
 
 The program reports statistics for each program name, taken from SMF type 30 subtype 4 (Step End) records.
 
-### [Sample 5: Accessing Sections in Lists](Sample5.md)
+### [Sample 5: Repeating Record Sections](Sample5.md)
 
 When a SMF record may have multiple instances of a section, the sections will be returned in a `List<T>`. Sometimes a record will have no instances of a particular section - in that case an empty list is returned. 
 
