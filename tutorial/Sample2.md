@@ -4,6 +4,9 @@
 
 Sample 2 shows how you can use Java Streams to filter and process SMF data.
 
+Streams are a neat way to define a series of actions, but they have some restrictions.
+Sometimes it is easier to use Streams, other times a traditional for(...) loop is easier. 
+
 The sample searches for SMF type 14 (input) and 15 (output) dataset close records for dataset SYS1.PARMLIB, and
 prints the time, system, jobname and the type of access.
 
@@ -19,7 +22,7 @@ reader
     .map(record -> Smf14Record.from(record)) 
     .filter(r14 -> r14.smfjfcb1().jfcbdsnm().equals("SYS1.PARMLIB"))
     .limit(1000000)
-    .forEach(r14 -> 
+    .forEachOrdered(r14 -> 
         System.out.format("%-23s %-4s %-8s %-6s%n",                                  
         r14.smfDateTime(), 
         r14.system(),

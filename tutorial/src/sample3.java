@@ -29,7 +29,7 @@ public class sample3
 	            // search for dataset name in the record
 	            .filter(record -> record.toString().contains("SYS1.PARMLIB"))
 	            .limit(100) // stop after 100 matches
-	            .forEach(record -> 
+	            .forEachOrdered(record -> 
 	            {
 	            	// print some record information
 	                System.out.format("%-23s System: %-4s Record Type: %s Subtype: %s%n%n",                                  

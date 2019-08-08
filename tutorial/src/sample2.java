@@ -36,7 +36,7 @@ public class sample2
 	            .filter(r14 -> r14.smfjfcb1().jfcbdsnm().equals("SYS1.PARMLIB"))
 	            .limit(1000000) // limit the number of matches
 	            // for each match, print information
-	            .forEach(r14 -> 
+	            .forEachOrdered(r14 -> 
 	                System.out.format("%-23s %-4s %-8s %-6s%n",                                  
 	                    r14.smfDateTime(), 
 	                    r14.system(),

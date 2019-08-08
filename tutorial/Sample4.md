@@ -20,7 +20,6 @@ Map<String, ProgramStatistics> programs = new HashMap<String, ProgramStatistics>
 We read and process the records the same way as in sample1.
 
 We attempt to get an existing entry from the Map for the program name. 
-If it is found, we accumulate data in the existing entry.
 If it is not present, a new instance is created and added to the map with the corresponding key. 
 
 ```

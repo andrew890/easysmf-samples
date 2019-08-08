@@ -6,6 +6,36 @@ The Java classes provide access to the data in the record, without needing to un
 The classes provide interfaces that are as consistent as possible across all the different record types.
 Techniques learned for one record type are easily transferrable to other record types.
 
+### Getting SMF Records
+
+SMF records are read using a [SmfRecordReader](https://static.blackhillsoftware.com/easysmf/javadoc/com/blackhillsoftware/smf/SmfRecordReader.html) to read from a JCL DD statement, z/OS dataset, a file or an InputStream.
+
+You can interate or stream from the SmfRecordReader to get [SmfRecord](https://static.blackhillsoftware.com/easysmf/javadoc/com/blackhillsoftware/smf/SmfRecord.html)s. The SmfRecord has the basic attributes common to all SMF records, e.g. recordType(). Once you know the record type you can create the specialized SMF record from the base SMF record:
+
+```
+try (SmfRecordReader reader = SmfRecordReader.fromDD("INPUT"))
+{        	
+    for (SmfRecord record : reader)
+    {
+        if (record.recordType() == 30)
+        {
+            Smf30Record r30 = Smf30Record.from(record);
+        }
+    }
+}
+```
+
+### Input Data Format
+
+The SmfRecordReader can read data from various sources.
+
+- z/OS SMF Dump Datasets 
+Reading from z/OS SMF Dump datasets is straightforward. You can use the JZOS Batch Launcher to run the java program and point the SmfRecordReader to a DDNAME in the JCL.
+- Unix or Windows files
+SMF data in Unix or Windows files needs to include the Record Descriptor Word (RDW) and have been transferred in Binary mode i.e. without any EBCDIC to ASCII translation or record boundaries inserted. FTP on z/OS will strip the RDW by default, to override this setting use the SITE RDW option. The SmfRecordReader can also read data transferred in RECFM=U format, e.g. this is often used when transferring SMF data for use with SAS.
+- InputStream
+The SmfRecordReader can read form any source that implements the Java [InputStream](https://docs.oracle.com/javase/8/docs/api/java/io/InputStream.html). Like Unix and Windows files, the InputStream must provide the data in binary format including the RDW.
+
 ### Data Conversion
 
 Data in SMF record fields are converted to Java types using a consistent set of principles.
@@ -19,7 +49,7 @@ They could be a LocalDate, LocalTime, LocalDateTime or a ZonedDateTime with Zone
 
 EasySMF time conversions mean that you do not need to worry about the units for the different fields when you are processing SMF data.
 Different data types for local and UTC date/times provide a defense against programming errors like comparing local and UTC time fields.
-Java has built in time zone support, so you can transform times between UTC and local and between different time zones according to the rules of your system time zone(s).
+Java has built in time zone support, so you can transform times between UTC and local time and between different time zones.
 
 Java.time classes store values with nanosecond precision. This is more than adequate for most SMF fields. Where more precision is required e.g. STCK timestamps, you can choose to use the raw value to get the full precision.
 
@@ -41,7 +71,7 @@ Classes mapping SMF records and sections provide methods to access the SMF secti
 
 If there is no Completion Section in the record completionSection() returns null.
 
-#### Multiple Sections
+#### Repeating Sections
 
 Often a section can occur multiple times in a record e.g. sections located by a SMF **triplet**. In that case the sections are returned in a **List**.
 
