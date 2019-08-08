@@ -5,12 +5,12 @@ These tutorials are provided to illustrate the use of the EasySMF:JE Java API to
 1. ##[Introduction](#EasySMF:JE-Introduction)
 1. ##[JCL](#JCL)
 1. ##[Sample Code](#Samples)
- 1. [Read, extract and print SMF data](Sample-1:-Read,-extract-and-print-SMF-data)
- 2. Filter and print SMF data
- 3. Search SMF for a Text String
- 4. Group and Summarize SMF data
- 5. Repeating Record Sections
- 6. A/B Reporting
+   1. [Read, extract and print SMF data](Sample-1:-Read,-extract-and-print-SMF-data)
+   2. Filter and print SMF data
+   3. Search SMF for a Text String
+   4. Group and Summarize SMF data
+   5. Repeating Record Sections
+   6. A/B Reporting
  
 
 ## EasySMF:JE Introduction
