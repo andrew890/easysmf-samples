@@ -5,14 +5,13 @@
 When a section in a SMF record can be repeated, the sections will be returned in a `List<T>`.
 Sometimes a record will have no instances of a particular section - in that case an empty list is returned. 
 
-Sample 5 generates a report based on the SMF type 30 EXCP Section.
+Sample 5 shows how to get multiple sections from a record and generate a report based on the SMF type 30 EXCP Section.
 
 The report lists job steps with a STEPLIB entry in the EXCP sections.
 The program ignores jobs where the job name begins with the userid.
 Each combination of Jobname, Step Number, Step Name and Program Name is listed only once.
 
-(This sample is used to demonstrate various techniques.
-It is not intended to imply that there is any problem with jobs using a STEPLIB.)
+(This sample is used to demonstrate various techniques. It is not intended to imply that there is any problem with jobs using a STEPLIB.)
 
 ### Processing the Data
 
@@ -50,12 +49,9 @@ if (excp.smf30ddn().equals("STEPLIB"))
 
 To eliminate duplicates, we collect the entries in a `Set<T>`. 
 A Set is a collection which does not allow duplicate entries. 
-We need to create a class to contain the job/step/program information, 
-and provide `hashCode()` and `equals(Object)` methods which the Set uses to find entries and test for equality.
+We need to create a class to contain the job/step/program information, and provide `hashCode()` and `equals(Object)` methods which the Set uses to find entries and test for equality.
 
-Exactly the same code is used to create a complex key for a HashMap.
-You can use this technique to summarize based on more complex keys than the simple String used in
-[Sample 4](./Sample4.md).
+Exactly the same code is used to create a complex key for a HashMap. You can use this technique to summarize based on more complex keys than the simple String used in [Sample 4](./Sample4.md).
 
 ```
 private static class JobStepProgram
@@ -102,7 +98,7 @@ This is a bare bones discussion of hashcode() and equals(), there is plenty of J
 
 ### Producing the Output
 
-Again, Java Streams provides a neat way to sort the data for output. We defined methods in the JobStepProgram class to access the fields, this means that we can use the method names in the comparing(...) statements.   
+Again, Java Streams provides a neat way to process the data for output. We defined methods in the JobStepProgram class to access the fields, this means that we can sort using the method names in the comparing(...) statements.   
 
 ```
 jobStepPrograms.stream()
@@ -118,3 +114,5 @@ jobStepPrograms.stream()
             entry.getStepName(),
             entry.getProgramName()));
 ```
+
+[Sample 5 Source Code: sample5.java](./src/sample5.java)

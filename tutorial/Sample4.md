@@ -5,35 +5,34 @@
 Sample 4 shows how group and summarize SMF data in Java.
 
 The program reports statistics for each program name, taken from SMF type 30 subtype 4 (Step End) records.
-Data does not need to be sorted, and the program information is collected in a `java.util.HashMap<>`.
-This means that CPU usage will scale approximately linearly with the amount of data processed, 
-and memory requirements will depend on the number of different program names encountered.
+Data does not need to be sorted, and the program information is collected in a `java.util.HashMap<>`. This means that CPU usage will scale approximately linearly with the amount of data processed, and memory requirements will depend on the number of different program names encountered.
 
 Statistics for each program are collected in a class called **ProgramStatistics**.
-There is an instance of the class for each program,
-kept in the HashMap with the program name as the key.
+There is an instance of the class for each program, kept in the HashMap with the program name as the key.
 
 ```
 Map<String, ProgramStatistics> programs = new HashMap<String, ProgramStatistics>();
 ```
 
-We read and process the records the same way as in sample1.
+### Processing the Data
 
-We attempt to get an existing entry from the Map for the program name. 
-If it is not present, a new instance is created and added to the map with the corresponding key. 
+We read and process the records the same way as in Sample 1.
+
+We attempt to get an existing entry from the Map for the program name. If it is not present, a new instance is created and added to the map with the corresponding key. 
 
 ```
-ProgramStatistics program = 
-    programs.get(r30.identificationSection().smf30pgm());
+String programName = r30.identificationSection().smf30pgm();
+ProgramStatistics program = programs.get(programName);
         		
 if (program == null)
 {
     program = new ProgramStatistics();
-    programs.put(r30.identificationSection().smf30pgm(),
-        program);
+    programs.put(programName, program);
 }            
-
 ```
+
+### Gathering Statistics
+
 We then accumulate the information from the record into the ProgramStatistics entry:
 ```
 program.accumulateData(r30);
@@ -65,6 +64,8 @@ private static class ProgramStatistics
 }
 ```
 
+### Writing the Report
+
 We use Java Streams again to write the report:
 ```
 programs.entrySet().stream()
@@ -87,5 +88,6 @@ programs.entrySet().stream()
 **forEachOrdered(...)** guarantees that the order of the entries is maintained - which is important after the sort. 
 **forEach** does not guarantee that the order is maintained - although in simple cases it seems to be.  
 
-The principles used in this sample can be adapted to many different situations, simply by changing the data
-accumulated in the Statistics class and the data used for the key in the Map. 
+The principles used in this sample can be adapted to many different situations, simply by changing the data accumulated in the Statistics class and the data used for the key in the Map.
+
+[Sample 4 Source Code: sample4.java](./src/sample4.java)

@@ -37,3 +37,5 @@ to the next steps.
   dataset name in jfcbdsnm(). We want to list references to SYS1.PARMLIB.
 - **limit** stop after this number of matches.
 - **forEach** process each record. In this case, print the output.
+
+[Sample 2 Source Code: sample2.java](./src/sample2.java)

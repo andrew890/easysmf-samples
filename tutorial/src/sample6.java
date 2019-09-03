@@ -1,3 +1,5 @@
+import static java.util.Comparator.comparing;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -44,19 +46,19 @@ public class sample6
         	for (SmfRecord record : reader)
         	{
         		Smf30Record r30 = Smf30Record.from(record);
+        		String programName = r30.identificationSection().smf30pgm();
         		
         		// get the target map based on whether this record is part of group A or B
         		Map<String, ProgramStatistics> target = isA(r30) ? aPrograms : bPrograms;
         	
         		// Find the entry for the program name and accumulate the data
-        		ProgramStatistics program = 
-        				target.get(r30.identificationSection().smf30pgm());
+        		ProgramStatistics program = target.get(programName);
         		
         		if (program == null)
         		{
-        			program = new ProgramStatistics();
-        			target.put(r30.identificationSection().smf30pgm(),
-        					program);
+        			// entry doesn't exist - create new and add to map
+        			program = new ProgramStatistics(programName);
+        			target.put(programName, program);
         		}            
     			program.accumulateData(r30);
         	}
@@ -100,49 +102,50 @@ public class sample6
 
         // Take entries in Group A
         aPrograms.entrySet().stream()
-        
+        	.map(entry -> entry.getValue())
+              
+            // Ignore any entries where there is no Group B equivalent 
+            .filter(aProgramsEntry -> bPrograms.containsKey(aProgramsEntry.getName()))
+            
             // sort by CP Time
             // reversing x and y in the comparison so sort is descending
-            .sorted((x, y) -> Double.compare(y.getValue().cpTime, x.getValue().cpTime))
+            .sorted(comparing(ProgramStatistics::getCpTime).reversed())
             
-            // Ignore any entries where there is no Group B equivalent 
-            .filter(aProgramsEntry -> bPrograms.containsKey(aProgramsEntry.getKey()))
             .limit(100) // take top 100
-            .forEachOrdered(aProgramsEntry ->
+            .forEachOrdered(programAInfo ->
             {
-            	// Get A statistics and matching B statistics
-                ProgramStatistics programAInfo = aProgramsEntry.getValue();
-                ProgramStatistics programBInfo = bPrograms.get(aProgramsEntry.getKey());
+            	// Get matching B statistics
+                ProgramStatistics programBInfo = bPrograms.get(programAInfo.getName());
                 
                 System.out.format("%-8s%n", 
-                        aProgramsEntry.getKey()); // Program name
+                		programAInfo.getName()); // Program name
                 
                 // write Group A detail line
                 System.out.format(detailFormatString, 
                     "A:",
-                    programAInfo.count, 
-                    hhhmmss(programAInfo.cpTime), 
-                    hhhmmss(programAInfo.ziipTime),
-                    hhhmmss(programAInfo.ziipOnCpTime),
-                    programAInfo.excps, 
+                    programAInfo.getCount(), 
+                    hhhmmss(programAInfo.getCpTime()), 
+                    hhhmmss(programAInfo.getZiipTime()),
+                    hhhmmss(programAInfo.getZiipOnCpTime()),
+                    programAInfo.getExcps(), 
                     programAInfo.getZiipPct(), 
                     programAInfo.getZiipOnCpPct(), 
                     programAInfo.getCpuMsPerIO()
-	            		.map(value -> String.format("%14.3f",value))
+	            		.map(value -> String.format("%.3f",value))
 	            		.orElse("") );               
                 
                 // write Group B detail line
                 System.out.format(detailFormatString, 
                     "B:",
-                    programBInfo.count, 
-                    hhhmmss(programBInfo.cpTime), 
-                    hhhmmss(programBInfo.ziipTime),
-                    hhhmmss(programBInfo.ziipOnCpTime),
-                    programBInfo.excps, 
+                    programBInfo.getCount(), 
+                    hhhmmss(programBInfo.getCpTime()), 
+                    hhhmmss(programBInfo.getZiipTime()),
+                    hhhmmss(programBInfo.getZiipOnCpTime()),
+                    programBInfo.getExcps(), 
                     programBInfo.getZiipPct(), 
                     programBInfo.getZiipOnCpPct(), 
                     programBInfo.getCpuMsPerIO()
-	            		.map(value -> String.format("%14.3f",value))
+	            		.map(value -> String.format("%.3f",value))
 	            		.orElse("") );
                 
                 // write differences
@@ -153,16 +156,14 @@ public class sample6
                 System.out.format(changeFormatString, 
                     "Change:",
                     programBInfo.getZiipPctChange(programAInfo)
-                    		.map(value -> String.format("%+13.1f%%",value))
+                    		.map(value -> String.format("%+.1f%%",value))
                     		.orElse(""),
                     programBInfo.getZiipOnCpPctChange(programAInfo)
-                    		.map(value -> String.format("%+13.1f%%",value))
+                    		.map(value -> String.format("%+.1f%%",value))
                     		.orElse(""),
                     programBInfo.getCpuMsPerIOChange(programAInfo)
-                    		.map(value -> String.format("%+13.0f%%",value))
-                    		.orElse("")
-                		
-                		);
+                    		.map(value -> String.format("%+.0f%%",value))
+                    		.orElse("") );
             });
     }
     
@@ -171,6 +172,11 @@ public class sample6
      */
     private static class ProgramStatistics
     {
+    	public ProgramStatistics(String name)
+    	{
+    		this.name = name;	
+    	}
+    	
         /**
          * Add information from a SMF 30 record.
          * 
@@ -206,6 +212,34 @@ public class sample6
             }
         }
                
+		String getName() {
+			return name;
+		}
+        
+        int getCount() {
+			return count;
+		}
+
+		double getCpTime() {
+			return cpTime;
+		}
+
+		double getZiipOnCpTime() {
+			return ziipOnCpTime;
+		}
+
+		double getZiipTime() {
+			return ziipTime;
+		}
+
+		double getNormalizedZiipTime() {
+			return normalizedZiipTime;
+		}
+
+		long getExcps() {
+			return excps;
+		}
+        
         /**
          * Calculate CPU time (CP time + normalized zIIP time) in milliseconds
          * per I/O (EXCP). If EXCP count = 0, return Optional.empty.
@@ -257,7 +291,7 @@ public class sample6
          */
         Optional<Double> getZiipPctChange(ProgramStatistics prev)
         {
-        	return (this.getZiipPct() > 0 && prev.getZiipPct() > 0) ? 
+        	return (this.getZiipPct() > 0 || prev.getZiipPct() > 0) ? 
         			Optional.of(this.getZiipPct() - prev.getZiipPct())
         			: Optional.empty();
         }
@@ -278,12 +312,13 @@ public class sample6
          */
         Optional<Double> getZiipOnCpPctChange(ProgramStatistics prev)
         {
-        	return (this.getZiipOnCpPct() > 0 && prev.getZiipOnCpPct() > 0) ? 
+        	return (this.getZiipOnCpPct() > 0 || prev.getZiipOnCpPct() > 0) ? 
         			Optional.of(this.getZiipOnCpPct() - prev.getZiipOnCpPct()) 
         			: Optional.empty();
         }
-        
-        int    count                 = 0;
+
+		String name;
+		int    count                 = 0;
         double cpTime                = 0;
         double ziipOnCpTime          = 0;
         double ziipTime              = 0;        

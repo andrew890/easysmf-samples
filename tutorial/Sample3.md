@@ -34,9 +34,8 @@ after 100 matches to avoid excessive output.
 
 #### Notes
 
-The entire record is translated to a Java string before searching for the text. For performance reasons it is best
-to do all other filtering e.g. by record type before the string search - this avoids doing the translation unnecessarily.
+The entire record is translated to a Java string before searching for the text. For performance reasons it is best to do all other filtering e.g. by record type before the string search - this avoids doing the translation unnecessarily.
 
-When running this sample, start with a limited amount of data and monitor the CPU time consumed. In testing,
-the program used about 10 seconds of CPU time per GB of SMF data on the IBM Dallas Remote Development system. 90%
-of that was on a zIIP.
+When running this sample, start with a limited amount of data and monitor the CPU time consumed. In testing, the program used about 10 seconds of CPU time per GB of SMF data on the IBM Dallas Remote Development system. 90% of that was on a zIIP.
+
+[Sample 3 Source Code: sample3.java](./src/sample3.java)

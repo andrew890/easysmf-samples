@@ -35,17 +35,17 @@ public class sample4
         	
         	for (SmfRecord record : reader)
         	{
-        		Smf30Record r30 = Smf30Record.from(record); 
+        		Smf30Record r30 = Smf30Record.from(record);
+        		String programName = r30.identificationSection().smf30pgm();
         	
         		// Find the entry for the program name and accumulate the data
-        		ProgramStatistics program = 
-        				programs.get(r30.identificationSection().smf30pgm());
+        		ProgramStatistics program = programs.get(programName);
         		
         		if (program == null)
         		{
+        			// entry doesn't exist - create new and add to map
         			program = new ProgramStatistics();
-        			programs.put(r30.identificationSection().smf30pgm(),
-        					program);
+        			programs.put(programName, program);
         		}            
     			program.accumulateData(r30);
         	}
