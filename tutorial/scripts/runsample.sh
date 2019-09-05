@@ -8,12 +8,12 @@
 #    https://www.blackhillsoftware.com/30-day-trial/
 # 3) If you compiled your samples using the compilesample.sh script, 
 #    change TARGET to match compilesample.sh. If the specified class 
-#    is not found in the TARGET directory, the EasySMFSamples jar
+#    is not found in the TARGET directory, the easysmf-je-samples jar
 #    will be searched.
 # 4) Ensure this file is executable:
 #    chmod +x runsample
 # 5) Run the script passing the sample and SMF data file as arguments e.g.:
-#    ./runsample com.blackhillsoftware.samples.RecordCount SMF.DATA
+#    ./runsample.sh com.blackhillsoftware.samples.RecordCount SMF.DATA
 #
 # This sample assumes that required Java environment variables e.g. JAVA_HOME 
 # were set by the Java installation process.

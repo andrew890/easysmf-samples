@@ -11,8 +11,9 @@ The [Introduction](Introduction.md) describes the basic principles of the API, i
 1. [Installation](https://www.blackhillsoftware.com/javasmf/easysmfje-java-quickstart/)
 Quick Start Installation Instructions can be found [here](https://www.blackhillsoftware.com/javasmf/easysmfje-java-quickstart/) 
 
-1. [JCL](JCL.md)
-[JCL](JCL.md) to compile and run the code on z/OS.
+1. [JCL](JCL.md) to compile and run the code on z/OS.
+
+1. [Scripts](Scripts.md) to compile and run the code on Windows and unix systems.
 
 1. Samples
 Most samples are self-contained in a single file and use the default package to make compiling and running the code
