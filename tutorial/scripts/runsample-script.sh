@@ -15,7 +15,7 @@
 # were set by the Java installation process.
 #
 
-export EASYSMFLOCATION=/path-to/easysmf-je-ZVERSION
+export EASYSMFLOCATION=/path-to/easysmf-je-VERSION
 export EASYSMFKEY=/path-to/easysmfkey
 
 java -classpath "$EASYSMFLOCATION/samples/*:$EASYSMFLOCATION/jar/*" $1 $2
