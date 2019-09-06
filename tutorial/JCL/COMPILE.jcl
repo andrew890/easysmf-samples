@@ -8,32 +8,41 @@
 //*
 // EXPORT SYMLIST=*
 //*
-//* File to compile
-// SET CLASS='com/blackhillsoftware/samples/RecordCount.java'
-//*
 //* Java source and target directories.
 //* As distributed, they are relative to user's home directory
 //*
-// SET SRC='./java/src'
+// SET SRC='./java/easysmf-je-1-9-3/samples/source'
 // SET TGT='./java/target'
 //*
+//* File to compile, relative to SRC directory
+// SET CLASS='com/blackhillsoftware/samples/RecordCount.java'
+//*
 //* EasySMF directory and jar file:
-// SET EZSMFDIR='./java/easysmf-je-1-9-3/jar'
+// SET EZSMFDIR='./java/easysmf-je-1-9-3'
 // SET EZSMFJAR='easysmf-je-1.9.3.jar'
 //*
 //* Location of Java:
 // SET JAVA='/usr/lpp/java/J8.0'
 //*
-//* Compile a Java class using BPXBATCH.
+//* Symbols from JCL are assigned to environment variables in STDENV,
+//* then substituted by the shell to avoid JCL line length problems
+//* that can occur with 2 long symbols on the same line.
+//* Beware: Variables in STDENV can be overridden by /etc/profile or
+//* .profile
 //*
 //COMPILE  EXEC PGM=BPXBATCH,REGION=0M
-//STDPARM  DD *,SYMBOLS=JCLONLY
-SH &JAVA./bin/javac
+//STDPARM  DD *
+SH ${JAVA}/bin/javac
  -Xlint -verbose
- -cp '&EZSMFDIR/*'
- -d &TGT
- &SRC./&CLASS.
-//STDENV   DD *
+ -cp "${EZSMFDIR}/jar/*"
+ -d ${TGT}
+ ${SRC}/${CLASS}
+//STDENV   DD *,SYMBOLS=JCLONLY
+JAVA=&JAVA
+CLASS=&CLASS
+SRC=&SRC
+TGT=&TGT
+EZSMFDIR=&EZSMFDIR
+EZSMFJAR=&EZSMFJAR
 //STDOUT   DD SYSOUT=*
 //STDERR   DD SYSOUT=*
-

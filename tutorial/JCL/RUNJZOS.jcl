@@ -9,18 +9,18 @@
 //*
 // EXPORT SYMLIST=*
 //*
-//* Class to compile and run
-// SET CLASS='sample1'
+//* Class to run
+// SET CLASS='com.blackhillsoftware.samples.RecordCount'
 //*
-//* Java source and target directories.
-//* As distributed, they are relative to user's home directory
+//* Java target directory
+//* As distributed, relative to user's home directory
 //*
-// SET SRC='./java/src'
 // SET TGT='./java/target'
 //*
 //* EasySMF directory and jar file:
-// SET EZSMFDIR='./java/easysmf-je-1-9-3/jar'
+// SET EZSMFDIR='./java/easysmf-je-1-9-3'
 // SET EZSMFJAR='easysmf-je-1.9.3.jar'
+// SET EZSMFSAM='easysmf-je-samples-1.9.1.jar'
 //*
 //* Location of JZOS batch launcher module JVMLDM80:
 // SET JZOSLIB=JZOS.LINKLIBE
@@ -30,19 +30,6 @@
 //*
 //* SMF data to process
 // SET SMFDATA=SMF.RECORDS
-//*
-//* Compile a Java class using BPXBATCH.
-//*
-//COMPILE  EXEC PGM=BPXBATCH,REGION=0M
-//STDPARM  DD *,SYMBOLS=JCLONLY
-SH &JAVA./bin/javac
- -Xlint -verbose
- -cp '&EZSMFDIR/*'
- -d &TGT
- &SRC./&CLASS..java
-//STDENV   DD *
-//STDOUT   DD SYSOUT=*
-//STDERR   DD SYSOUT=*
 //*
 //* Run a Java program under JZOS Batch Launcher
 //*
@@ -61,14 +48,15 @@ SH &JAVA./bin/javac
 //*
 //* EasySMF Key - get a 30 day trial from
 //* https://www.blackhillsoftware.com/30-day-trial/
-//* This sample key expires 2019-07-17
+//* This sample key expires 2019-10-05
+//*
 //EZSMFKEY DD *
 **License:
-MQ0KMjAxOS0wNy0xNw0KVGVtcG9yYXJ5IEtleQ0K
+MQ0KMjAxOS0xMC0wNQ0KVGVtcG9yYXJ5IEtleQ0K
 **Sig:
-MITWcvOCo4Q0TI/YJ7+5TGf/KzJfzizVwPeh68J86yY2up2G/9O98FM/svycNN71
-uGJZOUDWRToCsCzjPFPlKhphW/EPHanD4ZEyGzOZNvWIc1gbQ6Y2z8A4TWHYCrDV
-a4+vNXa4RC+IzEWiHVD0BUOYn7CZa0yJwkC2oZJU3Go=
+FS6Z60HpHaO3I4GooiBHljVNCdRZVMU5exyuNe/UA8z/AZuhhedHOxGjssK2FYDu
+mwAYn+nVWcujg63fVLlbA5pRYMHrFOfImd8soqipSAKliMGqXbYAqYHC3kg+QgJD
+oLr+whv9NDDky3tHzNGl1etaHAc/vuY47iRnyJ9Lf2Y=
 **End
 //*
 //* Configure for JZOS: based on JVMJCL80/JVMPRC80
@@ -86,9 +74,10 @@ export LIBPATH="$LIBPATH":
 
 APP_HOME=&TGT
 CP="${APP_HOME}"
-CP="${CP}":"&EZSMFDIR./&EZSMFJAR."
-CP="${CP}":"&EZSMFDIR./slf4j-api-1.7.21.jar"
-CP="${CP}":"&EZSMFDIR./slf4j-simple-1.7.21.jar"
+CP="${CP}":"&EZSMFDIR./jar/&EZSMFJAR."
+CP="${CP}":"&EZSMFSAM./samples/&EZSMFJAR."
+CP="${CP}":"&EZSMFDIR./jar/slf4j-api-1.7.21.jar"
+CP="${CP}":"&EZSMFDIR./jar/slf4j-simple-1.7.21.jar"
 export CLASSPATH="${CP}"
 
 IJO="-Xms16m -Xmx128m"

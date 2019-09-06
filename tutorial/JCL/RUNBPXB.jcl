@@ -4,23 +4,21 @@
 //*
 //* ***** Edit with CAPS OFF and NUMBER OFF *****
 //*
-//* Compile a Java program using BPXBATCH and 
-//* run it using BPXBATCH
+//* Run a Java program using BPXBATCH
 //*
 // EXPORT SYMLIST=*
 //*
-//* Class to compile and run
-// SET CLASS='sample1'
+//* Class to run
 //*
-//* Java source and target directories.
-//* As distributed, they are relative to user's home directory
+// SET CLASS='com.blackhillsoftware.samples.RecordCount'
 //*
-// SET SRC='./java/src'
+//* Java target directory.
+//* As distributed, relative to user's home directory
+//*
 // SET TGT='./java/target'
 //*
-//* EasySMF directory and jar file:
-// SET EZSMFDIR='./java/easysmf-je-1-9-3/jar'
-// SET EZSMFJAR='easysmf-je-1.9.3.jar'
+//* EasySMF directory
+// SET EZSMFDIR='./java/easysmf-je-1-9-3'
 //*
 //* Location of Java:
 // SET JAVA='/usr/lpp/java/J8.0'
@@ -31,25 +29,13 @@
 //* Location of EasySMF Key e.g. FB 80 PDS
 // SET KEYDSN=EASYSMF.INSTALL(EZSMFK)
 //*
-//* Compile a Java class using BPXBATCH.
-//*
-//COMPILE  EXEC PGM=BPXBATCH,REGION=0M
-//STDPARM  DD *,SYMBOLS=JCLONLY
-SH &JAVA./bin/javac
- -Xlint -verbose
- -cp '&EZSMFDIR/*'
- -d &TGT
- &SRC./&CLASS..java
-//STDENV   DD *
-//STDOUT   DD SYSOUT=*
-//STDERR   DD SYSOUT=*
-//*
 //* Run a Java program under BPXBATCH
 //*
 //G   EXEC PGM=BPXBATCH,REGION=512M
 //STDPARM DD *,SYMBOLS=JCLONLY
 SH CP="&TGT.";
- CP="$CP":"&EZSMFDIR./*";
+ CP="$CP":"&EZSMFDIR./jar/*";
+ CP="$CP":"&EZSMFDIR./samples/*";
  export CLASSPATH="$CP";
  &JAVA./bin/java
  &CLASS
@@ -58,4 +44,4 @@ SH CP="&TGT.";
 //STDERR    DD SYSOUT=*
 //STDENV    DD *,SYMBOLS=JCLONLY
 EASYSMFKEY=//'&KEYDSN'
-//
+/*
