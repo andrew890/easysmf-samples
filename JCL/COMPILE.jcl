@@ -1,35 +1,48 @@
-//JOBNAME  JOB CLASS=A,                                          
-//             MSGCLASS=H,                                       
-//             NOTIFY=&SYSUID                                    
-//*                                                              
-//* Compile a Java class using BPXBATCH.                         
-//* java/src/RecordCount.java is the file to compile.            
-//* Output goes to java/target                                   
-//*                                                              
-//* The EasySMF jar files have been installed in                 
-//* java/easysmf-je-1-9-1/jar                                    
-//*                                                              
-//* The directories are relative to the user's home directory    
-//* because java/target etc are relative paths (no leading "/")  
-//*                                                              
-//* RecordCount.java specifies a package of com.smfreports, which
-//* means that the compiled class file goes to the com/smfreports
-//* subdirectory under java/target i.e. if the home directory is 
-//* /u/userid, the output will be                                
-//* /u/userid/java/target/com/smfreports/RecordCount.class       
-//*                                                              
-//* Java uses the same convention when running the program.      
-//* If CLASSPATH points to java/target and the class is          
-//* com.smfreports.RecordCount, Java will look for               
-//* java/target/com/smfreports/RecordCount.class                 
-//*                                                              
-//COMPILE  EXEC PGM=BPXBATCH,REGION=0M                           
-//STDPARM  DD *                                                  
-SH /usr/lpp/java/J8.0/bin/javac                                  
- -Xlint -verbose                                                 
- -cp 'java/easysmf-je-1-9-1/jar/*'                               
- -d java/target                                                  
- java/src/RecordCount.java                                       
-//STDENV   DD *                                                  
-//STDOUT   DD SYSOUT=*                                           
-//STDERR   DD SYSOUT=*                                           
+//JOBNAME  JOB CLASS=A,
+//             MSGCLASS=H,
+//             NOTIFY=&SYSUID
+//*
+//* ***** Edit with CAPS OFF and NUMBER OFF *****
+//*
+//* Compile a Java program using BPXBATCH
+//*
+// EXPORT SYMLIST=*
+//*
+//* Java source and target directories.
+//* As distributed, they are relative to user's home directory
+//*
+// SET SRC='./java/easysmf-je-1-9-3/samples/source'
+// SET TGT='./java/target'
+//*
+//* File to compile, relative to SRC directory
+// SET CLASS='com/blackhillsoftware/samples/RecordCount.java'
+//*
+//* EasySMF directory and jar file:
+// SET EZSMFDIR='./java/easysmf-je-1-9-3'
+// SET EZSMFJAR='easysmf-je-1.9.3.jar'
+//*
+//* Location of Java:
+// SET JAVA='/usr/lpp/java/J8.0'
+//*
+//* Symbols from JCL are assigned to environment variables in STDENV,
+//* then substituted by the shell to avoid JCL line length problems
+//* that can occur with 2 long symbols on the same line.
+//* Beware: Variables in STDENV can be overridden by /etc/profile or
+//* .profile
+//*
+//COMPILE  EXEC PGM=BPXBATCH,REGION=0M
+//STDPARM  DD *
+SH ${JAVA}/bin/javac
+ -Xlint -verbose
+ -cp "${EZSMFDIR}/jar/*"
+ -d ${TGT}
+ ${SRC}/${CLASS}
+//STDENV   DD *,SYMBOLS=JCLONLY
+JAVA=&JAVA
+CLASS=&CLASS
+SRC=&SRC
+TGT=&TGT
+EZSMFDIR=&EZSMFDIR
+EZSMFJAR=&EZSMFJAR
+//STDOUT   DD SYSOUT=*
+//STDERR   DD SYSOUT=*
