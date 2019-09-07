@@ -14,6 +14,10 @@
 //*
 //* Java target directory.
 //* As distributed, relative to user's home directory
+//* The target directory will be searched first for 
+//* a locally compiled copy of the class, if the class is
+//* not found there the EasySMF Samples jar file will be 
+//* searched.
 //*
 // SET TGT='./java/target'
 //*
