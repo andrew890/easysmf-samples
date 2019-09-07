@@ -6,15 +6,15 @@ In most cases you would probably use an IDE e.g. Eclipse rather than these scrip
 
 ### Windows
 
-[compilesample.bat](./scripts/compilesample.bat)
+[compilesample.bat](../scripts/compilesample.bat)
 
-[runsample.bat](./scripts/runsample.bat)
+[runsample.bat](../scripts/runsample.bat)
 
 ### Unix
 
-[compilesample.sh](./scripts/compilesample.sh)
+[compilesample.sh](../scripts/compilesample.sh)
 
-[runsample.sh](./scripts/runsample.sh)
+[runsample.sh](../scripts/runsample.sh)
 
 
 ### Compiling the Samples
