@@ -1,14 +1,15 @@
 # Tutorial : Processing SMF Data using Java
 
+EasySMF:JE provides an API for accessing SMF data using Java. It provides Java classes to map SMF records and SMF record sections.
+
 These tutorials are provided to illustrate the use of the EasySMF:JE Java API to process SMF data.
 
 ## Contents
 
-1. [EasySMF:JE Introduction](Introduction.md)
-EasySMF:JE provides an API for accessing SMF data using Java. It provides Java classes to map SMF records and SMF record sections.
+1. [EasySMF:JE Introduction](Introduction.md)  
 The [Introduction](Introduction.md) describes the basic principles of the API, including data and date-time conversions, and how to access record sections and subsections.
 
-1. [Installation](https://www.blackhillsoftware.com/javasmf/easysmfje-java-quickstart/)
+1. [Installation](https://www.blackhillsoftware.com/javasmf/easysmfje-java-quickstart/)  
 Quick Start Installation Instructions can be found [here](https://www.blackhillsoftware.com/javasmf/easysmfje-java-quickstart/) 
 
 1. [JCL](JCL.md) to compile and run the code on z/OS.

@@ -17,9 +17,8 @@
 //* File to compile, relative to SRC directory
 // SET CLASS='com/blackhillsoftware/samples/RecordCount.java'
 //*
-//* EasySMF directory and jar file:
+//* EasySMF directory:
 // SET EZSMFDIR='./java/easysmf-je-1-9-3'
-// SET EZSMFJAR='easysmf-je-1.9.3.jar'
 //*
 //* Location of Java:
 // SET JAVA='/usr/lpp/java/J8.0'
@@ -43,6 +42,5 @@ CLASS=&CLASS
 SRC=&SRC
 TGT=&TGT
 EZSMFDIR=&EZSMFDIR
-EZSMFJAR=&EZSMFJAR
 //STDOUT   DD SYSOUT=*
 //STDERR   DD SYSOUT=*

@@ -4,8 +4,7 @@
 //*
 //* ***** Edit with CAPS OFF and NUMBER OFF *****
 //*
-//* Compile a Java program using BPXBATCH and
-//* run it using JZOS Batch Launcher
+//* Run a Java program using JZOS Batch Launcher
 //*
 // EXPORT SYMLIST=*
 //*
