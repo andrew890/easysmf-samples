@@ -26,7 +26,7 @@ public class PrimeShiftDailyCpu
                         DayOfWeek.THURSDAY, 
                         DayOfWeek.FRIDAY);   
 
-        // Use RMF data from these systems - typically one from each CEC
+        // Use RMF data from these systems - typically one from each CEC.
         // Change to match your system name or you will not see any data!
         //                   |||
         //                   |||

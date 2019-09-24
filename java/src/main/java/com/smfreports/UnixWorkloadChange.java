@@ -11,7 +11,8 @@ import com.blackhillsoftware.smf.smf30.*;
 
 /**
  * 
- * UnixWorkloadChange - search for work that changes WLM service class etc. 
+ * UnixWorkloadChange - search for work that spawns processes in
+ * a different service class. 
  * 
  * Unix work often creates multiple processes. On z/OS these can run in 
  * a different address space to the original job. These additional address 

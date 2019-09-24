@@ -12,14 +12,12 @@ public class JobsByUserid {
         try (SmfRecordReader reader = args.length == 0 ? 
             SmfRecordReader.fromDD("INPUT") :
             SmfRecordReader.fromName(args[0]))
-        {    	
-        	// SMF 30 subtype 5 = Job End records
-        	reader.include(30,5);
-        	
-        	JobSummarizer.jobSummaryReport(
-        			reader, 
+        {    	       	
+        	JobGroupReport.runReport(
         			"UserID", 
-        			x -> x.identificationSection().smf30rud()); // userid
+        			x -> x.identificationSection().smf30rud(), // userid
+        			reader, 
+        			new int[] { 5 }); // Subtype 5 Job End
         }
     }
 }

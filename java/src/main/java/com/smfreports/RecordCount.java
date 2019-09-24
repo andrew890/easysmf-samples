@@ -11,7 +11,7 @@ import com.blackhillsoftware.smf.SmfRecordReader;
 /**
  *
  * Collect statistics for SMF records by type and subtype,
- * and print record count, megabytes and various statitstics 
+ * and print record count, megabytes and various statistics 
  * for each type/subtype 
  *
  */

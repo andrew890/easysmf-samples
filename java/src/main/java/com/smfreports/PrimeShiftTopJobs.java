@@ -13,8 +13,6 @@ import com.blackhillsoftware.smf.smf30.Smf30Record;
  * Report the jobs/tasks that used the most CPU by job name 
  * during prime shift for each day of the week.  
  * 
- * @author Andrew Rowley
- *
  */
 public class PrimeShiftTopJobs
 {

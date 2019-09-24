@@ -61,7 +61,7 @@ public class Peak4HRAJobs {
         try (SmfRecordReader reader = 
                 args.length == 0 ?
                 SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromStream(new FileInputStream(args[0])))
+                SmfRecordReader.fromName(args[0]))
         {
         	reader
         		.include(70,1)
@@ -159,14 +159,6 @@ public class Peak4HRAJobs {
                     });
             }
             );
-    }
-
-    private static void reportTopJobsPrevious4Hours(
-            LocalDateTime hour,
-            long msuvalue,
-            Map<LocalDateTime, Map<String, JobnameTotals>> hourJobname) 
-    {       
-
     }
 
 	private static void reportTopCpJobs(long msuvalue, List<JobnameTotals> fourHourJobs, double fourHourTotalCpTime) {

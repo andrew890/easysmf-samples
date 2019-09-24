@@ -12,14 +12,12 @@ public class StepsByProgramName {
         try (SmfRecordReader reader = args.length == 0 ? 
             SmfRecordReader.fromDD("INPUT") :
             SmfRecordReader.fromName(args[0]))
-        {    	
-        	// SMF 30 subtype 4 = Step End records
-        	reader.include(30,4);
-        	
-        	JobSummarizer.jobSummaryReport(
+        {    	       	
+        	JobGroupReport.runReport(
+        			"Program Name", 
+        			x -> x.identificationSection().smf30pgm(), // program name 
         			reader, 
-        			"Program", 
-        			x -> x.identificationSection().smf30pgm()); // program name 
+        			new int[] { 4 }); // Subtype 4 Step End
         }
     }
 }

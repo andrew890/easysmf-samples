@@ -27,8 +27,6 @@ import com.blackhillsoftware.smf.smf30.Smf30Record;
  * restrict the report to subtype 5 job end records:
  * <code>reader.include(30,5)</code>
  * 
- * @author Andrew Rowley
- *
  */
 
 public class UserKeyCommon 
