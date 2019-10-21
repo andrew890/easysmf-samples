@@ -13,7 +13,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <slf4jVersion>1.7.21</slf4jVersion>
-    <easysmfVersion>1.9.1</easysmfVersion>
+    <easysmfVersion>1.9.5</easysmfVersion>
   </properties>
 
  <build>  
