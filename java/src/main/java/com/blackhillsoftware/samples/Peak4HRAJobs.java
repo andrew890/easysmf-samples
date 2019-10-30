@@ -23,15 +23,15 @@ public class Peak4HRAJobs {
     	
     	// System -> Hour -> Jobname -> JobTotals
     	Map< String, 
-    		SortedMap< LocalDateTime, // SortedMap allows easy reference to a submap i.e. 4 hour interval
+    		Map< LocalDateTime,
     			Map< String, 
     				HourlyJobTotals > > > systemHourJobnameTotals 
-    					= new HashMap<String, SortedMap<LocalDateTime, Map<String, HourlyJobTotals>>>();
+    					= new HashMap<String, Map<LocalDateTime, Map<String, HourlyJobTotals>>>();
     	
         try (SmfRecordReader reader = 
                 args.length == 0 ?
                 SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromStream(new FileInputStream(args[0]))                
+                SmfRecordReader.fromName(args[0])                
                 		.include(70,1)
                 		.include(30,2)
                 		.include(30,3))
@@ -52,9 +52,9 @@ public class Peak4HRAJobs {
             	case 30:	
 	            		Smf30Record r30 = new Smf30Record(record);
 	            		systemHourJobnameTotals
-	            			.computeIfAbsent(r30.system(), system -> new TreeMap<LocalDateTime, Map<String, HourlyJobTotals>>())
+	            			.computeIfAbsent(r30.system(), system -> new HashMap<LocalDateTime, Map<String, HourlyJobTotals>>())
 	            			.computeIfAbsent(r30.smfDateTime().truncatedTo(ChronoUnit.HOURS), time -> new HashMap<String, HourlyJobTotals>())
-	            			.computeIfAbsent(r30.identificationSection().smf30jnm(), 
+	            			.computeIfAbsent(r30.identificationSection().smf30jbn(), 
 	            					jobname -> new HourlyJobTotals(r30.identificationSection().smf30jbn()))            			
 	            			.add(r30); // Add the record to the HourlyJobTotals entry for this System:Time:Jobname
 	            	break;
@@ -68,7 +68,7 @@ public class Peak4HRAJobs {
 
 	private static void createReport(
 			Map<String, Map<LocalDateTime, HourlyLac>> systemHourLAC,
-			Map<String, SortedMap<LocalDateTime, Map<String, HourlyJobTotals>>> systemHourJobnameTotals) 
+			Map<String, Map<LocalDateTime, Map<String, HourlyJobTotals>>> systemHourJobnameTotals) 
 	{
 		systemHourLAC.entrySet().stream() // System names
 			// Sort names
@@ -106,20 +106,18 @@ public class Peak4HRAJobs {
 	private static void reportFourHourTopJobs(
 			LocalDateTime hour,
 			long msuvalue,
-			SortedMap<LocalDateTime, Map<String, HourlyJobTotals>> hourJobnameTotals) 
+			Map<LocalDateTime, Map<String, HourlyJobTotals>> hourJobnameTotals) 
 	{		
 		System.out.println("");
 		System.out.println("        Jobname       CPU%     Est. MSU");
 
-		// Get a subMap that consists of the requested hour plus 3 preceding hours
-		// and stream and flatten it into a list of job total entries
-		// (one for each hour:jobname combination)
-		List<HourlyJobTotals> fourHourJobs = 
-				// subMap range is (inclusive, exclusive)
-				hourJobnameTotals.subMap(hour.minusHours(3), hour.plusHours(1))
-					.values().stream()
-					.flatMap(hourlyJobs -> hourlyJobs.values().stream())
-					.collect(Collectors.toList());
+		List<HourlyJobTotals> fourHourJobs = new ArrayList<>();
+		for (int i=0; i < 4; i++) 
+	    {  
+		    fourHourJobs.addAll(
+		            hourJobnameTotals.getOrDefault(hour.minusHours(i), Collections.emptyMap())
+		            .values());
+	    }
 		
 		double fourHourTotal = fourHourJobs.stream()
 				.collect(Collectors.summingDouble(HourlyJobTotals::getCPTime));
