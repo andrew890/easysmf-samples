@@ -49,51 +49,48 @@ public class SmfDeDup
     	
     	Map<Integer, RecordStats> duplicatesByType = new HashMap<>(); 
     	
-        try (SmfRecordReader reader = SmfRecordReader.fromStream(new FileInputStream(args[0])))                
-        {       
-        	try (SmfRecordWriter writer = args.length > 1 ? 
-        			SmfRecordWriter.fromStream(new FileOutputStream(args[1])) : null)
-        	{
-	        	try (SmfRecordWriter dupwriter = args.length > 2 ? 
-	        			SmfRecordWriter.fromStream(new FileOutputStream(args[2])) : null)
-	        	{
-		        	int in = 0;
-		        	int out = 0;
-		        	int dups = 0;
-		            for (SmfRecord record : reader)
-		            {
-		            	in++;
-		                if (recordHashes.add(new BigInteger(sha256.digest(record.getBytes()))))
-		                {
-		                	// new hash, not a duplicate
-		                	if (writer != null) // if we have an output file for deduplicated records
-		                	{
-		                		out++;
-		                		writer.write(record);
-		                	}
-		                }
-		                else
-		                {
-		                	// hash was already in Set i.e. duplicate record
-		                	dups++;
-		                	if (dupwriter != null) // if we have an output file for duplicate records
-		                	{
-		                		dupwriter.write(record);
-		                	}
-		                	duplicatesByType
-		                		.computeIfAbsent(record.recordType(), key -> new RecordStats(record.recordType()))
-		                		.count(record);
-		                }
-		            }
-		            System.out.format("Finished, %d records in, %d records out, %d duplicates.%n", in, out, dups);
-		            
-		            System.out.format("%nDuplicates by type:%n");
-		            duplicatesByType.values().stream()
-		            	.sorted(Comparator.comparing(RecordStats::getRecordtype))
-		            	.forEachOrdered(entry -> System.out.format("%4d : %8d%n", entry.getRecordtype(), entry.getCount()));
-	        	}
-        	}
-        }
+        try (
+        	SmfRecordReader reader = SmfRecordReader.fromName(args[0]);                
+			SmfRecordWriter writer = args.length > 1 ? SmfRecordWriter.fromName(args[1]) : null;
+			SmfRecordWriter dupwriter = args.length > 2 ? SmfRecordWriter.fromName(args[2]) : null;
+        	)		
+    	{
+        	int in = 0;
+        	int out = 0;
+        	int dups = 0;
+            for (SmfRecord record : reader)
+            {
+            	in++;
+                if (recordHashes.add(new BigInteger(sha256.digest(record.getBytes()))))
+                {
+                	// new hash, not a duplicate
+                	if (writer != null) // if we have an output file for deduplicated records
+                	{
+                		out++;
+                		writer.write(record);
+                	}
+                }
+                else
+                {
+                	// hash was already in Set i.e. duplicate record
+                	dups++;
+                	if (dupwriter != null) // if we have an output file for duplicate records
+                	{
+                		dupwriter.write(record);
+                	}
+                	duplicatesByType
+                		.computeIfAbsent(record.recordType(), key -> new RecordStats(record.recordType()))
+                		.count(record);
+                }
+            }
+            System.out.format("Finished, %d records in, %d records out, %d duplicates.%n", in, out, dups);
+            
+            System.out.format("%nDuplicates by type:%n");
+            duplicatesByType.values().stream()
+            	.sorted(Comparator.comparing(RecordStats::getRecordtype))
+            	.forEachOrdered(entry -> System.out.format("%4d : %8d%n", entry.getRecordtype(), entry.getCount()));
+    	}
+
         catch (Exception e)
         {
         	printUsage();
