@@ -34,11 +34,10 @@ public class sample6
         Map<String, ProgramStatistics> aPrograms = new HashMap<String, ProgramStatistics>();
         Map<String, ProgramStatistics> bPrograms = new HashMap<String, ProgramStatistics>();
 
-        // If we received no arguments, open DD INPUT
-        // otherwise use the argument as a file name.
-        try (SmfRecordReader reader = args.length == 0 ? 
-            SmfRecordReader.fromDD("INPUT") :
-            SmfRecordReader.fromName(args[0]))
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+        
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0])) 
         {
         	// SMF 30 subtype 4 = Step End records
         	reader.include(30, 4);

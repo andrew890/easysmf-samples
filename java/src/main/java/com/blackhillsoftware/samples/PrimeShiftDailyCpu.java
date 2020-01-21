@@ -39,10 +39,11 @@ public class PrimeShiftDailyCpu
             > dailyCpuStatistics = new HashMap<LocalDate, Map<String, Map<String, List<Duration>>>>();
         
         // Read and process the data        
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromName(args[0])) 
+        
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+        
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0])) 
         {  
             reader
                 .include(70,1)

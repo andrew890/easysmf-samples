@@ -9,9 +9,14 @@ public class Db2Select
 	public static void main(String[] args) throws IOException 
 	{
         int in = 0;
-        int out = 0;        
-        try (SmfRecordReader reader = SmfRecordReader.fromDD("INPUT");
-        	 SmfRecordWriter writer = SmfRecordWriter.fromDD("OUTPUT");)                
+        int out = 0;
+        
+        // SmfRecordReader.fromName(...) and SmfRecordWriter.fromName(...) accept
+        // a filename, a DD name in the format //DD:DDNAME or MVS dataset name 
+        // in the form //'DATASET.NAME'
+        
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]);
+        	 SmfRecordWriter writer = SmfRecordWriter.fromName(args[1]);)                
         { 
             reader.include(100);
             reader.include(101);

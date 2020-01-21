@@ -16,15 +16,12 @@ public class FilterDb2
     
     public static void main(String[] args) throws IOException
     {
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromStream(new FileInputStream(args[0]));
-             SmfRecordWriter writer = 
-                args.length == 0 ?
-                SmfRecordWriter.fromDD("OUTPUT") :
-                SmfRecordWriter.fromStream(new FileOutputStream(args[1])); 
-            )                
+        // SmfRecordReader.fromName(...) and SmfRecordWriter.fromName(...) accept
+        // a filename, a DD name in the format //DD:DDNAME or MVS dataset name 
+        // in the form //'DATASET.NAME'
+        
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]);
+        	 SmfRecordWriter writer = SmfRecordWriter.fromName(args[1]);)                             
         {   
             int out = 0;
             reader.include(100);

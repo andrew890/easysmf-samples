@@ -15,10 +15,10 @@ public class CicsFileStatistics
         Map<String, Map<String, FileData>> applids = 
                 new HashMap<String, Map<String, FileData>>();
 
-        try (SmfRecordReader reader = 
-                args.length == 0 ? 
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromName(args[0])) 
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+        
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0])) 
         {
             reader.include(110, Smf110Record.SMFSTSTY);
             for (SmfRecord record : reader) 

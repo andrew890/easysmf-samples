@@ -37,7 +37,7 @@
 //* Run a Java program under JZOS Batch Launcher
 //*
 //G        EXEC PGM=JVMLDM80,REGION=0M,
-//   PARM='/ &CLASS'
+//   PARM='/ &CLASS //DD:INPUT'
 //*
 //STEPLIB  DD DISP=SHR,DSN=&JZOSLIB
 //*

@@ -1,6 +1,5 @@
 package com.blackhillsoftware.samples;
                                                                
-import java.io.FileInputStream;
 import java.io.IOException;                                                                     
 
 import com.blackhillsoftware.smf.SmfRecord;                                                     
@@ -21,10 +20,10 @@ public class db2sample
         int linesPerPage = 55;
         int linesOnPage = 0;
         
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromStream(new FileInputStream(args[0])))                
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+        
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))                
         { 
             reader.include(101);
             writeHeadings();

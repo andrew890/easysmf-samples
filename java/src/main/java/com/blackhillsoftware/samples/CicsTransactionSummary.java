@@ -22,10 +22,10 @@ public class CicsTransactionSummary
         int noDictionary = 0;
         int txCount = 0;
 
-        try (SmfRecordReader reader = 
-                args.length == 0 ? 
-                SmfRecordReader.fromDD("INPUT") :
-                    SmfRecordReader.fromName(args[0])) 
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+        
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0])) 
         {     
             reader.include(110, Smf110Record.SMFMNSTY);
             for (SmfRecord record : reader) 

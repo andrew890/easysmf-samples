@@ -28,14 +28,15 @@ public class Peak4HRAJobs {
     				HourlyJobTotals > > > systemHourJobnameTotals 
     					= new HashMap<String, Map<LocalDateTime, Map<String, HourlyJobTotals>>>();
     	
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromName(args[0])                
-                		.include(70,1)
-                		.include(30,2)
-                		.include(30,3))
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))
         { 
+        	reader.include(70,1)
+	    		.include(30,2)
+	    		.include(30,3);
+        	
             for (SmfRecord record : reader)                                                     
             {
             	switch (record.recordType())

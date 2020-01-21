@@ -8,18 +8,20 @@ Various CPU times are extracted and printed from the Processor Accounting sectio
 
 #### Reading SMF Data
 
-SMF Records are read using the SmfRecordReader class. This class implements AutoCloseable and should be used in a **try-with-resources** block so it is automaticaly closed before the program exits.
+SMF Records are read using the SmfRecordReader class. This class implements AutoCloseable and should be used in a **try-with-resources** block so it is automatically closed before the program exits.
 
-The samples are set up so that they can run as a z/OS batch job under the JZOS Batch Launcher and read from a DD, or on another platform (Windows, Linux, or z/OS BPXBATCH) with the input file name passed as a command line argument to the program.
+The samples can run as a z/OS batch job under the JZOS Batch Launcher reading from a JCL DD, or on another platform (Windows, Linux, or z/OS BPXBATCH) with the input source passed as a command line argument to the program.
 
-If there are no command line arguments, the program attempts to open the DD **INPUT**. If there are command line arguments, the first argument is used as a file name for the SmfRecordReader.  
-   
+The first command line argument is used as a name to create the SmfRecordReader. Different name formats are used for different types of input:  
+
+|                        |                            |
+|------------------------|----------------------------|
+| `//DD:DDNAME`          | Open a preallocated DDNAME |
+| `//'MVS.DATASET.NAME'` | Open a MVS dataset by name |
+| Anything else          | Open a file name           |
 
 ```
-try (SmfRecordReader reader = 
-         args.length == 0 ?
-              SmfRecordReader.fromDD("INPUT") :
-              SmfRecordReader.fromName(args[0])) 
+try (SmfRecordReader reader = SmfRecordReader.fromName(args[0])) 
 {
     ...                                                                          
 }

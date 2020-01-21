@@ -11,7 +11,7 @@ SMF records are read using a [SmfRecordReader](https://static.blackhillsoftware.
 You can interate or stream from the SmfRecordReader to get [SmfRecord](https://static.blackhillsoftware.com/easysmf/javadoc/com/blackhillsoftware/smf/SmfRecord.html)s. The SmfRecord class has the basic attributes common to all SMF records, e.g. recordType(). Once you know the record type you can create the specialized SMF record from the base SMF record:
 
 ```
-try (SmfRecordReader reader = SmfRecordReader.fromDD("INPUT"))
+try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))
 {        	
     for (SmfRecord record : reader)
     {

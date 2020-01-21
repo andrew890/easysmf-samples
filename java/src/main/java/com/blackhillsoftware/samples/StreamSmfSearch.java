@@ -1,6 +1,5 @@
 package com.blackhillsoftware.samples;
                                                                
-import java.io.FileInputStream;
 import java.io.IOException;                                                                     
 import com.blackhillsoftware.smf.SmfRecordReader;
 import com.blackhillsoftware.smf.smf15.Smf15Record;
@@ -8,11 +7,11 @@ import com.blackhillsoftware.smf.smf15.Smf15Record;
 public class StreamSmfSearch                                                                            
 {                                                                                               
     public static void main(String[] args) throws IOException                                   
-    {                                                                                           
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromStream(new FileInputStream(args[0])))                
+    {                                 
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))                
         { 
             long found = reader.include(15)
             	.stream()
