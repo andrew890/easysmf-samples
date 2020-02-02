@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.blackhillsoftware.easysmfje;
 
 import java.io.IOException;
 

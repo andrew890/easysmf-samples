@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.db2;
 
 import java.io.IOException;
 import com.blackhillsoftware.smf.*;

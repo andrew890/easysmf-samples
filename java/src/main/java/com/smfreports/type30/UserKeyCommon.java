@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.type30;
 
 import java.io.*;
 

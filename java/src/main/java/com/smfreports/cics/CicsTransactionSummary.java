@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.cics;
 
 import java.io.*;
 import java.time.*;
