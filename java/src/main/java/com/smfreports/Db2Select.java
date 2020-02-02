@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
 
 import java.io.IOException;
 import com.blackhillsoftware.smf.*;
@@ -8,6 +8,13 @@ public class Db2Select
 {
 	public static void main(String[] args) throws IOException 
 	{
+        if (args.length < 3)
+        {
+            System.out.println("Usage: Db2Select <input-name> <output-name> <qwhcopid-value>");
+            System.out.println("<input/output-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+		
         int in = 0;
         int out = 0;
         
@@ -28,7 +35,7 @@ public class Db2Select
             	case 100:
             		Smf100Record r100 = new Smf100Record(record);
             		if (r100.qwhc() != null 
-            			&& r100.qwhc().qwhcopid().equals("MYUSER"))
+            			&& r100.qwhc().qwhcopid().equals(args[2]))
             		{
             			writer.write(r100);
             			out ++;
@@ -37,7 +44,7 @@ public class Db2Select
             	case 101:
             		Smf101Record r101 = new Smf101Record(record);
             		if (r101.qwhc() != null 
-            			&& r101.qwhc().qwhcopid().equals("MYUSER"))
+            			&& r101.qwhc().qwhcopid().equals(args[2]))
             		{
             			writer.write(r101);
             			out++;

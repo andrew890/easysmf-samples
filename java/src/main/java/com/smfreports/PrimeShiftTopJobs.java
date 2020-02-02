@@ -29,17 +29,21 @@ public class PrimeShiftTopJobs
     
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: PrimeShiftTopJobs <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         // Create nested maps, DayOfWeek -> Jobname -> Job Data to collect information            
         Map<DayOfWeek, HashMap<String, JobData>> jobsByDay = new HashMap<DayOfWeek, HashMap<String, JobData>>();
 
-        // If we received no arguments, open DD INPUT
-        // otherwise use the first argument as the file 
-        // name to read.    
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromName(args[0])) 
-        {  
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))
+        { 
             reader
                 // collect data from subtype 2 interval, and subtype 3 last interval
                 .include(30, 2)

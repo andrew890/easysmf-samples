@@ -12,16 +12,22 @@ public class UnixSessionLeaders
 {
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: UnixSessionLeaders <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         // A map of Job Names to JobData entries to collect information about that
         // group of jobs.
 
         Map<IdentificationSection, JobData> jobs = new HashMap<IdentificationSection, JobData>();
 
-        // If we received no arguments, open DD INPUT
-        // otherwise use the argument as a file name.
-        try (SmfRecordReader reader = args.length == 0 ? 
-            SmfRecordReader.fromDD("INPUT") :
-            SmfRecordReader.fromName(args[0]))
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))                
         {
             for (SmfRecord r : reader.include(30, 5))
             {

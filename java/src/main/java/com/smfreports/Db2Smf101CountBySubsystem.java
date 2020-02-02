@@ -18,12 +18,20 @@ public class Db2Smf101CountBySubsystem {
 
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: Db2Smf101CountBySubsystem <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         Map<String, SubsystemInfo> subsystems = new HashMap<String, SubsystemInfo>();
         
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromName(args[0])) {
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))                
+        {
         	
         	reader.include(101);
         	

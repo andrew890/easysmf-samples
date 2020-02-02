@@ -13,23 +13,19 @@ public class SmfSearch
 {                                                                                               
     public static void main(String[] args) throws IOException                                   
     {                                       
-        if (args.length < 1 || args.length > 2)
+        if (args.length < 2)
         {
-            System.out.println("Usage: SmfSearch DATASET.NAME [input-file]");
-            System.out.println("If input-file is omitted DD INPUT will be used.");          
+            System.out.println("Usage: SmfSearch DATASET.NAME <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
             return;
         }
         
         String searchString = args[0];
 
-        // The first argument is the dataset name
-        // If we received only 1 argument, open DD INPUT
-        // otherwise use the second argument as the file 
-        // name to search.        
-        try (SmfRecordReader reader = 
-                args.length == 1 ?
-                        SmfRecordReader.fromDD("INPUT") :
-                        SmfRecordReader.fromName(args[1])) 
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[1]))
         { 
             reader.include(15)
                 .stream()

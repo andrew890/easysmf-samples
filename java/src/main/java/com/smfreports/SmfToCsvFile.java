@@ -8,15 +8,11 @@ import com.blackhillsoftware.smf.smf30.Smf30Record;
 public class SmfToCsvFile                                                                            
 {                                                                                               
     public static void main(String[] args) throws IOException                                   
-    {                                       
-        // If we received no arguments, open DD INPUT
-        // otherwise use the first argument as the file 
-        // name to read.
+    {                       	
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
     	
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                        SmfRecordReader.fromDD("INPUT") :
-                        SmfRecordReader.fromName(args[0]);
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]);
              FileWriter writer = new FileWriter("C:\\Users\\Andrew\\Desktop\\output.csv")) 
         { 
         	writer.write(String.format("%s,%s,%s,%s,%s,%s,%s,%n",

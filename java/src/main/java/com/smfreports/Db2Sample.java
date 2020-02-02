@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
                                                                
 import java.io.IOException;                                                                     
 
@@ -7,7 +7,7 @@ import com.blackhillsoftware.smf.SmfRecordReader;
 import com.blackhillsoftware.smf.db2.*;                                                                          
 import com.blackhillsoftware.smf.db2.section.Qwhc;
                                                                                                 
-public class db2sample                                                                            
+public class Db2Sample                                                                            
 {                                                                                               
     static final String columns = "%-8s %-12s %-8s %-8s %-8s %8s %-44s %-16s %-32s %-18s %n";
     static final String headingCols =
@@ -16,7 +16,14 @@ public class db2sample
     				"%n";
     
     public static void main(String[] args) throws IOException                                   
-    {                                                                                           
+    {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: Db2Sample <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+        
         int linesPerPage = 55;
         int linesOnPage = 0;
         

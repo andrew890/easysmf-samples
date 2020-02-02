@@ -19,44 +19,44 @@ public class RecordCount
 {
     public static void main(String[] args) throws IOException
     {
-        // Use a HashMap to keep the statistics
-        // The key is an Integer (4 bytes), the record type is shifted
-        // to the first 2 bytes, the subtype is in the second 2 bytes.
-        Map<Integer, RecordStats> statsMap = new HashMap<Integer, RecordStats>();
-        
-        // If we received no arguments, open DD INPUT
-        // otherwise use the first argument as the file 
-        // name to read.        
-        try (SmfRecordReader reader = args.length == 0 ?
-            SmfRecordReader.fromDD("INPUT") :
-            SmfRecordReader.fromName(args[0]))
+        if (args.length < 1)
         {
+            System.out.println("Usage: RecordCount <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
+        // Use nested Maps to keep the statistics
+    	// Keys are SMF record type and subtype
+        Map<Integer, Map<Integer, RecordStats>> statsMap = new HashMap<>();
+        
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))
+        { 
             for (SmfRecord record : reader)
             {
                 int type = record.recordType();
                 int subtype = record.hasSubtypes() ? record.subType() : 0;
-                Integer key = (type << 16) + subtype;
-                if (statsMap.containsKey(key)) 
-                {
-                    // Add to existing
-                    statsMap.get(key).add(record);
-                }
-                else
-                {
-                    // Insert new
-                    statsMap.put(key, new RecordStats(record));
-                } 
+                
+                
+            	statsMap.computeIfAbsent(type, key -> new HashMap<>())
+            		.computeIfAbsent(subtype, key -> new RecordStats(type, subtype))
+            		.add(record);
             }
         }
 
         writeReport(statsMap);
     }
 
-    private static void writeReport(Map<Integer, RecordStats> statsMap)
+    private static void writeReport(Map<Integer, Map<Integer, RecordStats>> statsMap)
     {
         // get the total bytes from all record types
-        long totalbytes = statsMap.entrySet().stream()
-            .mapToLong(entry -> entry.getValue().getBytes())
+        long totalbytes = statsMap.entrySet().stream() 		// get Map entries (keyed by SMF type)
+            .map(entry -> entry.getValue()) 				// get inner Maps (keyed by subtype)
+            .flatMap(entry -> entry.entrySet().stream()) 	// flatten Map contents into one stream 		
+            .mapToLong(entry -> entry.getValue().getBytes()) // Value is RecordStats entry 
             .sum();
 
         // write heading
@@ -64,9 +64,10 @@ public class RecordCount
             "Type", "Subtype", "Records", "MB", "Pct", "Min", "Max", "Avg");
 
         // write data
-        statsMap.entrySet().stream()
-            .map(entry -> entry.getValue())
-
+        statsMap.entrySet().stream() 					 // get Map entries (keyed by SMF type)
+            .map(entry -> entry.getValue())				 // get inner Maps (keyed by subtype)
+            .flatMap(entry -> entry.entrySet().stream()) // flatten Map contents into one stream 
+            .map(entry -> entry.getValue()) 			 // get value (RecordStats entry)
             // sort by total bytes descending
             .sorted(Comparator.comparingLong(RecordStats::getBytes).reversed())
 
@@ -93,18 +94,13 @@ public class RecordCount
     private static class RecordStats
     {
         /**
-         * Initialize statistics for a new record type/subtype combination
-         * @param record The first record of this group 
+         * Initialize statistics for a new record type/subtype combination.
+         * 
          */
-        RecordStats(SmfRecord record)
+        RecordStats(int recordType, int subType)
         {
-            this.recordtype = record.recordType();
-            this.subtype = record.hasSubtypes() ? record.subType() : 0;;
-            this.count = 1;
-            int length = record.recordLength();
-            bytes = length;
-            minLength = length;
-            maxLength = length;
+            this.recordtype = recordType;
+            this.subtype = subType;
         }
 
         /**
@@ -123,16 +119,16 @@ public class RecordCount
 
         private int  recordtype;
         private int  subtype;
-        private int  count;
-        private long bytes;
-        private int  maxLength;
-        private int  minLength;
+        private int  count = 0;
+        private long bytes = 0;
+        private int  maxLength = 0;
+        private int  minLength = 0;
 
-        int getRecordtype() { return recordtype; }
-        int getSubtype() { return subtype; }
-        int getCount() { return count; }
-        long getBytes() { return bytes; }
-        int getMaxLength() { return maxLength; }
-        int getMinLength() { return minLength; }    
+        int getRecordtype()	{ return recordtype; }
+        int getSubtype() 	{ return subtype; }
+        int getCount() 		{ return count; }
+        long getBytes() 	{ return bytes; }
+        int getMaxLength() 	{ return maxLength; }
+        int getMinLength()	{ return minLength; }    
     }
 }

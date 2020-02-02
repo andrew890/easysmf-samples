@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -15,6 +15,13 @@ public class PerformanceIndex
 {
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: PerformanceIndex <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         ArrayList<ServiceClassPeriod> highPI = new ArrayList<ServiceClassPeriod>();
         
         // SmfRecordReader.fromName(...) accepts a filename, a DD name in the

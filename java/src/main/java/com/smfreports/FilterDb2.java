@@ -1,7 +1,5 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import com.blackhillsoftware.smf.SmfRecord;
@@ -16,6 +14,13 @@ public class FilterDb2
     
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 2)
+        {
+            System.out.println("Usage: FilterDb2 <input-name> <output-name>");
+            System.out.println("<input/output-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         // SmfRecordReader.fromName(...) and SmfRecordWriter.fromName(...) accept
         // a filename, a DD name in the format //DD:DDNAME or MVS dataset name 
         // in the form //'DATASET.NAME'

@@ -7,12 +7,18 @@ public class JobsByJobClass {
 	
     public static void main(String[] args) throws IOException
     {
-        // If we received no arguments, open DD INPUT
-        // otherwise use the argument as a file name.
-        try (SmfRecordReader reader = args.length == 0 ? 
-            SmfRecordReader.fromDD("INPUT") :
-            SmfRecordReader.fromName(args[0]))
-        {    	       	
+        if (args.length < 1)
+        {
+            System.out.println("Usage: JobsByJobClass <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+        
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))                
+        {	       	
         	JobGroupReport.runReport(
         			"Job Class", 
         			x -> x.identificationSection().smf30cl8(), // job class

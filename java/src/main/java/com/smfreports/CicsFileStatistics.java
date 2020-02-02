@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
 
 import java.io.*;
 import java.util.*;
@@ -12,6 +12,13 @@ public class CicsFileStatistics
 {
     public static void main(String[] args) throws IOException 
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: CicsFileStatistics <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         Map<String, Map<String, FileData>> applids = 
                 new HashMap<String, Map<String, FileData>>();
 

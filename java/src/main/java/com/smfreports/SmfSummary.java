@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
 
 import java.io.*;
 import java.util.*;
@@ -9,6 +9,13 @@ public class SmfSummary
 {
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: SmfSummary <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         Map<String, ProgramData> programs = new HashMap<String, ProgramData>();
 
         // SmfRecordReader.fromName(...) accepts a filename, a DD name in the

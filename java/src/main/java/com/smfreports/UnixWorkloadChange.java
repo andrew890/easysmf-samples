@@ -3,7 +3,6 @@ package com.smfreports;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.blackhillsoftware.smf.*;
@@ -40,6 +39,12 @@ public class UnixWorkloadChange
 {
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: UnixWorkloadChange <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
 
         /*
          * Use the identification section as a key to accumulate multiple records from
@@ -47,13 +52,10 @@ public class UnixWorkloadChange
          */
         Map<IdentificationSection, JobData> jobs = new HashMap<IdentificationSection, JobData>();
 
-        /*
-         * If we received no arguments, open DD INPUT otherwise use the argument as a
-         * file name.
-         */
-        try (SmfRecordReader reader = args.length == 0 ? 
-            SmfRecordReader.fromDD("INPUT") :
-            SmfRecordReader.fromName(args[0]))
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))                
         {
             for (SmfRecord r : reader.include(30, 5))
             {

@@ -14,7 +14,7 @@ The samples can run as a z/OS batch job under the JZOS Batch Launcher reading fr
 
 The first command line argument is used as a name to create the SmfRecordReader. Different name formats are used for different types of input:  
 
-|                        |                            |
+| Syntax                 | File or dataset            |
 |------------------------|----------------------------|
 | `//DD:DDNAME`          | Open a preallocated DDNAME |
 | `//'MVS.DATASET.NAME'` | Open a MVS dataset by name |

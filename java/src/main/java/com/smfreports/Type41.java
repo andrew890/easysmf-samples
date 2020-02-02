@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -14,7 +14,13 @@ public class Type41
 {
     public static void main(String[] args) throws IOException
     {
-
+        if (args.length < 1)
+        {
+            System.out.println("Usage: Type41 <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+        
     	List<VlfEntry> vlfStatistics = new ArrayList<VlfEntry>();
 
         // SmfRecordReader.fromName(...) accepts a filename, a DD name in the

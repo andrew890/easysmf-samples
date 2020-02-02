@@ -1,4 +1,4 @@
-package com.blackhillsoftware.samples;
+package com.smfreports;
                                                                
 import java.io.IOException;                                                                     
 import java.time.*;
@@ -8,10 +8,17 @@ import com.blackhillsoftware.smf.SmfRecordReader;
 import com.blackhillsoftware.smf.smf30.ProcessorAccountingSection;                              
 import com.blackhillsoftware.smf.smf30.Smf30Record;                                             
                                                                                                 
-public class cpuGt60                                                                            
+public class CpuGt60                                                                            
 {                                                                                               
     public static void main(String[] args) throws IOException                                   
-    {                       
+    {   
+        if (args.length < 1)
+        {
+            System.out.println("Usage: CpuGt60 <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+        
         // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
         // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
     	

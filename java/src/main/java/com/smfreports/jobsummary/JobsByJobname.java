@@ -14,16 +14,22 @@ public class JobsByJobname
 {
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: JobsByJobname <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         // A map of Job Names to JobData entries to collect information about each
         // group of jobs.
 
         Map<String, JobData> jobs = new HashMap<String, JobData>();
 
-        // If we received no arguments, open DD INPUT
-        // otherwise use the argument as a file name.
-        try (SmfRecordReader reader = args.length == 0 ? 
-            SmfRecordReader.fromDD("INPUT") :
-            SmfRecordReader.fromName(args[0]))
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))                
         {
         	// SMF 30 subtype 5 = Job End records
         	reader.include(30,5);

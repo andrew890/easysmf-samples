@@ -39,6 +39,13 @@ import com.blackhillsoftware.smf.smf70.*;
 public class Peak4HRAJobs {
     public static void main(String[] args) throws IOException                                   
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: Peak4HRAJobs <input-name>");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+    	
         // Create nested Maps so we have a hierarchy of 
         // System -> Hour -> SMF70LAC
         Map< String, 
@@ -55,14 +62,11 @@ public class Peak4HRAJobs {
         systemHourJobnameTotals 
                         = new HashMap<String, Map<LocalDateTime, Map<String, JobnameTotals>>>();
         
-        // If we received no arguments, open DD INPUT.
-        // Otherwise use the first argument as the file 
-        // name to read.
-        try (SmfRecordReader reader = 
-                args.length == 0 ?
-                SmfRecordReader.fromDD("INPUT") :
-                SmfRecordReader.fromName(args[0]))
-        {
+        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+    	
+        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0]))
+        { 
         	reader
         		.include(70,1)
         		.include(30,2)
