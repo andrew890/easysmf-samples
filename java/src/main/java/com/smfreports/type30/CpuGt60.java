@@ -27,7 +27,7 @@ public class CpuGt60
             reader.include(30, 5);
             for (SmfRecord record : reader)                                                     
             {                                                                                   
-                Smf30Record r30 = new Smf30Record(record);                                      
+                Smf30Record r30 = Smf30Record.from(record);                                      
                 for (ProcessorAccountingSection procAcct 
                         : r30.processorAccountingSections())   
                 {                                                                               

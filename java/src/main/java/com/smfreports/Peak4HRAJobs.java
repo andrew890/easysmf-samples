@@ -36,7 +36,8 @@ import com.blackhillsoftware.smf.smf70.*;
  * 
  */
 
-public class Peak4HRAJobs {
+public class Peak4HRAJobs 
+{
     public static void main(String[] args) throws IOException                                   
     {
         if (args.length < 1)
@@ -51,7 +52,7 @@ public class Peak4HRAJobs {
         Map< String, 
             Map< LocalDateTime, 
                 HourlyLac > > 
-        systemHourLAC 
+        	systemHourLAC 
                     = new HashMap<String, Map<LocalDateTime, HourlyLac>>();
         
         // System -> Hour -> Jobname -> Totals
@@ -59,7 +60,7 @@ public class Peak4HRAJobs {
             Map< LocalDateTime, 
                 Map< String, 
                     JobnameTotals > > > 
-        systemHourJobnameTotals 
+        	systemHourJobnameTotals 
                         = new HashMap<String, Map<LocalDateTime, Map<String, JobnameTotals>>>();
         
         // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
@@ -78,7 +79,7 @@ public class Peak4HRAJobs {
                 switch (record.recordType())
                 {
                 case 70:
-                    Smf70Record r70 = new Smf70Record(record);
+                    Smf70Record r70 = Smf70Record.from(record);
                     systemHourLAC
                         // computeIfAbsent creates a new entry if the key is not found,
                         // otherwise returns the existing entry
@@ -90,7 +91,7 @@ public class Peak4HRAJobs {
                         .add(r70); // Add the record to the HourlyLac entry for this System:Time
                     break;
                 case 30:    
-                        Smf30Record r30 = new Smf30Record(record);
+                        Smf30Record r30 = Smf30Record.from(record);
                         systemHourJobnameTotals
                             // System
                             .computeIfAbsent(r30.system(), system -> new HashMap<LocalDateTime, Map<String, JobnameTotals>>())
@@ -106,66 +107,67 @@ public class Peak4HRAJobs {
                 }
             }
         }
-        writeReport(systemHourLAC, systemHourJobnameTotals);
+        
+        List<String> systems = systemHourLAC.keySet().stream()
+        		.sorted()
+        		.collect(Collectors.toList());
+        		
+        for (String system: systems)
+        {
+            writeReport(system, systemHourLAC.get(system), systemHourJobnameTotals.get(system));
+        }
+        
     }
 
     private static void writeReport(
-            Map<String, Map<LocalDateTime, HourlyLac>> systemHourLAC,
-            Map<String, Map<LocalDateTime, Map<String, JobnameTotals>>> systemHourJobnameTotals) 
+    		String system,
+            Map<LocalDateTime, HourlyLac> hourlyLAC,
+            Map<LocalDateTime, Map<String, JobnameTotals>> hourlyJobTotals) 
     {
-        systemHourLAC.entrySet().stream() // Information from each system
-            // Sort by system name
-            .sorted((systemAinfo, systemBinfo) -> systemAinfo.getKey().compareTo(systemBinfo.getKey()))
-            // For each system
-            .forEachOrdered(systemInfo ->
+        System.out.format("%n%nSystem: %s%n", system); // header
+    
+        hourlyLAC.entrySet().stream() // Information for each hour
+            // Sort entries
+            // comparing the average LAC for the hour 
+            // hourA,hourB reversed to sort descending
+            .sorted((hourA,hourB)  
+                    -> Long.compare(hourB.getValue().hourAverageLAC(), hourA.getValue().hourAverageLAC()))
+            .limit(5) // take the first (top) 5 entries
+            .forEachOrdered(hourEntry -> // for each of the top hours
             {
-                System.out.format("%n%nSystem: %s%n", systemInfo.getKey()); // header
-            
-                systemInfo.getValue().entrySet().stream() // Information for each hour
-	                // Sort entries
-	                // comparing the average LAC for the hour 
-	                // hourA,hourB reversed to sort descending
-                    .sorted((hourA,hourB)  
-                            -> Long.compare(hourB.getValue().hourAverageLAC(), hourA.getValue().hourAverageLAC()))
-                    .limit(5) // take the first (top) 5 entries
-                    .forEachOrdered(hourEntry -> // for each of the top hours
-                    {
-                        // write information about the hour
-                        LocalDateTime hour = hourEntry.getKey();
-                        long fourHourMSU = hourEntry.getValue().hourAverageLAC();
+                // write information about the hour
+                LocalDateTime hour = hourEntry.getKey();
+                long fourHourMSU = hourEntry.getValue().hourAverageLAC();
 
-                        System.out.format("%n    %-19s %21s%n", "Hour","4H MSU");
-                    
-                        System.out.format("    %10s %8s %21d%n", 
-                                hour.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                                hour.format(DateTimeFormatter.ISO_LOCAL_TIME),
-                                fourHourMSU);
-                        Map<LocalDateTime, Map<String, JobnameTotals>> hourJobname 
-                        	= systemHourJobnameTotals.get(systemInfo.getKey());
-                        // Get jobs for previous 4 hours
-                        List<JobnameTotals> fourHourJobs = new ArrayList<>();       
-                        for (int i = 0; i < 4; i++)
-                        {
-                            if (hourJobname.containsKey(hour.minusHours(i)))
-                            {
-                                fourHourJobs.addAll(hourJobname.get(hour.minusHours(i)).values());
-                            }
-                        }
-                                       
-                        // Calculate total CP time for all jobs during the 4 hours
-                        double fourHourTotalCpTime = 
-                        	fourHourJobs
-                        		.stream()
-                                .collect(Collectors.summingDouble(JobnameTotals::getCpTime));
-                        
-                        reportTopCpJobs(fourHourMSU, fourHourJobs, fourHourTotalCpTime);
-                        reportTopZiipOnCpJobs(fourHourMSU, fourHourJobs, fourHourTotalCpTime);    
-                    });
-            }
-            );
+                System.out.format("%n    %-19s %21s%n", "Hour","4H MSU");
+            
+                System.out.format("    %10s %8s %21d%n", 
+                        hour.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        hour.format(DateTimeFormatter.ISO_LOCAL_TIME),
+                        fourHourMSU);
+
+                // Get jobs for previous 4 hours
+                List<JobnameTotals> fourHourJobs = new ArrayList<>();       
+                for (int i = 0; i < 4; i++)
+                {
+                    if (hourlyJobTotals.containsKey(hour.minusHours(i)))
+                    {
+                        fourHourJobs.addAll(hourlyJobTotals.get(hour.minusHours(i)).values());
+                    }
+                }
+                               
+                // Calculate total CP time for all jobs during the 4 hours
+                double fourHourTotalCpTime = 
+                	fourHourJobs
+                		.stream()
+                        .collect(Collectors.summingDouble(JobnameTotals::getCpTime));
+                
+                report4HourTopCpJobs(fourHourMSU, fourHourJobs, fourHourTotalCpTime);
+                report4HourTopZiipOnCpJobs(fourHourMSU, fourHourJobs, fourHourTotalCpTime);    
+            });
     }
 
-	private static void reportTopCpJobs(long msuvalue, List<JobnameTotals> fourHourJobs, double fourHourTotalCpTime) {
+	private static void report4HourTopCpJobs(long msuvalue, List<JobnameTotals> fourHourJobs, double fourHourTotalCpTime) {
 		// Heading
         System.out.format("%n        %-12s %11s %12s%n", 
         		"Jobname", "CPU%", "Est. MSU");
@@ -195,7 +197,7 @@ public class Peak4HRAJobs {
                         jobCpTime.getValue() / fourHourTotalCpTime * msuvalue));
 	}
 
-	private static void reportTopZiipOnCpJobs(long msuvalue, List<JobnameTotals> fourHourJobs, double fourHourTotalCpTime) {
+	private static void report4HourTopZiipOnCpJobs(long msuvalue, List<JobnameTotals> fourHourJobs, double fourHourTotalCpTime) {
 		// Heading
         System.out.format("%n%n        %-12s %11s %12s%n", 
         		"Jobname", "zIIP On CP%", "Est. MSU");

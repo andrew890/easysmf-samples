@@ -29,7 +29,7 @@ public class SmfSearch
         { 
             reader.include(15)
                 .stream()
-                .map(record -> new Smf15Record(record))
+                .map(record -> Smf15Record.from(record))
                 .filter(r15 -> r15.smfjfcb1().jfcbdsnm().equals(searchString))
                 .limit(1000)
                 .forEach(r15 -> 

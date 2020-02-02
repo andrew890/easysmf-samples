@@ -49,7 +49,7 @@ public class UserKeyCommon
             int userKeyCommonFound = 0;
             for (SmfRecord record : reader.include(30))
             {
-                Smf30Record r30 = new Smf30Record(record);
+                Smf30Record r30 = Smf30Record.from(record);
                 if (r30.storageSection() != null)
                 {
                     if (!foundAuditEnabled && r30.storageSection().smf30UserKeyCommonAuditEnabled())

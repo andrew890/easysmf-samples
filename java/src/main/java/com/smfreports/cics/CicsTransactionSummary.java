@@ -36,7 +36,7 @@ public class CicsTransactionSummary
             reader.include(110, Smf110Record.SMFMNSTY);
             for (SmfRecord record : reader) 
             {
-                Smf110Record r110 = new Smf110Record(record);
+                Smf110Record r110 = Smf110Record.from(record);
                 
                 if (r110.haveDictionary()) 
                 {

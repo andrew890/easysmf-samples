@@ -30,7 +30,7 @@ public class CicsFileStatistics
             reader.include(110, Smf110Record.SMFSTSTY);
             for (SmfRecord record : reader) 
             {
-                Smf110Record r110 = new Smf110Record(record);
+                Smf110Record r110 = Smf110Record.from(record);
 
                 Map<String, FileData> applidFiles = 
                         applids.computeIfAbsent(r110.stProductSection().smfstprn(),

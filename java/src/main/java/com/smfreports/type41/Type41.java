@@ -31,7 +31,7 @@ public class Type41
             reader.include(41, 3);
             for (SmfRecord record : reader)
             {
-                Smf41Record r41 = new Smf41Record(record);
+                Smf41Record r41 = Smf41Record.from(record);
                 for (VlfStatisticsDataSection vlfSection : r41.vlfStatisticsDataSections())
                 {
                     vlfStatistics.add(new VlfEntry(r41, vlfSection));                   

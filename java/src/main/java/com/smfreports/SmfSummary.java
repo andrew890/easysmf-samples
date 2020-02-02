@@ -26,7 +26,7 @@ public class SmfSummary
             reader
                 .include(30, 4)
                 .stream()
-                .map(record -> new Smf30Record(record))
+                .map(record -> Smf30Record.from(record))
                 .filter(r30 -> r30.completionSection() != null 
                     && !r30.completionSection().smf30flh()) // not flushed
                 .filter(r30 -> r30.header().smf30wid().equals("JES2"))

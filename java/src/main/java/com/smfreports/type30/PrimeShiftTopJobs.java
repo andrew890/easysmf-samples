@@ -52,7 +52,7 @@ public class PrimeShiftTopJobs
                 .filter(record -> primeDays.contains(record.smfDate().getDayOfWeek())
                     && record.smfTime().isAfter(primeStartTime)
                     && record.smfTime().isBefore(primeEndTime))
-                .map(record -> new Smf30Record(record))
+                .map(record -> Smf30Record.from(record))
                 .forEach(r30 ->
                 {
                     jobsByDay

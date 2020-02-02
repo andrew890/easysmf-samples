@@ -65,7 +65,7 @@ public class PrimeShiftDailyCpu
                      && primedays.contains(record.smfDate().getDayOfWeek())
                      && record.smfTime().isAfter(primestart)
                      && record.smfTime().isBefore(primeend))
-                .map(record -> new Smf70Record(record))
+                .map(record -> Smf70Record.from(record))
                 .forEach(r70 ->
                 {
                     List<PrismLogicalProcessorDataSection> lpSections = r70.prismLogicalProcessorDataSections();

@@ -1,4 +1,4 @@
-package com.smfreports.jobsummary;
+package com.smfreports.type30;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,7 +36,7 @@ public class JobsByJobname
         	
         	for (SmfRecord record : reader)
         	{
-        		Smf30Record r30 = new Smf30Record(record); 
+        		Smf30Record r30 = Smf30Record.from(record); 
         	
                 // Optionally filter here, e.g. to include only jobs running in job class A:
                 // if (r30.identificationSection().smf30cl8().equals("A"))

@@ -22,7 +22,7 @@ public class StreamSmfSearch
         { 
             long found = reader.include(15)
             	.stream()
-            	.map(record -> new Smf15Record(record))
+            	.map(record -> Smf15Record.from(record))
             	.filter(r15 -> r15.smfjfcb1().jfcbdsnm().equals("SYS1.PARMLIB"))
             	.map(r15 -> 
             	{

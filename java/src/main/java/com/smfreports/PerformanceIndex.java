@@ -33,7 +33,7 @@ public class PerformanceIndex
             {
                 if (record.recordType() == 72 && record.subType() == 3)
                 {
-                    Smf72Record r72 = new Smf72Record(record);
+                    Smf72Record r72 = Smf72Record.from(record);
     
                     // skip report classes
                     if (!r72.workloadManagerControlSection().r723mrcl())
