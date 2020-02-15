@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.r4ha;
 
 import java.io.*;
 import java.time.*;
@@ -36,7 +36,7 @@ import com.blackhillsoftware.smf.smf70.*;
  * 
  */
 
-public class Peak4HRAJobs 
+public class PeakR4HAJobs 
 {
     public static void main(String[] args) throws IOException                                   
     {

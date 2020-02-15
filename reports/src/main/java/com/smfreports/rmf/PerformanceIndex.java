@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.rmf;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.dataset;
                                                                
 import java.io.IOException;                                                                     
 import com.blackhillsoftware.smf.SmfRecordReader;
