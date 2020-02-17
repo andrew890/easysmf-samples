@@ -30,9 +30,10 @@ public class SmfTextSearch
         { 
             reader
             .stream()
-            .filter(record -> record.recordType() != 14) // Exclude type 14 (read dataset)
+            // Optionally filter records 
+            //.filter(record -> record.recordType() != 14) // Exclude type 14 (read dataset)
             .filter(record -> record.toString().contains(searchString))
-            .limit(1000)
+            .limit(10000)
             .forEach(record -> 
                 // print record time, system, type and subtype
                 System.out.format("%-24s %s Type: %3d Subtype: %3s%n",                                  

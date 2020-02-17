@@ -100,14 +100,12 @@ public class sample6
             "EXCP", "zIIP%", "zIIP on CP%", "CPU ms/IO");
 
         // Take entries in Group A
-        aPrograms.entrySet().stream()
-        	.map(entry -> entry.getValue())
+        aPrograms.values().stream()
               
             // Ignore any entries where there is no Group B equivalent 
             .filter(aProgramsEntry -> bPrograms.containsKey(aProgramsEntry.getName()))
             
-            // sort by CP Time
-            // reversing x and y in the comparison so sort is descending
+            // sort by CP Time descending
             .sorted(comparing(ProgramStatistics::getCpTime).reversed())
             
             .limit(100) // take top 100

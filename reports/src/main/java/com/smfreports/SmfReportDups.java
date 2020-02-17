@@ -45,20 +45,23 @@ public class SmfReportDups
     		printUsage();
     		System.exit(0);
     	}
-    	
+        
+    	// Use SHA-256 hashes to find duplicates
     	MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
     	Set<BigInteger> recordHashes = new HashSet<BigInteger>();
     	
     	// Map to count by SystemID->Minute
-    	Map< String, Map<LocalDateTime, RecordStats>> allByMinute = new HashMap<>();
+    	Map< String, Map<LocalDateTime, RecordStats>> bySystemByMinute = new HashMap<>();
     	
-    	// Map to Count by SystemID->Record Type->Minute 
-    	Map< String, Map<LocalDateTime, Map<Integer, RecordStats>>> byMinuteByType = new HashMap<>();
+    	// Map to count by SystemID->Record Type->Minute 
+    	Map< String, Map<LocalDateTime, Map<Integer, RecordStats>>> bySystemByMinuteByType = new HashMap<>();
     	   	
     	int in = 0;
     	int dups = 0;
     	try
     	{
+    	    // Multiple input file/datasets can be specified to find duplicates
+    	    // across files.
 	    	for (int i = 0; i < args.length; i++)
 	    	{
 		        try (SmfRecordReader reader = SmfRecordReader.fromName(args[i]))                
@@ -71,22 +74,28 @@ public class SmfReportDups
 		            			.truncatedTo(ChronoUnit.MINUTES);
 		            	Integer recordtype = record.recordType();
 		            	
-		            	RecordStats minuteStats = allByMinute
+		            	// get a stats entry for this system and minute
+		            	RecordStats minuteStats = bySystemByMinute
 		            			.computeIfAbsent(system, key -> new HashMap<>())
 		            			.computeIfAbsent(minute, key -> new RecordStats(null, minute));
 		            	
-		            	RecordStats minuteRecordTypeStats = byMinuteByType
+		            	
+		            	// get a stats entry for this system, minute and record type
+		            	RecordStats minuteRecordTypeStats = bySystemByMinuteByType
 		            			.computeIfAbsent(system, key -> new HashMap<>())
 		            			.computeIfAbsent(minute, key -> new HashMap<>())
 		            			.computeIfAbsent(recordtype, key -> new RecordStats(recordtype, minute));
 		            	
-		                if (recordHashes.add(new BigInteger(sha256.digest(record.getBytes()))))
+		                // Is is a duplicate of one already seen?
+		            	if (recordHashes.add(new BigInteger(sha256.digest(record.getBytes()))))
 		                {
+		                    // no
 		                	minuteStats.countUnique();
 		                	minuteRecordTypeStats.countUnique();
 		                }
 		                else
 		                {
+		                    // yes
 		                	dups++;
 		                	minuteStats.countDuplicate();
 		                	minuteRecordTypeStats.countDuplicate();
@@ -103,76 +112,109 @@ public class SmfReportDups
     	
         System.out.format("Finished, %d records in, %d duplicates.%n", in, dups);
         
-        List<String> systems = allByMinute.keySet().stream()
+        writeReport(bySystemByMinute, bySystemByMinuteByType);
+
+    }
+
+    private static void writeReport(
+            Map<String, Map<LocalDateTime, RecordStats>> bySystemByMinute,
+            Map<String, Map<LocalDateTime, Map<Integer, RecordStats>>> bySystemByMinuteByType) 
+    {
+        // get a list of all systems
+        List<String> systems = bySystemByMinute.keySet().stream()
         		.sorted()
         		.collect(Collectors.toList());
         
         for (String system : systems)
         {
-	        List<RecordStats> duplicateMinutes = allByMinute.get(system).values().stream()
+            // get entries by minute and by minute/recordtype for this system
+            
+            Map<LocalDateTime, RecordStats> byMinute = 
+                    bySystemByMinute.get(system);
+            
+	        Map<LocalDateTime, Map<Integer, RecordStats>> byMinuteByType = 
+	                bySystemByMinuteByType.get(system);
+	        
+            // Find minutes where duplicate count is greater than or equal to unique record count
+	        List<RecordStats> duplicateMinutesBySystem = 
+	            byMinute.values().stream()
 	        		.filter(entry -> entry.dupPercent() >= 100)
 	        		.sorted(Comparator.comparing(RecordStats::getMinute))
 	        		.collect(Collectors.toList());
-	        
-	        if (!duplicateMinutes.isEmpty())
+	                    
+	        // We don't want to report duplicates for every record type when 
+	        // we report duplicates by system
+            // Remove entries for those minutes from the map by record type.   
+
+	        for (RecordStats entry : duplicateMinutesBySystem)
 	        {
-	            System.out.format("%nSystem : %s%n", system);
-	        	
-	        	System.out.format("%n%-20s %8s %8s %6s%n%n",
-	        			"Minute",
-	        			"Records",
-	        			"Dup",
-	        			"Dup%"
-	        			);
-	            for (RecordStats minuteEntry : duplicateMinutes)
-	            {
-	            	System.out.format("%-20s %8d %8d %6.0f%n", 
-	            			minuteEntry.getMinute(), 
-	            			minuteEntry.getTotal(), 
-	            			minuteEntry.getDuplicates(),
-	            			minuteEntry.dupPercent());
-	            	
-	            	// We don't want to report duplicates for every record type in this minute.
-	            	// Remove the entry for this minute from the map by type.
-	            	byMinuteByType.get(system)
-	            		.remove(minuteEntry.getMinute());
-	            }
+	            byMinuteByType.remove(entry.getMinute());
 	        }
 	        
 	        // Flatmap into one list and select entries with duplicates.
 	        // Sort by minute and record type
 	
-	        List<RecordStats> duplicatesByMinuteByType = byMinuteByType.get(system).values().stream()
+	        List<RecordStats> duplicatesByMinuteByType = byMinuteByType.values().stream()
 	        		.flatMap(entry -> entry.values().stream())
 	        		.filter(entry -> entry.dupPercent() >= 100)
 	        		.sorted(Comparator.comparing(RecordStats::getMinute)
 	        				.thenComparing(RecordStats::getRecordtype))
 	        		.collect(Collectors.toList());
 	        
-	        if (!duplicatesByMinuteByType.isEmpty())
-	        {
-	            System.out.format("%nSystem : %s%n", system);
-	        	System.out.format("%n%-20s %4s %8s %8s %6s%n%n",
-	        			"Minute",
-	        			"Type",
-	        			"Records",
-	        			"Dup",
-	        			"Dup%"
-	        			);
-	        	
-	            for (RecordStats recordTypeEntry : duplicatesByMinuteByType)
-	            {
-	            	
-	            	System.out.format("%-20s %4d %8d %8d %6.0f%n",
-	            			recordTypeEntry.getMinute(),
-	            			recordTypeEntry.getRecordtype(), 
-	            			recordTypeEntry.getTotal(), 
-	            			recordTypeEntry.getDuplicates(),
-	            			recordTypeEntry.dupPercent());
-	            }
-	        }
+	        // Write reports.
+	        
+	        reportBySystem(system, duplicateMinutesBySystem);
+	        reportByRecordType(system, duplicatesByMinuteByType);
         }
-
+    }
+    
+    private static void reportBySystem(String system, List<RecordStats> duplicateMinutesBySystem) 
+    {
+        if (!duplicateMinutesBySystem.isEmpty())
+        {
+            System.out.format("%nSystem : %s%n", system);
+        	
+        	System.out.format("%n%-20s %8s %8s %6s%n%n",
+        			"Minute",
+        			"Records",
+        			"Dup",
+        			"Dup%"
+        			);
+            for (RecordStats minuteEntry : duplicateMinutesBySystem)
+            {
+            	System.out.format("%-20s %8d %8d %6.0f%n", 
+            			minuteEntry.getMinute(), 
+            			minuteEntry.getTotal(), 
+            			minuteEntry.getDuplicates(),
+            			minuteEntry.dupPercent());
+            }
+        }
+    }
+    
+    private static void reportByRecordType(String system, List<RecordStats> duplicatesByMinuteByType) 
+    {
+        if (!duplicatesByMinuteByType.isEmpty())
+        {
+            System.out.format("%nSystem : %s%n", system);
+        	System.out.format("%n%-20s %4s %8s %8s %6s%n%n",
+        			"Minute",
+        			"Type",
+        			"Records",
+        			"Dup",
+        			"Dup%"
+        			);
+        	
+            for (RecordStats recordTypeEntry : duplicatesByMinuteByType)
+            {
+            	
+            	System.out.format("%-20s %4d %8d %8d %6.0f%n",
+            			recordTypeEntry.getMinute(),
+            			recordTypeEntry.getRecordtype(), 
+            			recordTypeEntry.getTotal(), 
+            			recordTypeEntry.getDuplicates(),
+            			recordTypeEntry.dupPercent());
+            }
+        }
     }
     
     private static class RecordStats
@@ -198,25 +240,11 @@ public class SmfReportDups
             duplicates++;
         }
 
-		private Integer getRecordtype() {
-			return recordtype;
-		}
-		
-		private LocalDateTime getMinute() {
-			return minute;
-		}
+		private Integer getRecordtype() { return recordtype; }	
+		private LocalDateTime getMinute() { return minute; }
+		private int getDuplicates() { return duplicates; }
 
-		private int getTotal() {
-			return unique + duplicates;
-		}
-		
-		private int getDuplicates() {
-			return duplicates;
-		}
-		
-		private double dupPercent() 
-		{
-			return (double)duplicates/unique * 100;
-		}
+		private int getTotal() { return unique + duplicates; }	
+		private double dupPercent() { return (double)duplicates / unique * 100; }
     }
 }

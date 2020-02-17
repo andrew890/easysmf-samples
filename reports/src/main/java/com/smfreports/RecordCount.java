@@ -40,7 +40,6 @@ public class RecordCount
                 int type = record.recordType();
                 int subtype = record.hasSubtypes() ? record.subType() : 0;
                 
-                
             	statsMap.computeIfAbsent(type, key -> new HashMap<>())
             		.computeIfAbsent(subtype, key -> new RecordStats(type, subtype))
             		.add(record);
@@ -53,11 +52,11 @@ public class RecordCount
     private static void writeReport(Map<Integer, Map<Integer, RecordStats>> statsMap)
     {
         // get the total bytes from all record types
-        long totalbytes = statsMap.entrySet().stream() 		// get Map entries (keyed by SMF type)
-            .map(entry -> entry.getValue()) 				// get inner Maps (keyed by subtype)
-            .flatMap(entry -> entry.entrySet().stream()) 	// flatten Map contents into one stream 		
+        long totalbytes = statsMap.entrySet().stream() 		 // get Map entries (keyed by SMF type)
+            .map(entry -> entry.getValue()) 				 // get inner Maps (keyed by subtype)
+            .flatMap(entry -> entry.entrySet().stream()) 	 // flatten Map contents into one stream 		
             .mapToLong(entry -> entry.getValue().getBytes()) // Value is RecordStats entry 
-            .sum();
+            .sum();                                          // Sum total bytes for all records
 
         // write heading
         System.out.format("%5s %8s %11s %11s %7s %9s %9s %9s %n", 
@@ -71,7 +70,7 @@ public class RecordCount
             // sort by total bytes descending
             .sorted(Comparator.comparingLong(RecordStats::getBytes).reversed())
 
-            // alternate sort, by type and subtype
+            // alternative sort, by type and subtype
             // .sorted(Comparator
             // .comparingInt(RecordStats::getRecordtype)
             // .thenComparingInt(RecordStats::getSubtype))

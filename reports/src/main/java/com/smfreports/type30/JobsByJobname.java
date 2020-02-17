@@ -69,16 +69,20 @@ public class JobsByJobname
             "Avg Connect", "Avg Excp");
 
         jobs.entrySet().stream()
+            // If multiple SMF records were written for a job but we 
+            // didn't see the first record, count might be 0. Ignore those jobs.
+            .filter(entry -> entry.getValue().count > 0)
             // sort by CP Time
             // reversing a and b in the comparison so sort is descending
             .sorted((a, b) -> Double.compare(b.getValue().cpTime, a.getValue().cpTime))
             .limit(100) // take top 100
-            .forEachOrdered(jobname ->
+            .forEachOrdered(entry ->
             {
-                JobData jobinfo = jobname.getValue();
+                String jobname = entry.getKey();
+                JobData jobinfo = entry.getValue();
                 // write detail line
                 System.out.format("%-8s %,6d %14s %14s %14s %,14d %14s %14s %14s %,14d%n", 
-                    jobname.getKey(),
+                    jobname,
                     jobinfo.count, 
                     hhhmmss(jobinfo.cpTime), 
                     hhhmmss(jobinfo.ziipTime),
@@ -139,10 +143,10 @@ public class JobsByJobname
             }
         }
 
-        int   count       = 0;
+        int    count       = 0;
         double cpTime      = 0;
         double ziipTime    = 0;
         double connectTime = 0;
-        long  excps       = 0;
+        long   excps       = 0;
     }   
 }

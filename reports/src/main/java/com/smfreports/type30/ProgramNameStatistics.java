@@ -5,13 +5,13 @@ import java.util.*;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.smf30.Smf30Record;
 
-public class SmfSummary
+public class ProgramNameStatistics
 {
     public static void main(String[] args) throws IOException
     {
         if (args.length < 1)
         {
-            System.out.println("Usage: SmfSummary <input-name>");
+            System.out.println("Usage: ProgramNameStatistics <input-name>");
             System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
             return;
         }

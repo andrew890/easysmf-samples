@@ -44,11 +44,15 @@ public class SmfDeDup
     	}
     	printWarning();
     	
+    	// Use SHA-256 hashes to find duplicates
     	MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+    	
+    	// Hashes will be stored as BigIntegers
     	Set<BigInteger> recordHashes = new HashSet<BigInteger>();
     	
     	Map<Integer, RecordStats> duplicatesByType = new HashMap<>(); 
     	
+    	// Open reader, and writer and dupwriter classes if provided.
         try (
         	SmfRecordReader reader = SmfRecordReader.fromName(args[0]);                
 			SmfRecordWriter writer = args.length > 1 ? SmfRecordWriter.fromName(args[1]) : null;

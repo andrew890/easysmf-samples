@@ -17,17 +17,17 @@ import com.blackhillsoftware.smf.smf70.*;
  * MSU usage for each job name is also estimated by calculating the 
  * CPU time for the job name as a proportion of all CPU time seen for
  * those hours, and apportioning the SMF70LAC MSU value. This will not be 
- * totally accurate due to time not captured in type 30 records, and 
+ * totally accurate due to time not captured in type 30 records and 
  * jobs that don't write type 30.2 and 30.3 records e.g. system tasks
  * that write 30.6.   
  * 
- * The report requires SMF 30 data from the 4 hours up to the 4HRA peak
+ * The report requires SMF 30 data from the 4 hours up to each 4HRA peak
  * otherwise results will be incorrect. 
  * 
  * The report uses SMF 70 subtype 1 for SMF70LAC values, and SMF 30 subtypes 
  * 2 and 3 for interval CPU usage.
  * 
- * Only 1 pass of the data is required, and data does not need to be in order.
+ * Only 1 pass of the data is required, and data does not need to be sorted.
  * 
  * The program gathers data using nested HashMaps. One set of Maps organizes
  * SMF70LAC by System and Hour. The second set of Maps organizes Job CPU 
@@ -42,7 +42,7 @@ public class PeakR4HAJobs
     {
         if (args.length < 1)
         {
-            System.out.println("Usage: Peak4HRAJobs <input-name>");
+            System.out.println("Usage: PeakR4HAJobs <input-name>");
             System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
             return;
         }
@@ -79,35 +79,46 @@ public class PeakR4HAJobs
                 switch (record.recordType())
                 {
                 case 70:
-                    Smf70Record r70 = Smf70Record.from(record);
-                    systemHourLAC
-                        // computeIfAbsent creates a new entry if the key is not found,
-                        // otherwise returns the existing entry
-                    
-                    	// Map of systems
-                        .computeIfAbsent(r70.system(), system -> new HashMap<LocalDateTime, HourlyLac>())
-                        // Nested map of hour -> hourly LAC for this system
-                        .computeIfAbsent(r70.smfDateTime().truncatedTo(ChronoUnit.HOURS), time -> new HourlyLac())
-                        .add(r70); // Add the record to the HourlyLac entry for this System:Time
-                    break;
+                    {
+                        Smf70Record r70 = Smf70Record.from(record);
+                        String system = r70.system();
+                        LocalDateTime hour = r70.smfDateTime().truncatedTo(ChronoUnit.HOURS);
+                        
+                        systemHourLAC
+                            // computeIfAbsent creates a new entry if the key is not found,
+                            // otherwise returns the existing entry
+                        
+                        	// Map of systems
+                            .computeIfAbsent(system, key -> new HashMap<>())
+                            // Nested map of hour -> hourly LAC for this system
+                            .computeIfAbsent(hour, key -> new HourlyLac(system, hour))
+                            .add(r70); // Add the record to the HourlyLac entry for this System:Time
+                        break;
+                    }
                 case 30:    
+                    {
                         Smf30Record r30 = Smf30Record.from(record);
+                        String system = r30.system();
+                        LocalDateTime hour = r30.smfDateTime().truncatedTo(ChronoUnit.HOURS);
+                        String jobname = r30.identificationSection().smf30jbn();
+                        
                         systemHourJobnameTotals
                             // System
-                            .computeIfAbsent(r30.system(), system -> new HashMap<LocalDateTime, Map<String, JobnameTotals>>())
+                            .computeIfAbsent(system, key -> new HashMap<>())
                             // Hour
-                            .computeIfAbsent(r30.smfDateTime().truncatedTo(ChronoUnit.HOURS), time -> new HashMap<String, JobnameTotals>())
+                            .computeIfAbsent(hour, key -> new HashMap<>())
                             // Job name
-                            .computeIfAbsent(r30.identificationSection().smf30jbn(), 
-                                    jobname -> new JobnameTotals(r30.identificationSection().smf30jbn()))                     
+                            .computeIfAbsent(jobname, key -> new JobnameTotals(jobname))                     
                             .add(r30); // Add the record to the HourlyJobTotals entry for this System:Time:Jobname
-                    break;
+                        break;
+                    }
                 default:
                     break;
                 }
             }
         }
         
+        // get a sorted list of system names
         List<String> systems = systemHourLAC.keySet().stream()
         		.sorted()
         		.collect(Collectors.toList());
@@ -126,18 +137,16 @@ public class PeakR4HAJobs
     {
         System.out.format("%n%nSystem: %s%n", system); // header
     
-        hourlyLAC.entrySet().stream() // Information for each hour
+        hourlyLAC.values().stream() // Information for each hour
             // Sort entries
-            // comparing the average LAC for the hour 
-            // hourA,hourB reversed to sort descending
-            .sorted((hourA,hourB)  
-                    -> Long.compare(hourB.getValue().hourAverageLAC(), hourA.getValue().hourAverageLAC()))
+            // comparing the average LAC for the hour, descending 
+            .sorted(Comparator.comparingLong(HourlyLac::hourAverageLAC).reversed())
             .limit(5) // take the first (top) 5 entries
             .forEachOrdered(hourEntry -> // for each of the top hours
             {
                 // write information about the hour
-                LocalDateTime hour = hourEntry.getKey();
-                long fourHourMSU = hourEntry.getValue().hourAverageLAC();
+                LocalDateTime hour = hourEntry.getHour();
+                long fourHourMSU = hourEntry.hourAverageLAC();
 
                 System.out.format("%n    %-19s %21s%n", "Hour","4H MSU");
             
@@ -273,20 +282,9 @@ public class PeakR4HAJobs
             }
         }
         
-        public double getCpTime()
-        {
-            return cpTime;
-        }
-        
-        public double getZiipOnCpTime()
-        {
-            return ziipOnCpTime;
-        }
-        
-        public String getJobname()
-        {
-            return jobname;
-        }
+        public double getCpTime() { return cpTime; }
+        public double getZiipOnCpTime() { return ziipOnCpTime; }
+        public String getJobname() { return jobname; }
     }
     
     /**
@@ -297,9 +295,20 @@ public class PeakR4HAJobs
      */
     private static class HourlyLac
     {
+        public HourlyLac(String system, LocalDateTime hour)
+        {
+            this.system = system;
+            this.hour = hour;
+        }
+        private String system;
+        private LocalDateTime hour;
         private long smf70lac = 0;
         private long smf70sam = 0;
-    	
+        
+        public String getSystem() { return system; }
+
+        public LocalDateTime getHour() { return hour; }
+        
     	/**
     	 * Accumulate information from a SMF 70 record.
     	 * @param r70 the SMF type 70 record 
@@ -319,6 +328,4 @@ public class PeakR4HAJobs
             return smf70sam > 0 ? smf70lac / smf70sam : 0;
         }
     }
-    
-    
 }
