@@ -42,34 +42,24 @@ public class DatasetActivity {
         {
         	includeReadActivity = true;
         	nextArg++;
-        }
-        
+        }    
+
         String datasetFilter = args[nextArg++];
-        String inputName = args[nextArg++];
-        
-        // strip quotes which might be necessary to avoid shell or JVM from using the 
-        // asterisk as a wildcard
-        if ((datasetFilter.startsWith("\"") && datasetFilter.endsWith("\""))
-        	|| (datasetFilter.startsWith("'") && datasetFilter.endsWith("'")))
-        	
-        {
-        	datasetFilter = datasetFilter.substring(1, datasetFilter.length() -1);
-        } 
-        
         pattern = buildPattern(datasetFilter);
-        
         // Print the input argument and resulting regex, because asterisk in the command 
         // line can give unexpected and hard to debug results if not quoted correctly 
         
         System.out.format("Dataset pattern is: %s%n", datasetFilter);
-        System.out.format("Resulting regex is: %s%n", pattern.pattern());
+        System.out.format("Resulting regex is: %s%n", pattern.pattern());        
         
-        List<DatasetEvent> events = readData(inputName, includeReadActivity);
+        String inputName = args[nextArg++];
+
+        List<DatasetEvent> events = processData(inputName, includeReadActivity);
         
         writeReport(events);
     }
 
-	private static List<DatasetEvent> readData(String inputName, boolean includeReadActivity) throws IOException 
+	private static List<DatasetEvent> processData(String inputName, boolean includeReadActivity) throws IOException 
 	{
 		List<DatasetEvent> events = new ArrayList<>();
         
@@ -90,14 +80,28 @@ public class DatasetActivity {
             
             for (SmfRecord record : reader) 
             {
-            	addEvents(events, record);
+            	events.add(eventsFrom(record));
+
             }
+            // If we don't want read events remove them (from non type 14) from the list
+        	if (!includeReadActivity)
+        	{
+        		events = events.stream()
+    				.filter(event -> event.isRead() == false)
+    				.collect(Collectors.toList());
+        	}
         }
 		return events;
 	}
     
-    private static void addEvents(List<DatasetEvent> events, SmfRecord record) 
+    private static DatasetEvent eventsFrom(SmfRecord record) 
 	{
+    	// Return events as a list, which means that we can return 1,
+    	// 0 or multiple events from a record and the caller handles
+    	// them all the same way.
+    	// Collections.singletonList is a high performance list 
+    	// implementation to contain a single item.
+    	
 		switch (record.recordType())
 		{
 		// 14 and 15 use the same mapping
@@ -108,7 +112,7 @@ public class DatasetActivity {
 				if (pattern.matcher(r14.smfjfcb1().jfcbdsnm()).matches()
 						&& !r14.smf14tds()) // ignore temporary datasets 
 				{
-					events.add(DatasetEvent.from(r14));
+					return DatasetEvent.from(r14);
 				}
 				break;
 			}
@@ -117,7 +121,7 @@ public class DatasetActivity {
 				Smf17Record r17 = Smf17Record.from(record);
 				if (pattern.matcher(r17.smf17dsn()).matches())
 				{
-					events.add(DatasetEvent.from(r17));
+					return DatasetEvent.from(r17);
 				}				
 				break;
 			}
@@ -126,7 +130,7 @@ public class DatasetActivity {
 				Smf18Record r18 = Smf18Record.from(record);
 				if (pattern.matcher(r18.smf18ods()).matches() || pattern.matcher(r18.smf18nds()).matches())
 				{
-					events.add(DatasetEvent.from(r18));
+					return DatasetEvent.from(r18);
 				}
 				break;
 			}
@@ -135,7 +139,7 @@ public class DatasetActivity {
 				Smf61Record r61 = Smf61Record.from(record);
 				if (pattern.matcher(r61.smf61enm()).matches())
 				{
-					events.add(DatasetEvent.from(r61));
+					return DatasetEvent.from(r61);
 				}					
 				break;
 			}
@@ -144,7 +148,7 @@ public class DatasetActivity {
 				Smf62Record r62 = Smf62Record.from(record);
 				if (pattern.matcher(r62.smf62dnm()).matches())
 				{
-					events.add(DatasetEvent.from(r62));
+					return DatasetEvent.from(r62);
 				}	
 				break;
 			}
@@ -153,7 +157,7 @@ public class DatasetActivity {
 				Smf64Record r64 = Smf64Record.from(record);
 				if (pattern.matcher(r64.smf64dnm()).matches())
 				{
-					events.add(DatasetEvent.from(r64));
+					return DatasetEvent.from(r64);
 				}	
 				break;
 			}
@@ -162,11 +166,12 @@ public class DatasetActivity {
 				Smf65Record r65 = Smf65Record.from(record);
 				if (pattern.matcher(r65.smf65enm()).matches())
 				{
-					events.add(DatasetEvent.from(r65));
+					return DatasetEvent.from(r65);
 				}	
 				break;
 			}
 		}
+		return null;
 	}
 	
 	private static void writeReport(List<DatasetEvent> events) {
@@ -210,6 +215,15 @@ public class DatasetActivity {
     
 	private static Pattern buildPattern(String patternString) 
 	{
+        // strip quotes which might be necessary to avoid shell or JVM from using the 
+        // asterisk as a wildcard
+        if ((patternString.startsWith("\"") && patternString.endsWith("\""))
+        	|| (patternString.startsWith("'") && patternString.endsWith("'")))
+        	
+        {
+        	patternString = patternString.substring(1, patternString.length() -1);
+        } 
+		
 		// escape characters valid in dataset names that have special meaning in regex
 		
 		// period
@@ -241,13 +255,14 @@ public class DatasetActivity {
 		return Pattern.compile("^" + patternString + "$", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 	}
 	
-	static class DatasetEvent 
+	private static class DatasetEvent 
 	{
 		private LocalDateTime time;
 		private String datasetname;
 		private String newname;
 		private String jobname;
 		private String event;
+		private boolean readEvent = false;
 		
 		private DatasetEvent()
 		{
@@ -259,7 +274,17 @@ public class DatasetActivity {
 			datasetevent.datasetname = r14.smfjfcb1().jfcbdsnm();
 			datasetevent.jobname = r14.smf14jbn();
 			datasetevent.time = r14.smfDateTime();
-			datasetevent.event = r14.recordType() == 15 ? "Update (15)" : "Read (14)";
+			if (r14.recordType() == 15)
+			{
+				datasetevent.event = "Update (15)";
+				
+			}
+			else
+			{
+				datasetevent.event = "Read (14)";
+				datasetevent.readEvent = true;
+			}
+
 			return datasetevent;
 		}
 		public static DatasetEvent from(Smf17Record r17)
@@ -272,14 +297,14 @@ public class DatasetActivity {
 			return datasetevent;
 		}
 		public static DatasetEvent from(Smf18Record r18)
-		{		
-			DatasetEvent oldnamescratch = new DatasetEvent();
-			oldnamescratch.datasetname = r18.smf18ods();
-			oldnamescratch.jobname = r18.smf18jbn();
-			oldnamescratch.time = r18.smfDateTime();
-			oldnamescratch.event =  "Rename (18)";
-			oldnamescratch.newname = r18.smf18nds();
-			return oldnamescratch;
+		{					
+			DatasetEvent datasetevent = new DatasetEvent();
+			datasetevent.datasetname = r18.smf18ods();
+			datasetevent.jobname = r18.smf18jbn();
+			datasetevent.time = r18.smfDateTime();
+			datasetevent.event =  "Rename (18)";
+			datasetevent.newname = r18.smf18nds();
+			return datasetevent;
 
 		}
 		public static DatasetEvent from(Smf61Record r61)
@@ -305,6 +330,7 @@ public class DatasetActivity {
 			else
 			{
 				datasetevent.event = "Read (62)";
+				datasetevent.readEvent = true;
 			}
 			return datasetevent;
 		}
@@ -321,6 +347,7 @@ public class DatasetActivity {
 			else
 			{
 				datasetevent.event = "Read (64)";
+				datasetevent.readEvent = true;
 			}
 			return datasetevent;
 		}
@@ -354,6 +381,11 @@ public class DatasetActivity {
 		public String getEvent() {
 			return event;
 		}
+		
+		public boolean isRead() {
+			return readEvent;
+		}
+		
 	}
 	
 }
