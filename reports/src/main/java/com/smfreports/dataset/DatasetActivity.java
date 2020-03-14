@@ -21,6 +21,11 @@ public class DatasetActivity
 		System.out.println("<input-name> : filename, //DD:DDNAME or //'DATASET.NAME'");
 	}
 	
+	/**
+	 * Run the report
+	 * @param args Command line arguments: [-r] <dataset-pattern> <input-name>
+	 * @throws IOException
+	 */
     public static void main(String[] args) throws IOException
     {
     	try 
@@ -42,18 +47,21 @@ public class DatasetActivity
 	
 	        String datasetFilter = args[nextArg++];
 	        // create the regular expression from the simplified pattern
-	        Pattern pattern = buildPattern(datasetFilter);
+	        Pattern regexPattern = buildPattern(datasetFilter);
 	        
 	        // Print the input argument and resulting regex, because asterisks in the command 
 	        // line can give unexpected and hard to debug results if not quoted correctly 
 	        System.out.format("Dataset pattern is: %s%n", datasetFilter);
-	        System.out.format("Regex is: %s%n", pattern.pattern());        
+	        System.out.format("Regex is: %s%n", regexPattern.pattern());        
 	        
 	        String inputName = args[nextArg++];
 	
-	        List<DatasetActivityEvent> events = processData(inputName, pattern, includeReadActivity);
+	        // Process the input
+	        List<DatasetActivityEvent> events = processData(inputName, regexPattern, includeReadActivity);
 	        
+	        // Write the report
 	        writeReport(events);
+	        
     	}
         catch (Exception e)
         {
@@ -62,6 +70,14 @@ public class DatasetActivity
         }
     }
 
+    /**
+     * Read the data from the SMF input
+     * @param inputName             Name of the input source: filename, //DD:DDNAME or //'DATASET.NAME'
+     * @param pattern               Regular expressson pattern to include matching dataset names 
+     * @param includeReadActivity   Should read activity be included as well as update
+     * @return A list of DatasetActivityEvent for datasets matching the regular expression
+     * @throws IOException
+     */
 	private static List<DatasetActivityEvent> processData(
 			String inputName, 
 			Pattern pattern, 
@@ -88,8 +104,9 @@ public class DatasetActivity
             
             for (SmfRecord record : reader) 
             {
+            	// skip type 14/15 for temporary datasets
             	if ((record.recordType() == 14 || record.recordType() == 15)
-            		&& Smf14Record.from(record).smf14tds()) // skip type 14/15 for temporary datasets
+            		&& Smf14Record.from(record).smf14tds()) 
         		{
         			continue;
         		}
@@ -98,10 +115,12 @@ public class DatasetActivity
         		
         		if (includeReadActivity || !event.isRead())
         		{
+        			// Check if the name matches the pattern and add to the list
         			if (pattern.matcher(event.getDatasetname()).matches())
         			{
         				events.add(event);
         			}
+        			// If we have a new name, also report it if it matches the pattern
         			else if (event.getNewname() != null 
         					&& event.getNewname().length() > 0 
         					&& pattern.matcher(event.getNewname()).matches())
@@ -114,24 +133,44 @@ public class DatasetActivity
 		return events;
 	}
 	
-	private static void writeReport(List<DatasetActivityEvent> events) {
-		Map<String, List<DatasetActivityEvent>> eventsByDataset = events.stream()
-        	.collect(Collectors.groupingBy(DatasetActivityEvent::getDatasetname));
+	/**
+	 * Write the Dataset Activity report.
+	 * Events are grouped by Dataset Name and sorted by time.
+	 * @param events The list of events
+	 */
+	private static void writeReport(List<DatasetActivityEvent> events) 
+	{
+		// Group by dataset name
+		Map<String, List<DatasetActivityEvent>> eventsByDataset = 
+			events.stream()
+        		.collect(Collectors.groupingBy(DatasetActivityEvent::getDatasetname));
         
+		// For each dataset name (i.e. eventsByDataset key)
         eventsByDataset.keySet().stream()
         	.sorted()
         	.forEachOrdered( datasetName ->
         			{
+        				// Heading
+        				System.out.format(
+        						"%-44s %-25s %-8s %-8s %-15s %-44s%n",
+        						"Dataset",
+        						"Time",
+        						"Jobname",
+        						"Userid",
+        						"Activity",
+        						"New Name");
+
         				eventsByDataset.get(datasetName)
         					.stream()
            					.sorted(Comparator.comparing(DatasetActivityEvent::getTime))
         		        	.forEachOrdered(event ->
                 			{
                 				System.out.format(
-                						"%-44s %-25s %-8s %-15s %-44s%n", 
+                						"%-44s %-25s %-8s %-8s %-15s %-44s%n", 
                 						event.getDatasetname(),
                 						event.getTime(),
                 						event.getJobname(),
+                						event.getUserid(),
                 						event.getEvent(),
                 						event.getNewname()
                 						);
