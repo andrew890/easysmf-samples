@@ -31,34 +31,37 @@ public class CicsTransactionSummary
         // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
         // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
         
-        try (SmfRecordReader reader = SmfRecordReader.fromName(args[0])) 
-        {     
-            reader.include(110, Smf110Record.SMFMNSTY);
-            for (SmfRecord record : reader) 
-            {
-                Smf110Record r110 = Smf110Record.from(record);
-                
-                if (r110.haveDictionary()) 
-                {
-                    Map<String, TransactionData> applidTransactions = 
-                        applids.computeIfAbsent(
-                            r110.mnProductSection().smfmnprn(), 
-                            transactions -> new HashMap<String, TransactionData>());
-
-                    for (PerformanceRecord mn : r110.performanceRecords()) 
-                    {
-                        String txName = mn.getField(Field.TRAN);
-                        txCount++;
-                        applidTransactions.computeIfAbsent(
-                                txName, 
-                                x -> new TransactionData(txName)).add(mn);
-                    }
-                } 
-                else 
-                {
-                    noDictionary++;
-                }
-            }
+        for (String name : args)
+        {
+	        try (SmfRecordReader reader = SmfRecordReader.fromName(name)) 
+	        {     
+	            reader.include(110, Smf110Record.SMFMNSTY);
+	            for (SmfRecord record : reader) 
+	            {
+	                Smf110Record r110 = Smf110Record.from(record);
+	                
+	                if (r110.haveDictionary()) 
+	                {
+	                    Map<String, TransactionData> applidTransactions = 
+	                        applids.computeIfAbsent(
+	                            r110.mnProductSection().smfmnprn(), 
+	                            transactions -> new HashMap<String, TransactionData>());
+	
+	                    for (PerformanceRecord mn : r110.performanceRecords()) 
+	                    {
+	                        String txName = mn.getField(Field.TRAN);
+	                        txCount++;
+	                        applidTransactions.computeIfAbsent(
+	                                txName, 
+	                                x -> new TransactionData(txName)).add(mn);
+	                    }
+	                } 
+	                else 
+	                {
+	                    noDictionary++;
+	                }
+	            }
+	        }
         }
         
         writeReport(applids);
