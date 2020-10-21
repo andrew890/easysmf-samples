@@ -17,7 +17,7 @@ public class CicsTransactionSummary
     {
         if (args.length < 1)
         {
-            System.out.println("Usage: CicsTransactionSummary <input-name>");
+            System.out.println("Usage: CicsTransactionSummary <input-name> <input-name2> ...");
             System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
             return;
         }
@@ -47,13 +47,13 @@ public class CicsTransactionSummary
 	                            r110.mnProductSection().smfmnprn(), 
 	                            transactions -> new HashMap<String, TransactionData>());
 	
-	                    for (PerformanceRecord mn : r110.performanceRecords()) 
+	                    for (PerformanceRecord txData : r110.performanceRecords()) 
 	                    {
-	                        String txName = mn.getField(Field.TRAN);
+	                        String txName = txData.getField(Field.TRAN);
 	                        txCount++;
 	                        applidTransactions.computeIfAbsent(
 	                                txName, 
-	                                x -> new TransactionData(txName)).add(mn);
+	                                x -> new TransactionData(txName)).add(txData);
 	                    }
 	                } 
 	                else 
@@ -133,14 +133,14 @@ public class CicsTransactionSummary
             this.name = name;
         }
 
-        public void add(PerformanceRecord perfdata) 
+        public void add(PerformanceRecord txData) 
         {
             count++;
             elapsed += Utils.ToSeconds(
-                    Duration.between(perfdata.getField(Field.START), perfdata.getField(Field.STOP)));
-            dispatch += perfdata.getFieldTimerSeconds(Field.USRDISPT);
-            dispatchWait += perfdata.getFieldTimerSeconds(Field.DISPWTT);
-            cpu += perfdata.getFieldTimerSeconds(Field.USRCPUT);
+                    Duration.between(txData.getField(Field.START), txData.getField(Field.STOP)));
+            dispatch += txData.getFieldTimerSeconds(Field.USRDISPT);
+            dispatchWait += txData.getFieldTimerSeconds(Field.DISPWTT);
+            cpu += txData.getFieldTimerSeconds(Field.USRCPUT);
         }
 
         public String getName() 
