@@ -1,13 +1,13 @@
 package com.smfreports.db2ddf;
 
 import java.io.IOException;
+import java.time.*;
 import java.util.*;
 
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.SmfRecordReader;
 import com.blackhillsoftware.smf.db2.Smf101Record;
-import com.blackhillsoftware.smf.db2.section.Qlac;
-import com.blackhillsoftware.smf.db2.section.Qmda;
+import com.blackhillsoftware.smf.db2.section.*;
 
 public class ssidCorr
 {   
@@ -17,29 +17,33 @@ public class ssidCorr
         		= SmfRecordReader.fromName(args[0])
     				.include(101))
         {   
-        	Map<String, 
+        	Map<String,    
         		Map<String, 
-        			Map<String, statistics>>> stats = new HashMap<>();
+                Map<String, 
+                Map<LocalDate, statistics>>>> stats = new HashMap<>();
         	
             for (SmfRecord r : reader)
             {
-                Smf101Record r101 = new Smf101Record(r);
+                Smf101Record r101 = new Smf101Record(r);   
+                Qwhc qwhc = r101.qwhc();
                 
-                if (r101.ifcid() == 3)
+                if (r101.ifcid() == 3
+                    && (qwhc.qwhcatyp() == QwhcConnectionType.QWHCDUW 
+                        || qwhc.qwhcatyp() == QwhcConnectionType.QWHCRUW
+                        || !r101.qlac().isEmpty())
+                    && !r101.qmda().isEmpty())
                 {
-                	Qlac qlac = r101.qlac().get(0);
-                	Qmda qmda = r101.qmda().get(0);
-                	String ptyp = qmda.qmdaptyp();
+                	String ptyp = r101.qmda().get(0).qmdaptyp();
                 	
-            		if (qlac.qlacsqls() == 0
-            			&& (ptyp.equals("SQL") || ptyp.equals("DSN") || ptyp.equals("JCL")))
+            		if ((ptyp.equals("SQL") || ptyp.equals("DSN") || ptyp.equals("JCL"))
+            		        && r101.qlac().get(0).qlacsqls() == 0)
             		{
 		                stats.computeIfAbsent(r101.system(), system -> new HashMap<>())
 		            		.computeIfAbsent(r101.sm101ssi(), ssi -> new HashMap<>())
-		                	.computeIfAbsent(corrid(r101), corrid -> new statistics())
+                            .computeIfAbsent(getCorrid(r101), corrid -> new HashMap<>())
+                            .computeIfAbsent(r101.smfDateTime().toLocalDate(), date -> new statistics())
 		                	.add(r101);		
-                	}
-                	
+                	}              	
                 }
             }
             
@@ -52,19 +56,29 @@ public class ssidCorr
             				ssiEntry.getValue().entrySet().stream()
 	            				.sorted(Map.Entry.comparingByKey())
 	            				.forEachOrdered(corridEntry ->
-
-            						{
-            							System.out.format("%s %s %s %d%n", 
-            									systemEntry.getKey(), 
-            									ssiEntry.getKey(), 
-            									corridEntry.getKey(), 
-            									corridEntry.getValue().count);   
-            						})));
+    	            				corridEntry.getValue().entrySet().stream()
+                                        .sorted(Map.Entry.comparingByKey())
+                                        .forEachOrdered(minuteEntry ->
+                						{
+                							System.out.format("%s %s %s %s %6d %6d %6d %8.3f %8.3f %8.3f %8.3f%8.3f%n", 
+                									systemEntry.getKey(), 
+                									ssiEntry.getKey(), 
+                                                    corridEntry.getKey(), 
+                                                    minuteEntry.getKey(), 
+                                                    minuteEntry.getValue().count,
+                                                    minuteEntry.getValue().commits,   
+                                                    minuteEntry.getValue().aborts,   
+                                                    minuteEntry.getValue().c1Tcb,
+                                                    minuteEntry.getValue().c1Ziip,
+                                                    minuteEntry.getValue().c2Tcb,
+                                                    minuteEntry.getValue().c2Ziip,
+                                                    minuteEntry.getValue().nonZiip);   
+                						}))));
              
         }
     }
 
-	private static String corrid(Smf101Record r101) 
+	private static String getCorrid(Smf101Record r101) 
 	{
 		String corrid = r101.qwhc().qwhccv();
 		if (corrid.startsWith("ENTR") || corrid.startsWith("POOL"))
@@ -78,12 +92,45 @@ public class ssidCorr
     {
     	void add(Smf101Record r101)
     	{
-    		count++;
+    	    count++;
+    	    
+    	    Qwac qwac = r101.qwac().get(0);
+    		commits += qwac.qwaccomm();
+    		aborts += qwac.qwacabrt();
+    			 		
+    		c1Tcb +=
+    		        qwac.qwacejstSeconds()
+    		        + qwac.qwacspcpSeconds()
+    		        + qwac.qwacudcpSeconds();
+    		
+    		if (!qwac.qwacparr())
+    		{
+    		    c1Tcb -= qwac.qwacbjstSeconds();
+    		}
+    		
+    		c1Ziip += qwac.qwaccls1ZiipSeconds();
+    		
+    		c2Tcb += qwac.qwacajstSeconds()
+    		        + qwac.qwacspttSeconds()
+    		        + qwac.qwacudttSeconds();
+
+            c2Ziip += qwac.qwaccls2ZiipSeconds();
+
+            nonZiip += qwac.qwacajstSeconds();
     	}
     	
-    	int count = 0;
-    }
-    
-    
-    
+        long count = 0;
+        long commits = 0;
+        long aborts = 0;
+        
+        double c1Tcb = 0;
+        double c1Ziip = 0;
+        
+        double c2Tcb = 0;
+        double c2Ziip = 0;
+        
+        double nonZiip = 0;    
+
+        
+        }    
 }
