@@ -9,6 +9,9 @@ import com.blackhillsoftware.smf.SmfRecordReader;
 import com.blackhillsoftware.smf.db2.Smf101Record;
 import com.blackhillsoftware.smf.db2.section.*;
 
+import static java.util.Comparator.comparing;
+import static java.util.Map.Entry.comparingByKey;
+
 public class ssidCorr
 {   
     public static void main(String[] args) throws IOException
@@ -17,10 +20,7 @@ public class ssidCorr
         		= SmfRecordReader.fromName(args[0])
     				.include(101))
         {   
-        	Map<String,    
-        		Map<String, 
-                Map<String, 
-                Map<LocalDate, statistics>>>> stats = new HashMap<>();
+        	Map<ReportKey, statistics> stats = new HashMap<>();
         	
             for (SmfRecord r : reader)
             {
@@ -38,56 +38,37 @@ public class ssidCorr
             		if ((ptyp.equals("SQL") || ptyp.equals("DSN") || ptyp.equals("JCL"))
             		        && r101.qlac().get(0).qlacsqls() == 0)
             		{
-		                stats.computeIfAbsent(r101.system(), system -> new HashMap<>())
-		            		.computeIfAbsent(r101.sm101ssi(), ssi -> new HashMap<>())
-                            .computeIfAbsent(getCorrid(r101), corrid -> new HashMap<>())
-                            .computeIfAbsent(r101.smfDateTime().toLocalDate(), date -> new statistics())
+		                stats.computeIfAbsent(new ReportKey(r101), key -> new statistics())
 		                	.add(r101);		
                 	}              	
                 }
             }
             
-            stats.entrySet().stream()
-            	.sorted(Map.Entry.comparingByKey())
-            	.forEachOrdered(systemEntry ->
-            			systemEntry.getValue().entrySet().stream()
-            				.sorted(Map.Entry.comparingByKey())
-            				.forEachOrdered(ssiEntry ->
-            				ssiEntry.getValue().entrySet().stream()
-	            				.sorted(Map.Entry.comparingByKey())
-	            				.forEachOrdered(corridEntry ->
-    	            				corridEntry.getValue().entrySet().stream()
-                                        .sorted(Map.Entry.comparingByKey())
-                                        .forEachOrdered(minuteEntry ->
-                						{
-                							System.out.format("%s %s %s %s %6d %6d %6d %8.3f %8.3f %8.3f %8.3f%8.3f%n", 
-                									systemEntry.getKey(), 
-                									ssiEntry.getKey(), 
-                                                    corridEntry.getKey(), 
-                                                    minuteEntry.getKey(), 
-                                                    minuteEntry.getValue().count,
-                                                    minuteEntry.getValue().commits,   
-                                                    minuteEntry.getValue().aborts,   
-                                                    minuteEntry.getValue().c1Tcb,
-                                                    minuteEntry.getValue().c1Ziip,
-                                                    minuteEntry.getValue().c2Tcb,
-                                                    minuteEntry.getValue().c2Ziip,
-                                                    minuteEntry.getValue().nonZiip);   
-                						}))));
-             
+            stats.entrySet().stream()          
+                .sorted(comparingByKey(
+                            comparing(ReportKey::getSmfid)
+                                .thenComparing(ReportKey::getSsi)
+                                .thenComparing(ReportKey::getCorrid)
+                                .thenComparing(ReportKey::getDay)))
+                    .forEachOrdered(entry ->
+					{
+						System.out.format("%s %s %s %s %6d %6d %6d %8.3f %8.3f %8.3f %8.3f%8.3f%n", 
+						        entry.getKey().getSmfid(), 
+						        entry.getKey().getSsi(),
+                                entry.getKey().getCorrid(),
+                                entry.getKey().getDay(),
+                                entry.getValue().count,
+                                entry.getValue().commits,   
+                                entry.getValue().aborts,   
+                                entry.getValue().c1Tcb,
+                                entry.getValue().c1Ziip,
+                                entry.getValue().c2Tcb,
+                                entry.getValue().c2Ziip,
+                                entry.getValue().nonZiip);   
+					});
         }
     }
-
-	private static String getCorrid(Smf101Record r101) 
-	{
-		String corrid = r101.qwhc().qwhccv();
-		if (corrid.startsWith("ENTR") || corrid.startsWith("POOL"))
-		{
-			corrid = "CICS Tx " + corrid.substring(4, 8);
-		}
-		return corrid;
-	}
-    
+   
     static class statistics
     {
     	void add(Smf101Record r101)
@@ -130,7 +111,64 @@ public class ssidCorr
         double c2Ziip = 0;
         
         double nonZiip = 0;    
+    }       
 
+    static class ReportKey
+    {
+        private String smfid;
+        private String ssi;
+        private String corrid;
+        private LocalDate day;   
         
-        }    
+        public ReportKey(Smf101Record r101)
+        {
+            smfid = r101.system();
+            ssi = r101.sm101ssi();
+            corrid = getCorrid(r101);
+            day = r101.smfDateTime().toLocalDate();
+        }           
+        
+        public String getSmfid() {
+            return smfid;
+        }
+        public String getSsi() {
+            return ssi;
+        }
+        public String getCorrid() {
+            return corrid;
+        }
+        public LocalDate getDay() {
+            return day;
+        }
+        
+        // We need hashCode and equals for use as a HashMap key. 
+        // These were generated by Eclipse 
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(corrid, day, smfid, ssi);
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (!(obj instanceof ReportKey))
+                return false;
+            ReportKey other = (ReportKey) obj;
+            return Objects.equals(corrid, other.corrid) 
+                    && Objects.equals(day, other.day)
+                    && Objects.equals(smfid, other.smfid) 
+                    && Objects.equals(ssi, other.ssi);
+        }
+        
+        private static String getCorrid(Smf101Record r101) 
+        {
+            String corrid = r101.qwhc().qwhccv();
+            if (corrid.startsWith("ENTR") || corrid.startsWith("POOL"))
+            {
+                corrid = "CICS Tx " + corrid.substring(4, 8);
+            }
+            return corrid;
+        }      
+    }
 }
