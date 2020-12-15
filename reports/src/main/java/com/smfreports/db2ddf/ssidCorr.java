@@ -52,7 +52,7 @@ public class ssidCorr
                                 .thenComparing(ReportKey::getDay)))
                     .forEachOrdered(entry ->
 					{
-						System.out.format("%s %s %s %s %6d %6d %6d %8.3f %8.3f %8.3f %8.3f%8.3f%n", 
+						System.out.format("%s %s %s %s %6d %6d %6d %8.3f %8.3f %8.3f %8.3f %6d %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f%n", 
 						        entry.getKey().getSmfid(), 
 						        entry.getKey().getSsi(),
                                 entry.getKey().getCorrid(),
@@ -64,7 +64,18 @@ public class ssidCorr
                                 entry.getValue().c1Ziip,
                                 entry.getValue().c2Tcb,
                                 entry.getValue().c2Ziip,
-                                entry.getValue().nonZiip);   
+                                entry.getValue().noZiip,
+                                entry.getValue().ziipOnGcp,
+                                entry.getValue().c2nnTcb,
+                                entry.getValue().c2spTcb,
+                                entry.getValue().c2udfTcb,
+                                (double) (entry.getValue().c1Time.toMillis()) / 1000,
+                                (double) (entry.getValue().c2Time().toMillis()) / 1000,
+                                (double) (entry.getValue().c2nnTime.toMillis()) / 1000,
+                                (double) (entry.getValue().c2spTime.toMillis()) / 1000,
+                                (double) (entry.getValue().c2udfTime.toMillis()) / 1000,
+                                (double) (entry.getValue().c2spSchTime.toMillis()) / 1000,
+                                (double) (entry.getValue().c2udfSchTime.toMillis()) / 1000) ;   
 					});
         }
     }
@@ -79,8 +90,7 @@ public class ssidCorr
     		commits += qwac.qwaccomm();
     		aborts += qwac.qwacabrt();
     			 		
-    		c1Tcb +=
-    		        qwac.qwacejstSeconds()
+    		c1Tcb += qwac.qwacejstSeconds()
     		        + qwac.qwacspcpSeconds()
     		        + qwac.qwacudcpSeconds();
     		
@@ -91,14 +101,36 @@ public class ssidCorr
     		
     		c1Ziip += qwac.qwaccls1ZiipSeconds();
     		
+    		if (qwac.qwaccls1ZiipSeconds() == 0)
+    		{
+    		    noZiip++;	
+    		}
+    		
     		c2Tcb += qwac.qwacajstSeconds()
     		        + qwac.qwacspttSeconds()
     		        + qwac.qwacudttSeconds();
 
             c2Ziip += qwac.qwaccls2ZiipSeconds();
+            
+            ziipOnGcp += qwac.qwacziipEligibleSeconds();
 
-            nonZiip += qwac.qwacajstSeconds();
+            c2nnTcb += qwac.qwacajstSeconds();
+            c2spTcb += qwac.qwacspttSeconds();  
+            c2udfTcb += qwac.qwacudttSeconds();
+
+            c1Time = c1Time.plus(
+                    qwac.qwacparr() ?
+                        Duration.between(stckOrigin, qwac.qwacesc()) :
+                        Duration.between(qwac.qwacbsc(), qwac.qwacesc()));
+         
+            c2nnTime = c2nnTime.plus(qwac.qwacasc());
+            c2spTime = c2spTime.plus(qwac.qwacspeb());
+            c2udfTime = c2udfTime.plus(qwac.qwacudeb());
+            c2spSchTime = c2spSchTime.plus(qwac.qwaccast());
+            c2udfSchTime = c2udfSchTime.plus(qwac.qwacudst());
+
     	}
+    	
     	
         long count = 0;
         long commits = 0;
@@ -110,7 +142,31 @@ public class ssidCorr
         double c2Tcb = 0;
         double c2Ziip = 0;
         
-        double nonZiip = 0;    
+        long noZiip = 0;
+
+        double ziipOnGcp = 0;
+        
+        double c2nnTcb = 0;    
+        double c2spTcb = 0;    
+        double c2udfTcb = 0;
+        
+        Duration c1Time = Duration.ZERO;
+        Duration c2nnTime = Duration.ZERO;
+        Duration c2spTime = Duration.ZERO;
+        Duration c2udfTime = Duration.ZERO;
+        Duration c2spSchTime = Duration.ZERO;
+        Duration c2udfSchTime = Duration.ZERO;
+        
+        Duration c2Time()
+        {
+            return c2nnTime
+                    .plus(c2spTime)
+                    .plus(c2udfTime)
+                    .plus(c2spSchTime)
+                    .plus(c2udfSchTime);
+        }  
+        
+        private static final ZonedDateTime stckOrigin = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
     }       
 
     static class ReportKey
