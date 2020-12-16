@@ -11,7 +11,7 @@ import com.blackhillsoftware.smf.db2.section.*;
 import static java.util.Comparator.*;
 import static java.util.Map.Entry.*;
 
-public class ssidCorr
+public class ByCorridByDay
 {   
     public static void main(String[] args) throws IOException
     {
@@ -24,6 +24,7 @@ public class ssidCorr
             for (SmfRecord r : reader)
             {
                 Smf101Record r101 = new Smf101Record(r);   
+                
                 Qwhc qwhc = r101.qwhc();
                 
                 if (r101.ifcid() == 3
@@ -48,6 +49,8 @@ public class ssidCorr
     }
 
     private static void writeReport(Map<ReportKey, DDFStatistics> ddfStatisticsByKey) {
+        
+        // headings
         System.out.format("%-5s, %-4s, %-14s, %-10s, %11s, "  
                         + "%11s, %11s, %11s, %11s, %11s, "
                         + "%11s, %11s, %11s, %11s, %11s, " 
@@ -78,6 +81,7 @@ public class ssidCorr
                     "C2 UDF Sch"
                     );       
         
+        // data
         ddfStatisticsByKey.entrySet().stream()          
             .sorted(comparingByKey(
                         comparing(ReportKey::getSmfid)
