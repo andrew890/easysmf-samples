@@ -4,13 +4,12 @@ import java.io.IOException;
 import java.time.*;
 import java.util.*;
 
-import com.blackhillsoftware.smf.SmfRecord;
-import com.blackhillsoftware.smf.SmfRecordReader;
-import com.blackhillsoftware.smf.db2.Smf101Record;
+import com.blackhillsoftware.smf.*;
+import com.blackhillsoftware.smf.db2.*;
 import com.blackhillsoftware.smf.db2.section.*;
 
-import static java.util.Comparator.comparing;
-import static java.util.Map.Entry.comparingByKey;
+import static java.util.Comparator.*;
+import static java.util.Map.Entry.*;
 
 public class ssidCorr
 {   
@@ -20,7 +19,7 @@ public class ssidCorr
         		= SmfRecordReader.fromName(args[0])
     				.include(101))
         {   
-        	Map<ReportKey, statistics> stats = new HashMap<>();
+        	Map<ReportKey, DDFStatistics> stats = new HashMap<>();
         	
             for (SmfRecord r : reader)
             {
@@ -38,66 +37,103 @@ public class ssidCorr
             		if ((ptyp.equals("SQL") || ptyp.equals("DSN") || ptyp.equals("JCL"))
             		        && r101.qlac().get(0).qlacsqls() == 0)
             		{
-		                stats.computeIfAbsent(new ReportKey(r101), key -> new statistics())
+		                stats.computeIfAbsent(new ReportKey(r101), key -> new DDFStatistics())
 		                	.add(r101);		
                 	}              	
                 }
             }
             
-            stats.entrySet().stream()          
-                .sorted(comparingByKey(
-                            comparing(ReportKey::getSmfid)
-                                .thenComparing(ReportKey::getSsi)
-                                .thenComparing(ReportKey::getCorrid)
-                                .thenComparing(ReportKey::getDay)))
-                    .forEachOrdered(entry ->
-					{
-						System.out.format("%s %s %s %s %6d %6d %6d %8.3f %8.3f %8.3f %8.3f %6d %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f%n", 
-						        entry.getKey().getSmfid(), 
-						        entry.getKey().getSsi(),
-                                entry.getKey().getCorrid(),
-                                entry.getKey().getDay(),
-                                entry.getValue().count,
-                                entry.getValue().commits,   
-                                entry.getValue().aborts,   
-                                entry.getValue().c1Tcb,
-                                entry.getValue().c1Ziip,
-                                entry.getValue().c2Tcb,
-                                entry.getValue().c2Ziip,
-                                entry.getValue().noZiip,
-                                entry.getValue().ziipOnGcp,
-                                entry.getValue().c2nnTcb,
-                                entry.getValue().c2spTcb,
-                                entry.getValue().c2udfTcb,
-                                (double) (entry.getValue().c1Time.toMillis()) / 1000,
-                                (double) (entry.getValue().c2Time().toMillis()) / 1000,
-                                (double) (entry.getValue().c2nnTime.toMillis()) / 1000,
-                                (double) (entry.getValue().c2spTime.toMillis()) / 1000,
-                                (double) (entry.getValue().c2udfTime.toMillis()) / 1000,
-                                (double) (entry.getValue().c2spSchTime.toMillis()) / 1000,
-                                (double) (entry.getValue().c2udfSchTime.toMillis()) / 1000) ;   
-					});
+            writeReport(stats);
         }
     }
+
+    private static void writeReport(Map<ReportKey, DDFStatistics> ddfStatisticsByKey) {
+        System.out.format("%-5s, %-4s, %-14s, %-10s, %11s, "  
+                        + "%11s, %11s, %11s, %11s, %11s, "
+                        + "%11s, %11s, %11s, %11s, %11s, " 
+                        + "%11s, %11s, %11s, %11s, %11s, "  
+                        + "%11s, %11s, %11s%n", 
+                    "SMFID",
+                    "SSID",
+                    "Corrid",
+                    "Date",
+                    "Records",
+                    "Commits",
+                    "Aborts",
+                    "C1 TCB",
+                    "C1 zIIP",
+                    "C2 TCB",
+                    "C2 zIIP",
+                    "No zIIP",
+                    "zIIP on GCP",
+                    "C2 NN TCB",
+                    "C2 SP TCB",
+                    "C2 UDF TCB",
+                    "C1 Time",
+                    "C2 Time",
+                    "C2 NN Time",
+                    "C2 SP Time",
+                    "C2 UDF Time",
+                    "C2 SP Sch",
+                    "C2 UDF Sch"
+                    );       
+        
+        ddfStatisticsByKey.entrySet().stream()          
+            .sorted(comparingByKey(
+                        comparing(ReportKey::getSmfid)
+                            .thenComparing(ReportKey::getSsi)
+                            .thenComparing(ReportKey::getCorrid)
+                            .thenComparing(ReportKey::getDay)))
+                .forEachOrdered(entry ->
+        		{
+        			System.out.format("%-5s, %-4s, %-14s, %-10s, %11d, " 
+        			                + "%11d, %11d, %11.3f, %11.3f, %11.3f, " 
+        			                + "%11.3f, %11d, %11.3f, %11.3f, %11.3f, " 
+        			                + "%11.3f, %11.3f, %11.3f, %11.3f, %11.3f, " 
+        			                + "%11.3f, %11.3f, %11.3f%n", 
+        			        entry.getKey().getSmfid(), 
+        			        entry.getKey().getSsi(),
+                            '"' + entry.getKey().getCorrid() + '"',
+                            entry.getKey().getDay(),
+                            entry.getValue().count,
+                            entry.getValue().commits,   
+                            entry.getValue().aborts,   
+                            entry.getValue().c1Tcb,
+                            entry.getValue().c1Ziip,
+                            entry.getValue().c2Tcb(),
+                            entry.getValue().c2Ziip,
+                            entry.getValue().noZiip,
+                            entry.getValue().ziipOnGcp,
+                            entry.getValue().c2nnTcb,
+                            entry.getValue().c2spTcb,
+                            entry.getValue().c2udfTcb,
+                            (double) (entry.getValue().c1Time.toMillis()) / 1000,
+                            (double) (entry.getValue().c2Time().toMillis()) / 1000,
+                            (double) (entry.getValue().c2nnTime.toMillis()) / 1000,
+                            (double) (entry.getValue().c2spTime.toMillis()) / 1000,
+                            (double) (entry.getValue().c2udfTime.toMillis()) / 1000,
+                            (double) (entry.getValue().c2spSchTime.toMillis()) / 1000,
+                            (double) (entry.getValue().c2udfSchTime.toMillis()) / 1000) ;   
+        		});
+    }
    
-    static class statistics
+    static class DDFStatistics
     {
     	void add(Smf101Record r101)
     	{
     	    count++;
     	    
     	    Qwac qwac = r101.qwac().get(0);
-    		commits += qwac.qwaccomm();
+
+    	    commits += qwac.qwaccomm();
     		aborts += qwac.qwacabrt();
     			 		
-    		c1Tcb += qwac.qwacejstSeconds()
-    		        + qwac.qwacspcpSeconds()
-    		        + qwac.qwacudcpSeconds();
+    		c1Tcb += qwac.qwacparr() ?
+    		        qwac.qwacejstSeconds() :
+    		        qwac.qwacejstSeconds() - qwac.qwacbjstSeconds();
     		
-    		if (!qwac.qwacparr())
-    		{
-    		    c1Tcb -= qwac.qwacbjstSeconds();
-    		}
+    		c1Tcb += qwac.qwacspcpSeconds()
+    		        + qwac.qwacudcpSeconds();
     		
     		c1Ziip += qwac.qwaccls1ZiipSeconds();
     		
@@ -106,10 +142,6 @@ public class ssidCorr
     		    noZiip++;	
     		}
     		
-    		c2Tcb += qwac.qwacajstSeconds()
-    		        + qwac.qwacspttSeconds()
-    		        + qwac.qwacudttSeconds();
-
             c2Ziip += qwac.qwaccls2ZiipSeconds();
             
             ziipOnGcp += qwac.qwacziipEligibleSeconds();
@@ -120,7 +152,7 @@ public class ssidCorr
 
             c1Time = c1Time.plus(
                     qwac.qwacparr() ?
-                        Duration.between(stckOrigin, qwac.qwacesc()) :
+                        Duration.between(stckZero, qwac.qwacesc()) :
                         Duration.between(qwac.qwacbsc(), qwac.qwacesc()));
          
             c2nnTime = c2nnTime.plus(qwac.qwacasc());
@@ -128,18 +160,14 @@ public class ssidCorr
             c2udfTime = c2udfTime.plus(qwac.qwacudeb());
             c2spSchTime = c2spSchTime.plus(qwac.qwaccast());
             c2udfSchTime = c2udfSchTime.plus(qwac.qwacudst());
-
-    	}
-    	
+    	}    	
     	
         long count = 0;
         long commits = 0;
         long aborts = 0;
         
         double c1Tcb = 0;
-        double c1Ziip = 0;
-        
-        double c2Tcb = 0;
+        double c1Ziip = 0;        
         double c2Ziip = 0;
         
         long noZiip = 0;
@@ -164,9 +192,16 @@ public class ssidCorr
                     .plus(c2udfTime)
                     .plus(c2spSchTime)
                     .plus(c2udfSchTime);
+        } 
+        
+        double c2Tcb()
+        {
+            return c2nnTcb +
+                    c2spTcb +
+                    c2udfTcb;
         }  
         
-        private static final ZonedDateTime stckOrigin = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+        private static final ZonedDateTime stckZero = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
     }       
 
     static class ReportKey
