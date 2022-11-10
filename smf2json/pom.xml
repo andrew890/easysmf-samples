@@ -13,7 +13,7 @@
 			<name>Black Hill Software Repository</name>
 			<url>https://blackhillsoftware.jfrog.io/artifactory/public</url>
 			<snapshots>
-				<enabled>true</enabled>
+				<enabled>false</enabled>
 			</snapshots>
 		</repository>
 	</repositories>
@@ -69,8 +69,8 @@
 		</dependency>
 				<dependency>
 			<groupId>com.blackhillsoftware.zutil</groupId>
-			<artifactId>zutil</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<artifactId>bhs-zutil</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 				<dependency>
 			<groupId>commons-cli</groupId>
