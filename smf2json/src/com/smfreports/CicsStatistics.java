@@ -34,15 +34,18 @@ public class CicsStatistics
     {
         CommandLine cmd = initOptions(args);    
         
-        gson = new EasySmfGsonBuilder()
+        EasySmfGsonBuilder builder = new EasySmfGsonBuilder()
                 
                 // combine fields into a complete LocalDateTime and exclude individual fields 
                 .calculateEntry(StProductSection.class, "time", x -> x.smfstdat().atTime(x.smfstclt()))
                 .exclude(StProductSection.class, "smfstdat")
-                .exclude(StProductSection.class, "smfstclt")
-                
-                .setPrettyPrinting()
-                .createGson();
+                .exclude(StProductSection.class, "smfstclt");       
+        
+        if(cmd.hasOption("pretty"))
+        {
+            builder.setPrettyPrinting();
+        }
+        gson = builder.createGson();
         
         try (SmfRecordReader ddReader = cmd.hasOption("inDD") ?
                 SmfRecordReader.fromDD(cmd.getOptionValue("inDD")).include(110) : null;           
@@ -126,6 +129,12 @@ public class CicsStatistics
                 .longOpt("out")
                 .hasArg(true)
                 .desc("output file name")
+                .build());
+        options.addOption(
+                Option.builder()
+                .longOpt("pretty")
+                .hasArg(false)
+                .desc("pretty print json")
                 .build());
 
         CommandLineParser parser = new DefaultParser();
