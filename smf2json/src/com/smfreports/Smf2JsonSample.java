@@ -1,22 +1,15 @@
 package com.smfreports;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import java.util.*;
+import org.apache.commons.cli.*;
 
 import com.blackhillsoftware.json.EasySmfGsonBuilder;
 import com.blackhillsoftware.smf.SmfRecord;
-import com.blackhillsoftware.smf.cics.Smf110Record;
-import com.blackhillsoftware.smf.cics.StProductSection;
-import com.blackhillsoftware.smf.cics.statistics.StatisticsDataSection;
+import com.blackhillsoftware.smf.cics.*;
+import com.blackhillsoftware.smf.cics.statistics.*;
 
-public class Smf2JsonSample 
+public class Smf2JsonSample implements Smf2Json.Processor
 {
     private static int outputCount = 0;
     private static int outputMax = 0;
@@ -25,33 +18,22 @@ public class Smf2JsonSample
     {
         Smf2Json.create("Test SMF2JSON")
             .includeRecords(110)
-            .customizeOptions(Smf2JsonSample::customizeOptions)
-            .customizeEasySmfGson(Smf2JsonSample::customizeEasySmfGson)
-            .onEndOfData(Smf2JsonSample::endOfdata)
-            .receiveCommandLine(Smf2JsonSample::receiveCommandLine)
-            .start(args, Smf2JsonSample::processRecord);
+            .start(new Smf2JsonSample(), args);
     }
     
-    public static void customizeOptions(Options options)
+    @Override
+    public void customizeOptions(Options options)
     {
         options.addOption(
                 Option.builder()
                 .longOpt("max")
                 .hasArg(true)
-                .desc("maximum output records")
+                .desc("maximum output records (approximate)")
                 .build());
     }
     
-    public static EasySmfGsonBuilder customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder)
-    {
-        return easySmfGsonBuilder                
-                // combine fields into a complete LocalDateTime and exclude individual fields 
-                .calculateEntry(StProductSection.class, "time", x -> x.smfstdat().atTime(x.smfstclt()))
-                .exclude(StProductSection.class, "smfstdat")
-                .exclude(StProductSection.class, "smfstclt"); 
-    }
-
-    public static boolean receiveCommandLine(CommandLine cmd)
+    @Override
+    public boolean receiveCommandLine(CommandLine cmd)
     {
         if (cmd.hasOption("max"))
         {
@@ -60,7 +42,18 @@ public class Smf2JsonSample
         return true;
     }
     
-    public static List<Object> processRecord(SmfRecord record)
+    @Override
+    public EasySmfGsonBuilder customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder)
+    {
+        return easySmfGsonBuilder                
+                // combine fields into a complete LocalDateTime and exclude individual fields 
+                .calculateEntry(StProductSection.class, "time", x -> x.smfstdat().atTime(x.smfstclt()))
+                .exclude(StProductSection.class, "smfstdat")
+                .exclude(StProductSection.class, "smfstclt"); 
+    }
+    
+    @Override
+    public List<Object> processRecord(SmfRecord record)
     {
         if (outputMax == 0 || outputCount < outputMax)
         {
@@ -76,12 +69,6 @@ public class Smf2JsonSample
             return result;
         }
         return null;
-    }
-    
-    public static List<Object> endOfdata()
-    {
-        System.err.format("Wrote %d records%n", outputCount);
-        return Collections.emptyList();      
     }
     
     static class StatsEntry

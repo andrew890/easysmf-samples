@@ -2,7 +2,6 @@ package com.smfreports;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.*;
 import com.blackhillsoftware.json.EasySmfGsonBuilder;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.zutil.io.*;
@@ -10,10 +9,20 @@ import com.google.gson.Gson;
 
 import org.apache.commons.cli.*;
 
-public class Smf2Json 
-{
+public class Smf2Json
+{    
+    public interface Processor
+    {
+        public List<Object> processRecord(SmfRecord record);
+        public default List<Object> endOfData(){return Collections.emptyList();};
+        public default boolean receiveCommandLine(CommandLine cmd) throws ParseException {return true;};
+        public default EasySmfGsonBuilder customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder) {return easySmfGsonBuilder;};
+        public default void customizeOptions(Options options) {};
+    }
+    
     private void printUsage(Options options) 
     {
+        // find main[] class name
         StackTraceElement[] stack = Thread.currentThread ().getStackTrace ();
         StackTraceElement main = stack[stack.length - 1];
         
@@ -39,17 +48,14 @@ public class Smf2Json
         return new Smf2Json(description);
     }
     
+    Smf2Json.Processor processor;
+    
     private String description;
     private Gson gson;
 
     private List<Integer> smfTypes = new ArrayList<>();
-    private List<SmfTypeSubtype> smfTypeSubtypes = new ArrayList<>();
+    private List<SmfTypeSubtype> smfTypeSubtypes = new ArrayList<>();    
     
-    private Function<EasySmfGsonBuilder, EasySmfGsonBuilder> easysmfGsonCustomizer = null;
-    private Consumer<Options> optionsCustomizer = null;
-    private Function<CommandLine, Boolean> checkCommand = null;
-    private Supplier<List<Object>> onEndOfData = null;
-        
     private Options initOptions(String[] args)
     {
         Options options = new Options();
@@ -82,11 +88,8 @@ public class Smf2Json
                 .hasArg(false)
                 .desc("pretty print json")
                 .build());
-           
-        if (optionsCustomizer != null)
-        {
-            optionsCustomizer.accept(options);
-        }
+        
+        processor.customizeOptions(options);
         
         return options;
     }    
@@ -102,29 +105,13 @@ public class Smf2Json
         smfTypeSubtypes.add(new SmfTypeSubtype(smfType, subType));
         return this;
     }
-    
-    public Smf2Json customizeEasySmfGson(Function<EasySmfGsonBuilder, EasySmfGsonBuilder> builder) {
-        easysmfGsonCustomizer = builder;
-        return this;
-    }
-
-    public Smf2Json customizeOptions(Consumer<Options> options) {
-        optionsCustomizer = options;
-        return this;
-    }
-
-    public Smf2Json receiveCommandLine(Function<CommandLine, Boolean> cmd) {
-        checkCommand = cmd;
-        return this;
-    }
-
-    public Smf2Json onEndOfData(Supplier<List<Object>> processor) {
-        onEndOfData = processor;
-        return this;
-    }
         
-    public void start(String[] args, Function<SmfRecord, List<Object>> processor) throws ParseException, IOException 
+    public void start(Smf2Json.Processor processor, String[] args) throws ParseException, IOException 
     {    
+        Objects.requireNonNull(processor);
+        Objects.requireNonNull(args);
+        
+        this.processor = processor;
         Options options = initOptions(args);
         
         CommandLineParser parser = new DefaultParser();
@@ -136,7 +123,7 @@ public class Smf2Json
             System.exit(0);
         }
         
-        if (checkCommand == null || checkCommand.apply(cmd))
+        if (processor.receiveCommandLine(cmd))
         {
             EasySmfGsonBuilder builder = new EasySmfGsonBuilder();      
             
@@ -145,7 +132,7 @@ public class Smf2Json
                 builder.setPrettyPrinting();
             }
             
-            builder = easysmfGsonCustomizer.apply(builder);
+            builder = processor.customizeEasySmfGson(builder);
             gson = builder.createGson();
             
             try (SmfRecordReader ddReader = cmd.hasOption("inDD") ?
@@ -161,7 +148,7 @@ public class Smf2Json
                     setRecordTypes(ddReader);
                     for (SmfRecord record : ddReader)
                     {
-                        List<Object> result = processor.apply(record);
+                        List<Object> result = processor.processRecord(record);
                         if (result == null) break;
                         writeJson(fileWriter, datasetWriter, result);
                     }
@@ -174,16 +161,13 @@ public class Smf2Json
                         setRecordTypes(reader);
                         for (SmfRecord record : reader)
                         {
-                            List<Object> result = processor.apply(record);
+                            List<Object> result = processor.processRecord(record);
                             if (result == null) break;
                             writeJson(fileWriter, datasetWriter, result);    
                         }    
                     }
                 }
-                if (onEndOfData != null)
-                {
-                    writeJson(fileWriter, datasetWriter, onEndOfData.get());
-                }
+                writeJson(fileWriter, datasetWriter, processor.endOfData());               
             }
         }
     }
