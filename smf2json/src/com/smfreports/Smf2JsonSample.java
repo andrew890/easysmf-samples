@@ -5,18 +5,20 @@ import java.util.*;
 import org.apache.commons.cli.*;
 
 import com.blackhillsoftware.json.EasySmfGsonBuilder;
+import com.blackhillsoftware.smf2json.*;
+
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.statistics.*;
 
-public class Smf2JsonSample implements Smf2Json.Processor
+public class Smf2JsonSample implements Smf2JsonCLI.Processor
 {
     private static int outputCount = 0;
     private static int outputMax = 0;
     
     public static void main(String[] args) throws ParseException, IOException                         
     {
-        Smf2Json.create("Test SMF2JSON")
+        Smf2JsonCLI.create("Test SMF2JSON")
             .includeRecords(110)
             .start(new Smf2JsonSample(), args);
     }
@@ -70,7 +72,7 @@ public class Smf2JsonSample implements Smf2Json.Processor
         }
         else
         {
-            return Smf2Json.FINISHED;
+            return Smf2JsonCLI.FINISHED;
         }
     }
     
