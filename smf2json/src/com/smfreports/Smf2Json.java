@@ -19,6 +19,8 @@ public class Smf2Json
         public default void customizeOptions(Options options) {};
     }
     
+    public static final Finished FINISHED = Finished.getInstance();
+    
     private void printUsage(Options options) 
     {
         // find main[] class name
@@ -46,7 +48,7 @@ public class Smf2Json
         return new Smf2Json(description);
     }
     
-    Smf2Json.Processor processor;
+    private Smf2Json.Processor processor;
     
     private String description;
     private Gson gson;
@@ -159,7 +161,7 @@ public class Smf2Json
                         for (SmfRecord record : reader)
                         {
                             List<Object> result = processor.processRecord(record);
-                            if (result == Finished.getInstance()) finished = true;
+                            if (result == FINISHED) finished = true;
                             if (finished) break;
                             writeJson(writer, result);    
                         }    
@@ -168,11 +170,6 @@ public class Smf2Json
                 writeJson(writer, processor.endOfData());               
             }
         }
-    }
-
-    public static Finished finished()
-    {
-        return Finished.getInstance();
     }
     
     private void setRecordTypes(SmfRecordReader reader) 

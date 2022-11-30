@@ -70,7 +70,7 @@ public class Smf2JsonSample implements Smf2Json.Processor
         }
         else
         {
-            return Smf2Json.finished();
+            return Smf2Json.FINISHED;
         }
     }
     
