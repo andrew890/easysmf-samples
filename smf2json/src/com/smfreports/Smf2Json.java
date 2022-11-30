@@ -149,15 +149,18 @@ public class Smf2Json
                                                  Smf2JsonWriter.forStdout();
                  )
             {
+                boolean finished = false;
                 for (Smf2JsonInput input : inputs) 
                 {
+                    if (finished) break;
                     try (SmfRecordReader reader = input.getReader())
                     {
                         setRecordTypes(reader);
                         for (SmfRecord record : reader)
                         {
                             List<Object> result = processor.processRecord(record);
-                            if (result == null) break;
+                            if (result == Finished.getInstance()) finished = true;
+                            if (finished) break;
                             writeJson(writer, result);    
                         }    
                     }
@@ -167,6 +170,11 @@ public class Smf2Json
         }
     }
 
+    public static Finished finished()
+    {
+        return Finished.getInstance();
+    }
+    
     private void setRecordTypes(SmfRecordReader reader) 
     {
         for (int smfType : smfTypes)

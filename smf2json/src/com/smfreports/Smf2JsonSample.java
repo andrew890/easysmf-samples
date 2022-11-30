@@ -68,7 +68,10 @@ public class Smf2JsonSample implements Smf2Json.Processor
             }
             return result;
         }
-        return null;
+        else
+        {
+            return Smf2Json.finished();
+        }
     }
     
     static class StatsEntry

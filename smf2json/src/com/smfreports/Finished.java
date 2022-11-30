@@ -4,6 +4,17 @@ import java.util.*;
 
 public class Finished implements List<Object> 
 {
+    // singleton
+    static final Finished instance = new Finished();
+    private Finished()
+    {
+    }
+    
+    public static Finished getInstance()
+    {
+        return instance;
+    }
+    
     private static final List<Object> emptyList = Collections.emptyList();
 
     @Override
