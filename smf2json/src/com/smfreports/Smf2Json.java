@@ -5,7 +5,6 @@ import java.util.*;
 import java.util.function.*;
 import com.blackhillsoftware.json.EasySmfGsonBuilder;
 import com.blackhillsoftware.smf.*;
-import com.blackhillsoftware.zutil.io.*;
 import com.google.gson.Gson;
 
 import org.apache.commons.cli.*;
@@ -20,7 +19,6 @@ public class Smf2Json
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp( main.getClassName() + 
                 " [options] <input-name> <input-name2> ...", 
-                System.lineSeparator() +
                 description, 
                 options, 
                 System.lineSeparator() + 
@@ -42,6 +40,7 @@ public class Smf2Json
     private String description;
     private Gson gson;
 
+    private List<Smf2JsonInput> inputs = new ArrayList<>();
     private List<Integer> smfTypes = new ArrayList<>();
     private List<SmfTypeSubtype> smfTypeSubtypes = new ArrayList<>();
     
@@ -148,41 +147,37 @@ public class Smf2Json
             builder = easysmfGsonCustomizer.apply(builder);
             gson = builder.createGson();
             
-            try (SmfRecordReader ddReader = cmd.hasOption("inDD") ?
-                    SmfRecordReader.fromDD(cmd.getOptionValue("inDD")) : null;           
-                 Writer fileWriter = cmd.hasOption("out") ? 
-                    new BufferedWriter(new FileWriter(cmd.getOptionValue("out"))) : null;
-                 TextRecordWriter datasetWriter = cmd.hasOption("outDD") ? 
-                         TextRecordWriter.newWriterForDD(cmd.getOptionValue("outDD")) : null;
+            if (cmd.hasOption("inDD"))
+            {
+                inputs.add(Smf2JsonInput.dd(cmd.getOptionValue("inDD")));
+            }
+            for (String name : cmd.getArgList()) // remaining arguments should be input files
+            {
+                inputs.add(Smf2JsonInput.file(name));
+            }
+            
+            try (Smf2JsonWriter writer = 
+                        cmd.hasOption("out")   ? Smf2JsonWriter.forFile(cmd.getOptionValue("out")) : 
+                        cmd.hasOption("outDD") ? Smf2JsonWriter.forDD(cmd.getOptionValue("outDD")) :
+                                                 Smf2JsonWriter.forStdout();
                  )
             {
-                if (ddReader != null)
+                for (Smf2JsonInput input : inputs) // remaining arguments should be input files
                 {
-                    setRecordTypes(ddReader);
-                    for (SmfRecord record : ddReader)
-                    {
-                        List<Object> result = processor.apply(record);
-                        if (result == null) break;
-                        writeJson(fileWriter, datasetWriter, result);
-                    }
-                }
-                for (String name : cmd.getArgList()) // remaining arguments should be input files
-                {
-                    try (SmfRecordReader reader = 
-                            SmfRecordReader.fromName(name)) 
+                    try (SmfRecordReader reader = input.getReader()) 
                     {
                         setRecordTypes(reader);
                         for (SmfRecord record : reader)
                         {
                             List<Object> result = processor.apply(record);
                             if (result == null) break;
-                            writeJson(fileWriter, datasetWriter, result);    
+                            writeJson(writer, result);    
                         }    
                     }
                 }
                 if (onEndOfData != null)
                 {
-                    writeJson(fileWriter, datasetWriter, onEndOfData.get());
+                    writeJson(writer, onEndOfData.get());
                 }
             }
         }
@@ -200,26 +195,14 @@ public class Smf2Json
         }
     }
 
-    private void writeJson(Writer fileWriter, TextRecordWriter datasetWriter, List<Object> objects) throws IOException 
+    private void writeJson(Smf2JsonWriter writer, List<Object> objects) throws IOException 
     {
         if (objects != null)
         {
             for (int i=0; i < objects.size(); i++)
             {
                 String json = gson.toJson(objects.get(i));
-                if (datasetWriter != null)
-                {
-                    datasetWriter.writeLine(json);
-                }
-                else if (fileWriter != null)
-                {
-                    fileWriter.write(json);
-                    fileWriter.write(System.lineSeparator());
-                }
-                else
-                {
-                    System.out.println(json);
-                }
+                writer.writeLine(json);
             }
         }
     }
