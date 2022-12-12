@@ -24,6 +24,7 @@ public class CicsTransactions implements Smf2JsonCLI.Processor
     public EasySmfGsonBuilder customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder) 
     {
         easySmfGsonBuilder.cicsTxExcludeGroup("DFHRMI");
+        easySmfGsonBuilder.exclude("BMCMVCIC");
         return easySmfGsonBuilder;
     }
 
