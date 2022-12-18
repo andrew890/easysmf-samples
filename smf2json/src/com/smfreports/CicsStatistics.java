@@ -1,163 +1,49 @@
 package com.smfreports;
 
 import java.io.*;
-import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.blackhillsoftware.json.CombinedEntry;
 import com.blackhillsoftware.json.EasySmfGsonBuilder;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.statistics.*;
-import com.blackhillsoftware.zutil.io.*;
-import com.google.gson.Gson;
+import com.blackhillsoftware.smf2json.Smf2JsonCLI;
 
 import org.apache.commons.cli.*;
 
-public class CicsStatistics 
+public class CicsStatistics implements Smf2JsonCLI.Processor
 {
-    private static void printUsage(Options options) 
+    public static void main(String[] args) throws IOException, ParseException 
     {
-        HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp( MethodHandles.lookup().lookupClass().getName() + 
-                " [options] <input-name> <input-name2> ...", 
-                System.lineSeparator() +
-                "Generate JSON records from CICS statistics SMF data", 
-                options, 
-                System.lineSeparator() + 
-                "<input-name> : File(s) containing SMF records. Binary data, RECFM=U or V[B] including RDW." +
-                System.lineSeparator() + 
-                "Specify <input-name> or --inDD");
+        Smf2JsonCLI.create("Convert CICS Statistics Sections to JSON")
+            .includeRecords(110)
+            .start(new CicsStatistics(), args);
     }
-    
-    private static Gson gson;
-    
-    public static void main(String[] args) throws IOException, ParseException                                   
+
+    @Override
+    public EasySmfGsonBuilder customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder)
     {
-        CommandLine cmd = initOptions(args);    
-        
-        EasySmfGsonBuilder builder = new EasySmfGsonBuilder()
-                
+        return easySmfGsonBuilder                
                 // combine fields into a complete LocalDateTime and exclude individual fields 
                 .calculateEntry(StProductSection.class, "time", x -> x.smfstdat().atTime(x.smfstclt()))
                 .exclude(StProductSection.class, "smfstdat")
-                .exclude(StProductSection.class, "smfstclt");       
-        
-        if(cmd.hasOption("pretty"))
-        {
-            builder.setPrettyPrinting();
-        }
-        gson = builder.createGson();
-        
-        try (SmfRecordReader ddReader = cmd.hasOption("inDD") ?
-                SmfRecordReader.fromDD(cmd.getOptionValue("inDD")).include(110) : null;           
-             Writer fileWriter = cmd.hasOption("out") ? 
-                new BufferedWriter(new FileWriter(cmd.getOptionValue("out"))) : null;
-             TextRecordWriter datasetWriter = cmd.hasOption("outDD") ? 
-                     TextRecordWriter.newWriterForDD(cmd.getOptionValue("outDD")) : null;
-             )
-        {
-            if (ddReader != null)
-            {
-                processRecords(ddReader, fileWriter, datasetWriter);  
-            }
-            for (String name : cmd.getArgList()) // remaining arguments should be input files
-            {
-                try (SmfRecordReader reader = 
-                        SmfRecordReader.fromName(name)
-                            .include(110)) 
-                {
-                    processRecords(reader, fileWriter, datasetWriter);  
-                }
-            }
-        }
-        System.err.println("Done");
-    }
-
-    private static void processRecords(
-            SmfRecordReader reader, 
-            Writer fileWriter, 
-            TextRecordWriter datasetWriter)
-            throws IOException 
-    {
-        for (SmfRecord record : reader)
-        {
-            Smf110Record r110 = Smf110Record.from(record);
-            {
-                for (StatisticsDataSection stats : r110.statisticsDataSections())
-                {
-                    String json = gson.toJson(
-                            new StatsEntry(r110.stProductSection(), stats));
-                    if (datasetWriter != null)
-                    {
-                        datasetWriter.writeLine(json);
-                    }
-                    else if (fileWriter != null)
-                    {
-                        fileWriter.write(json);
-                        fileWriter.write(System.lineSeparator());
-                    }
-                    else
-                    {
-                        System.out.println(json);
-                    }
-                }
-            }    
-        }
+                .exclude(StProductSection.class, "smfstclt"); 
     }
     
-    private static CommandLine initOptions(String[] args) throws ParseException 
+    @Override
+    public List<Object> processRecord(SmfRecord record) 
     {
-        Options options = new Options();
-        options.addOption(
-                Option.builder("h")
-                .longOpt("help")
-                .desc("print this message and exit")
-                .build());
-        options.addOption(
-                Option.builder()
-                .longOpt("inDD")
-                .hasArg(true)
-                .desc("input DD name")
-                .build());
-        options.addOption(
-                Option.builder()
-                .longOpt("outDD")
-                .hasArg(true)
-                .desc("output DD name")
-                .build());
-        options.addOption(
-                Option.builder()
-                .longOpt("out")
-                .hasArg(true)
-                .desc("output file name")
-                .build());
-        options.addOption(
-                Option.builder()
-                .longOpt("pretty")
-                .hasArg(false)
-                .desc("pretty print json")
-                .build());
-
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = parser.parse(options, args);
-
-        if (args.length == 0 || cmd.hasOption("help"))
+        Smf110Record r110 = Smf110Record.from(record);
+        List<Object> result = new ArrayList<>();
+        for (StatisticsDataSection stats : r110.statisticsDataSections())
         {
-            printUsage(options);
-            System.exit(0);
+            
+            result.add(new CombinedEntry()
+                    .add("productSection", r110.stProductSection())
+                    .add("statisticsSection", stats));
         }
-        
-        return cmd;
-    }
-    
-    static class StatsEntry
-    {
-        StatsEntry(StProductSection productSection, StatisticsDataSection statisticsSection)
-        {
-            this.productSection = productSection;
-            this.statisticsSection = statisticsSection;
-        }
-                
-        StProductSection productSection;
-        StatisticsDataSection statisticsSection;
-    }
+        return result;
+    }   
 }
