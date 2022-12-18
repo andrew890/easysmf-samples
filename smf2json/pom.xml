@@ -20,7 +20,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<easysmfVersion>1.11.1</easysmfVersion>
+		<easysmfVersion>1.12.0-SNAPSHOT</easysmfVersion>
 	</properties>
 
 	<build>
