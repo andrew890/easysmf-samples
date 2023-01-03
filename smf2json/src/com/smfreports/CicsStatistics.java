@@ -1,19 +1,17 @@
 package com.smfreports;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import com.blackhillsoftware.json.CombinedEntry;
-import com.blackhillsoftware.json.EasySmfGsonBuilder;
+import com.blackhillsoftware.json.*;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.statistics.*;
-import com.blackhillsoftware.smf2json.Smf2JsonCLI;
+import com.blackhillsoftware.smf2json.cli.*;
 
 import org.apache.commons.cli.*;
 
-public class CicsStatistics implements Smf2JsonCLI.Processor
+public class CicsStatistics implements Smf2JsonCLI.Client
 {
     public static void main(String[] args) throws IOException, ParseException 
     {
@@ -23,13 +21,13 @@ public class CicsStatistics implements Smf2JsonCLI.Processor
     }
 
     @Override
-    public EasySmfGsonBuilder customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder)
+    public void customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder)
     {
-        return easySmfGsonBuilder                
                 // combine fields into a complete LocalDateTime and exclude individual fields 
-                .calculateEntry(StProductSection.class, "time", x -> x.smfstdat().atTime(x.smfstclt()))
-                .exclude(StProductSection.class, "smfstdat")
-                .exclude(StProductSection.class, "smfstclt"); 
+        easySmfGsonBuilder                
+            .calculateEntry(StProductSection.class, "time", x -> x.smfstdat().atTime(x.smfstclt()))
+            .exclude(StProductSection.class, "smfstdat")
+            .exclude(StProductSection.class, "smfstclt"); 
     }
     
     @Override

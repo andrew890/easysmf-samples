@@ -1,19 +1,17 @@
 package com.smfreports;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
-import org.apache.commons.cli.ParseException;
+import com.blackhillsoftware.json.*;
+import com.blackhillsoftware.smf.*;
+import com.blackhillsoftware.smf.cics.*;
+import com.blackhillsoftware.smf.cics.monitoring.*;
+import com.blackhillsoftware.smf2json.cli.*;
 
-import com.blackhillsoftware.json.EasySmfGsonBuilder;
-import com.blackhillsoftware.smf.SmfRecord;
-import com.blackhillsoftware.smf.cics.Smf110Record;
-import com.blackhillsoftware.smf.cics.monitoring.PerformanceRecord;
-import com.blackhillsoftware.smf2json.Smf2JsonCLI;
-
-public class CicsTransactions implements Smf2JsonCLI.Processor
+public class CicsTransactions implements Smf2JsonCLI.Client
 {      
-    public static void main(String[] args) throws IOException, ParseException                                   
+    public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI.create("Convert CICS transaction information to JSON")
             .includeRecords(110, 1)
@@ -21,11 +19,10 @@ public class CicsTransactions implements Smf2JsonCLI.Processor
     }
     
     @Override
-    public EasySmfGsonBuilder customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder) 
+    public void customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder) 
     {
         easySmfGsonBuilder.cicsTxExcludeGroup("DFHRMI");
         easySmfGsonBuilder.exclude("BMCMVCIC");
-        return easySmfGsonBuilder;
     }
 
     @Override

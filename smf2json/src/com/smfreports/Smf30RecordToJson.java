@@ -1,11 +1,11 @@
 package com.smfreports;
 
-import java.io.IOException;
+import java.io.*;
 
-import com.blackhillsoftware.json.EasySmfGsonBuilder;
-import com.blackhillsoftware.smf.SmfRecordReader;
-import com.blackhillsoftware.smf.smf30.Smf30Record;
-import com.google.gson.Gson;
+import com.blackhillsoftware.json.*;
+import com.blackhillsoftware.smf.*;
+import com.blackhillsoftware.smf.smf30.*;
+import com.google.gson.*;
 
 /**
  * 
