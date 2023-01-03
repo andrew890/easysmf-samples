@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.json;
 
 import java.io.*;
 

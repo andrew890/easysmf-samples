@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.json.cics;
 
 import java.io.*;
 import java.util.*;
