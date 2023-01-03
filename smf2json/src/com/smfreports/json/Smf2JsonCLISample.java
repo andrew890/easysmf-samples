@@ -10,7 +10,7 @@ import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.statistics.*;
 
-public class Smf2JsonSample implements Smf2JsonCLI.Client
+public class Smf2JsonCLISample implements Smf2JsonCLI.Client
 {
     private static int outputCount = 0;
     private static int outputMax = 0;
@@ -19,7 +19,7 @@ public class Smf2JsonSample implements Smf2JsonCLI.Client
     {
         Smf2JsonCLI.create("Test SMF2JSON")
             .includeRecords(110)
-            .start(new Smf2JsonSample(), args);
+            .start(new Smf2JsonCLISample(), args);
     }
     
     @Override
