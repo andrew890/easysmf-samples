@@ -3,7 +3,6 @@ package com.smfreports.json.cics;
 import java.io.*;
 import java.util.*;
 
-import com.blackhillsoftware.json.*;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.monitoring.*;
@@ -16,13 +15,6 @@ public class CicsTransactions implements Smf2JsonCLI.Client
         Smf2JsonCLI.create("Convert CICS transaction information to JSON")
             .includeRecords(110, 1)
             .start(new CicsTransactions(), args);
-    }
-    
-    @Override
-    public void customizeEasySmfGson(EasySmfGsonBuilder easySmfGsonBuilder) 
-    {
-        easySmfGsonBuilder.cicsTxExcludeGroup("DFHRMI");
-        easySmfGsonBuilder.exclude("BMCMVCIC");
     }
 
     @Override
