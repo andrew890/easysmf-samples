@@ -12,15 +12,15 @@ import com.blackhillsoftware.smf.cics.monitoring.*;
 import com.blackhillsoftware.smf.cics.monitoring.fields.*;
 import com.blackhillsoftware.smf2json.cli.*;
 
-public class CicsTransactions implements Smf2JsonCLI.Client
+public class CicsSlowTransactions implements Smf2JsonCLI.Client
 {      
     double slowSeconds;
     
     public static void main(String[] args) throws IOException                                   
     {
-        Smf2JsonCLI.create("Convert CICS transaction information to JSON")
+        Smf2JsonCLI.create("Convert transaction information for slow CICS transactions to JSON")
             .includeRecords(110, 1)
-            .start(new CicsTransactions(), args);
+            .start(new CicsSlowTransactions(), args);
     }
     
     @Override
