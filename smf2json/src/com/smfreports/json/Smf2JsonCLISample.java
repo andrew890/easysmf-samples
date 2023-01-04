@@ -34,7 +34,7 @@ public class Smf2JsonCLISample implements Smf2JsonCLI.Client
     }
     
     @Override
-    public boolean checkCommandLine(CommandLine cmd) 
+    public boolean validateCommandLine(CommandLine cmd) 
     {
         if (cmd.hasOption("max"))
         {

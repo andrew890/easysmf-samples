@@ -9,12 +9,12 @@ import com.blackhillsoftware.json.CombinedEntry;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.monitoring.*;
-import com.blackhillsoftware.smf.cics.monitoring.fields.Field;
+import com.blackhillsoftware.smf.cics.monitoring.fields.*;
 import com.blackhillsoftware.smf2json.cli.*;
 
 public class CicsTransactions implements Smf2JsonCLI.Client
 {      
-    int slowMS;
+    double slowSeconds;
     
     public static void main(String[] args) throws IOException                                   
     {
@@ -28,16 +28,22 @@ public class CicsTransactions implements Smf2JsonCLI.Client
     {
         List<Object> result = new ArrayList<>();
         Smf110Record r110 = Smf110Record.from(record);
-        
-        IdentificationInfo id = new IdentificationInfo(r110);
+
+        String system = r110.smfsid();
+        String smfmnjbn = r110.mnProductSection().smfmnjbn();
+        String smfmnprn = r110.mnProductSection().smfmnprn();
+        String smfmnspn = r110.mnProductSection().smfmnspn();
         
         for (PerformanceRecord section : r110.performanceRecords())
         {
-            if (section.elapsedSeconds() * 1000 > slowMS)
+            if (section.elapsedSeconds() > slowSeconds)
             {
                 CombinedEntry entry = new CombinedEntry()
                         .add("time", section.getField(Field.STOP))
-                        .add("identificationInfo", id)
+                        .add("system", system)
+                        .add("smfmnjbn", smfmnjbn)
+                        .add("smfmnprn", smfmnprn)
+                        .add("smfmnspn", smfmnspn)
                         .add("txInfo", section);
                 result.add(entry);
             }
@@ -52,39 +58,24 @@ public class CicsTransactions implements Smf2JsonCLI.Client
                 Option.builder("ms")
                     .longOpt("milliseconds")
                     .hasArg(true)
+                    .valueSeparator('=')
                     .desc("report transactions longer than this duration (0 for all)")
                     .required()
                     .build());        
     }
     
     @Override
-    public boolean checkCommandLine(CommandLine cmd) 
+    public boolean validateCommandLine(CommandLine cmd) 
     {
         try
         {
-            slowMS = Integer.parseInt(cmd.getOptionValue("ms"));
+            slowSeconds = (double)Integer.parseInt(cmd.getOptionValue("ms")) / 1000;
         }
         catch (NumberFormatException ex)
         {
-            System.err.println("Failed to parse ms option: " + ex.getMessage());
+            System.err.println("Failed to parse ms option: " + ex.toString());
             return false;
         }   
         return true;
-    }
-    
-    private static class IdentificationInfo
-    {
-        public IdentificationInfo(Smf110Record r110)
-        {
-            system = r110.smfsid();
-            smfmnjbn = r110.mnProductSection().smfmnjbn();
-            smfmnprn = r110.mnProductSection().smfmnprn();
-            smfmnspn = r110.mnProductSection().smfmnspn();
-        }
-        
-        String system;
-        String smfmnjbn;
-        String smfmnprn;
-        String smfmnspn;
     }
 }
