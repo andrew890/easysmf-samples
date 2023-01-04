@@ -5,7 +5,7 @@ import java.util.*;
 
 import org.apache.commons.cli.*;
 
-import com.blackhillsoftware.json.CombinedEntry;
+import com.blackhillsoftware.json.*;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.monitoring.*;
@@ -38,13 +38,13 @@ public class CicsTransactions implements Smf2JsonCLI.Client
         {
             if (section.elapsedSeconds() > slowSeconds)
             {
-                CombinedEntry entry = new CombinedEntry()
+                CompositeEntry entry = new CompositeEntry()
                         .add("time", section.getField(Field.STOP))
                         .add("system", system)
                         .add("smfmnjbn", smfmnjbn)
                         .add("smfmnprn", smfmnprn)
                         .add("smfmnspn", smfmnspn)
-                        .add("txInfo", section);
+                        .add(section);
                 result.add(entry);
             }
         }

@@ -38,9 +38,9 @@ public class CicsStatistics implements Smf2JsonCLI.Client
         for (StatisticsDataSection stats : r110.statisticsDataSections())
         {
             
-            result.add(new CombinedEntry()
-                    .add("productSection", r110.stProductSection())
-                    .add("statisticsSection", stats));
+            result.add(new CompositeEntry()
+                    .add(r110.stProductSection())
+                    .add(stats));
         }
         return result;
     }   
