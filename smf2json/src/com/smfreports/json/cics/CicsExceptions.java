@@ -10,31 +10,41 @@ import com.blackhillsoftware.smf.cics.monitoring.ExceptionData;
 import com.blackhillsoftware.smf2json.cli.*;
 
 
-public class CicsExceptions implements Smf2JsonCLI.Client 
+public class CicsExceptions  
 {
     public static void main(String[] args) throws IOException                         
     {
-        Smf2JsonCLI.create("Convert CICS Exception Records to JSON")
+        Smf2JsonCLI.create(args)
+        .description("Convert CICS Exception Records to JSON")
             .includeRecords(110)
-            .start(new CicsExceptions(), args);
+            .start(new Client());
     }
     
-    @Override
-    public List<Object> processRecord(SmfRecord record) 
+    static class Client implements Smf2JsonCLI.Client
     {
-        List<Object> result = new ArrayList<>();
-        Smf110Record r110 = Smf110Record.from(record);
-        for (ExceptionData exception : r110.exceptionData())
+        @Override
+        public List<Object> processRecord(SmfRecord record) 
         {
-            result.add(new CompositeEntry()                   
-                    .add("time", exception.excmnsto())
-                    .add("system", r110.smfsid())
-                    .add("smfmnjbn", r110.mnProductSection().smfmnjbn())
-                    .add("smfmnprn", r110.mnProductSection().smfmnprn())
-                    .add("smfmnspn", r110.mnProductSection().smfmnspn())
-                    .add(exception));
+            List<Object> result = new ArrayList<>();
+            Smf110Record r110 = Smf110Record.from(record);
+            for (ExceptionData exception : r110.exceptionData())
+            {
+                result.add(
+                        new CompositeEntry()                   
+                            .add("time", exception.excmnsto())
+                            .add("system", r110.smfsid())
+                            .add("smfmnjbn", r110.mnProductSection().smfmnjbn())
+                            .add("smfmnprn", r110.mnProductSection().smfmnprn())
+                            .add("smfmnspn", r110.mnProductSection().smfmnspn())
+                            .add(exception)
+                            );
+            }
+            return result;
         }
         
-        return result;
+        @Override
+        public List<Object> onEndOfData() {
+            return null;
+        }       
     }
 }
