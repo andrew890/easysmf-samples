@@ -14,13 +14,13 @@ public class CicsExceptions
 {
     public static void main(String[] args) throws IOException                         
     {
-        Smf2JsonCLI.create(args)
-        .description("Convert CICS Exception Records to JSON")
+        Smf2JsonCLI.create()
+            .description("Convert CICS Exception Records to JSON")
             .includeRecords(110)
-            .start(new Client());
+            .start(new CliClient(), args);
     }
     
-    static class Client implements Smf2JsonCLI.Client
+    private static class CliClient implements Smf2JsonCLI.Client
     {
         @Override
         public List<Object> processRecord(SmfRecord record) 

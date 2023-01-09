@@ -13,19 +13,19 @@ public class CicsStatistics
 {
     public static void main(String[] args) throws IOException 
     {
-        Smf2JsonCLI cli = Smf2JsonCLI.create(args)
+        Smf2JsonCLI smf2JsonCli = Smf2JsonCLI.create()
             .description("Convert CICS Statistics Sections to JSON")
             .includeRecords(110);
         
         // combine fields into a complete LocalDateTime and exclude individual fields 
-        cli.easySmfGsonBuilder()            
+        smf2JsonCli.easySmfGsonBuilder()            
             .calculateEntry(StProductSection.class, "time", 
                     x -> x.smfstdat().atTime(x.smfstclt()))
             .exclude(StProductSection.class, "smfstdat")
             .exclude(StProductSection.class, "smfstclt");
     
         // exclude some other fields
-        cli.easySmfGsonBuilder()
+        smf2JsonCli.easySmfGsonBuilder()
             .exclude(StProductSection.class, "smfstrsd")
             .exclude(StProductSection.class, "smfstrst")
             .exclude(StProductSection.class, "smfstcst")
@@ -33,7 +33,7 @@ public class CicsStatistics
             .exclude(StProductSection.class, "smfstmfl")
             .exclude(StProductSection.class, "smfstpdn");
         
-            cli.start(new Client());
+            smf2JsonCli.start(new Client(), args);
     }
     
     private static class Client implements Smf2JsonCLI.Client

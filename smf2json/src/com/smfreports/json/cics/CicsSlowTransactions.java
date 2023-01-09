@@ -18,11 +18,11 @@ public class CicsSlowTransactions
     
     public static void main(String[] args) throws IOException                                   
     {
-        Smf2JsonCLI cli = Smf2JsonCLI.create(args)
+        Smf2JsonCLI smf2JsonCli = Smf2JsonCLI.create()
             .description("Convert transaction information for slow CICS transactions to JSON")
             .includeRecords(110, 1);
         
-        cli.options().addOption(
+        smf2JsonCli.options().addOption(
                 Option.builder("ms")
                     .longOpt("milliseconds")
                     .hasArg(true)
@@ -34,21 +34,21 @@ public class CicsSlowTransactions
         int slowMs = 0;
         try
         {
-            slowMs = Integer.parseInt(cli.commandLine().getOptionValue("ms"));
+            slowMs = Integer.parseInt(smf2JsonCli.commandLine(args).getOptionValue("ms"));
         }
         catch (NumberFormatException ex)
         {
             System.err.println("Failed to parse ms option: " + ex.toString());
             System.exit(0);
         }   
-        cli.start(new Client((double)slowMs * 1000));    
+        smf2JsonCli.start(new CliClient((double)slowMs * 1000), args);    
     }
     
-    static class Client implements Smf2JsonCLI.Client
+    private static class CliClient implements Smf2JsonCLI.Client
     {
         double slowSeconds;
         
-        Client(double slowSeconds)
+        CliClient(double slowSeconds)
         {
             this.slowSeconds = slowSeconds;
         }
@@ -83,7 +83,6 @@ public class CicsSlowTransactions
         
         @Override
         public List<Object> onEndOfData() {
-            // TODO Auto-generated method stub
             return null;
         }
     }
