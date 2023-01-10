@@ -30,7 +30,9 @@ public class CicsSlowTransactions
                     .desc("report transactions longer than this duration (0 for all)")
                     .required()
                     .build());
-
+        
+        smf2JsonCli.easySmfGsonBuilder().cicsClockDetail(false);
+        
         int slowMs = 0;
         try
         {
@@ -41,7 +43,7 @@ public class CicsSlowTransactions
             System.err.println("Failed to parse ms option: " + ex.toString());
             System.exit(0);
         }   
-        smf2JsonCli.start(new CliClient((double)slowMs * 1000), args);    
+        smf2JsonCli.start(new CliClient((double)slowMs / 1000), args);    
     }
     
     private static class CliClient implements Smf2JsonCLI.Client
