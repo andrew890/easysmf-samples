@@ -24,7 +24,7 @@ public class CicsStatistics
             .exclude(StProductSection.class, "smfstdat")
             .exclude(StProductSection.class, "smfstclt");
     
-        // exclude some other fields
+        // exclude some other non-interesting fields
         smf2JsonCli.easySmfGsonBuilder()
             .exclude(StProductSection.class, "smfstrsd")
             .exclude(StProductSection.class, "smfstrst")
@@ -56,6 +56,7 @@ public class CicsStatistics
 
         @Override
         public List<Object> onEndOfData() {
+            System.err.println("Finished");
             return null;
         }
     }

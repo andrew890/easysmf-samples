@@ -44,6 +44,7 @@ public class CicsExceptions
         
         @Override
         public List<Object> onEndOfData() {
+            System.err.println("Finished");
             return null;
         }       
     }

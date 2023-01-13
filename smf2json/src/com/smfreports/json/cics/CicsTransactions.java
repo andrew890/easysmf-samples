@@ -17,6 +17,7 @@ public class CicsTransactions {
         Smf2JsonCLI smf2JsonCLI = Smf2JsonCLI.create()
             .includeRecords(110, 1);
         smf2JsonCLI.easySmfGsonBuilder().avoidScientificNotation();
+        smf2JsonCLI.easySmfGsonBuilder().cicsClockDetail(false);
         smf2JsonCLI.start(new Client(), args);
     }
     
@@ -36,23 +37,32 @@ public class CicsTransactions {
                         .add("jobname", r110.mnProductSection().smfmnjbn())
                         .add("smfmnprn", r110.mnProductSection().smfmnprn())
                         .add("smfmnspn", r110.mnProductSection().smfmnspn())
+                        .add("oapplid", perf.getField(Field.OAPPLID))
                         .add("term", perf.getField(Field.TERM))
                         .add("tran", perf.getField(Field.TRAN))
+                        .add("pgmname", perf.getField(Field.PGMNAME))
                         .add("trannum", 
                                 perf.isValidPacked(Field.TRANNUM) ?
                                         perf.getField(Field.TRANNUM) :
                                         perf.getFieldAsString(Field.TRANNUM).trim() 
                                 )
+                        .add("rtype", perf.getField(Field.RTYPE).trim())
                         .add("ttype", perf.getField(Field.TTYPE))
                         .add("start", perf.getField(Field.START))
                         .add("stop", perf.getField(Field.STOP))
                         .add("elapsed", perf.elapsedSeconds())
-                        .add("dspdeley", perf.getField(Field.DSPDELAY).timerSeconds())
-                        .add("usrcput", perf.getField(Field.USRCPUT).timerSeconds())
-                        .add("usrdispt", perf.getField(Field.USRDISPT).timerSeconds())
-                        .add("qrcput", perf.getField(Field.QRCPUT).timerSeconds())
-                        .add("qrdispt", perf.getField(Field.QRDISPT).timerSeconds())
-                        .add("susptime", perf.getField(Field.SUSPTIME).timerSeconds())
+                        .add("abcodeo", perf.getField(Field.ABCODEO).length() > 0 ? 
+                                perf.getField(Field.ABCODEO) : 
+                                null)
+                        .add("abcodec", perf.getField(Field.ABCODEC).length() > 0 ? 
+                                perf.getField(Field.ABCODEC) : 
+                                null)
+                        .add("dspdelay", perf.getField(Field.DSPDELAY))
+                        .add("usrcput", perf.getField(Field.USRCPUT))
+                        .add("usrdispt", perf.getField(Field.USRDISPT))
+                        .add("qrcput", perf.getField(Field.QRCPUT))
+                        .add("qrdispt", perf.getField(Field.QRDISPT))
+                        .add("susptime", perf.getField(Field.SUSPTIME))
                         );   
             }
             return result;
@@ -64,9 +74,5 @@ public class CicsTransactions {
             System.err.println("Finished");
             return null;
         }
-
-
-        
     }
-
 }
