@@ -7,8 +7,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.blackhillsoftware.json.CicsTransactionSummary;
-import com.blackhillsoftware.json.CompositeEntry;
+import com.blackhillsoftware.json.*;
+
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.cics.Smf110Record;
 import com.blackhillsoftware.smf.cics.monitoring.*;
@@ -24,22 +24,22 @@ public class CicsTransactionSummary2
             .processRecordIsThreadsafe(true)
             .includeRecords(110, 1);  
         
-        CicsTransactionSummary.exclude(Field.START);
-        CicsTransactionSummary.exclude(Field.STOP);
-        CicsTransactionSummary.exclude(Field.TRAN);
-        CicsTransactionSummary.exclude(Field.TTYPE);
-        CicsTransactionSummary.exclude(Field.RTYPE);
-        CicsTransactionSummary.exclude(Field.PGMNAME);
-        CicsTransactionSummary.exclude(Field.SRVCLSNM);
-        CicsTransactionSummary.exclude(Field.RPTCLSNM);
-        CicsTransactionSummary.exclude(Field.TCLSNAME);
-        
         smf2JsonCli.start(new CliClient(), args);    
     }
     
     private static class CliClient implements Smf2JsonCLI.Client
     {        
-        private Map<Key, CicsTransactionSummary> stats = new ConcurrentHashMap<>();
+        private Map<Key, CicsTransactionCollector> stats = new ConcurrentHashMap<>();
+        private CicsTransactionCollectorFactory collectorFactory = new CicsTransactionCollectorFactory()
+                .exclude(Field.START)
+                .exclude(Field.STOP)
+                .exclude(Field.TRAN)
+                .exclude(Field.TTYPE)
+                .exclude(Field.RTYPE)
+                .exclude(Field.PGMNAME)
+                .exclude(Field.SRVCLSNM)
+                .exclude(Field.RPTCLSNM)
+                .exclude(Field.TCLSNAME);
         
         @Override
         public List<Object> processRecord(SmfRecord record) 
@@ -50,7 +50,7 @@ public class CicsTransactionSummary2
 	            	{
 	            		stats.computeIfAbsent(
 	            				new Key(r110, performanceRecord), 
-	            				value -> new CicsTransactionSummary(performanceRecord.getDictionary()))
+	            				value -> collectorFactory.createCollector(performanceRecord.getDictionary()))
 	            		.add(performanceRecord);
 	            	}
             	);
