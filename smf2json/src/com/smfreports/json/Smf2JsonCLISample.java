@@ -3,7 +3,7 @@ package com.smfreports.json;
 import java.io.*;
 import java.util.*;
 import com.blackhillsoftware.smf2json.cli.*;
-import com.blackhillsoftware.json.*;
+import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.smf30.*;
 

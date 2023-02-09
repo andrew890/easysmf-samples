@@ -3,9 +3,7 @@ package com.smfreports.json.cics;
 import java.io.*;
 import java.util.*;
 
-import org.apache.commons.cli.*;
-
-import com.blackhillsoftware.json.*;
+import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.monitoring.*;
@@ -22,7 +20,10 @@ public class CicsAbendTransactions
             .description("List CICS transactions with ABCODEC or ABCODEO as JSON")
             .includeRecords(110, 1);
         
-        smf2JsonCli.easySmfGsonBuilder().cicsClockDetail(false);
+        smf2JsonCli.easySmfGsonBuilder()
+            .includeZeroValues(false)
+            .includeEmptyStrings(false)
+            .cicsClockDetail(true);
 
         smf2JsonCli.start(new CliClient(), args);    
     }
@@ -60,7 +61,8 @@ public class CicsAbendTransactions
         }
         
         @Override
-        public List<Object> onEndOfData() {
+        public List<Object> onEndOfData() 
+        {
             System.err.println("Finished");
             return null;
         }

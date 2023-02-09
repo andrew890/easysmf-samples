@@ -3,7 +3,7 @@ package com.smfreports.json.cics;
 import java.io.*;
 import java.util.*;
 
-import com.blackhillsoftware.json.*;
+import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.statistics.*;
@@ -55,7 +55,8 @@ public class CicsStatistics
         }
 
         @Override
-        public List<Object> onEndOfData() {
+        public List<Object> onEndOfData() 
+        {
             System.err.println("Finished");
             return null;
         }

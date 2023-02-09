@@ -21,7 +21,7 @@ public class Smf30RecordToJson
     public static void main(String[] args) throws IOException                                   
     {
         Gson gson = new EasySmfGsonBuilder()
-                .avoidScientificNotation() // make decimals more readable
+                .avoidScientificNotation(true) // make decimals more readable
                 .setPrettyPrinting()       // pretty printing = human readable
                 .createGson();
         

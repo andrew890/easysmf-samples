@@ -5,7 +5,7 @@ import java.util.*;
 
 import org.apache.commons.cli.*;
 
-import com.blackhillsoftware.json.*;
+import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.monitoring.*;
@@ -31,19 +31,25 @@ public class CicsSlowTransactions
                     .required()
                     .build());
         
-        smf2JsonCli.easySmfGsonBuilder().cicsClockDetail(false);
+        smf2JsonCli.easySmfGsonBuilder()
+            .cicsClockDetail(true)
+            .includeZeroValues(false)
+            .includeEmptyStrings(false)
+            ;
         
-        int slowMs = 0;
+        double slowSeconds = 0;
         try
         {
-            slowMs = Integer.parseInt(smf2JsonCli.commandLine(args).getOptionValue("ms"));
+            slowSeconds = Double.parseDouble(
+                    smf2JsonCli.commandLine(args).getOptionValue("ms")) 
+                        / 1000;
         }
         catch (NumberFormatException ex)
         {
             System.err.println("Failed to parse ms option: " + ex.toString());
             System.exit(0);
-        }   
-        smf2JsonCli.start(new CliClient((double)slowMs / 1000), args);    
+        }
+        smf2JsonCli.start(new CliClient(slowSeconds), args);    
     }
     
     private static class CliClient implements Smf2JsonCLI.Client

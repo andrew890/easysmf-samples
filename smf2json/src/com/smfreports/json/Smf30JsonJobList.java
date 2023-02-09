@@ -26,7 +26,7 @@ public class Smf30JsonJobList
     public static void main(String[] args) throws IOException                                   
     {
         Gson gson = new EasySmfGsonBuilder()
-                .avoidScientificNotation() // make decimals more readable
+                .avoidScientificNotation(true) // make decimals more readable
                 .createGson();
         
         // SmfRecordReader.fromName(...) accepts a filename, a DD name in the

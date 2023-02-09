@@ -3,7 +3,7 @@ package com.smfreports.json.cics;
 import java.io.IOException;
 import java.util.*;
 
-import com.blackhillsoftware.json.CompositeEntry;
+import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.cics.Smf110Record;
 import com.blackhillsoftware.smf.cics.monitoring.ExceptionData;
