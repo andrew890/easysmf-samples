@@ -33,16 +33,16 @@ Convert CICS Statistics records to JSON format.
 Create a minute by minute summary of CICS transaction data.
 
 Data is grouped by a combination of the following fields:
-- SMFMNPRN - Generic APPLID
-- SMFMNSPN - Specific APPLID
-- minute - Minute from the STOP time
-- TRAN - Transaction identification
-- TTYPE - Transaction start type
-- RTYPE - Performance record type
-- PGMNAME - Name of the first program
-- SRVCLSNM - WLM service class name
-- RPTCLSNM - WLM report class name
-- TCLSNAME - Transaction class name
+* SMFMNPRN - Generic APPLID
+* SMFMNSPN - Specific APPLID
+* minute - Minute from the STOP time
+* TRAN - Transaction identification
+* TTYPE - Transaction start type
+* RTYPE - Performance record type
+* PGMNAME - Name of the first program
+* SRVCLSNM - WLM service class name
+* RPTCLSNM - WLM report class name
+* TCLSNAME - Transaction class name
 
 Fields can be added or deleted from the group key as required. The amount of output data increases based on the resulting number of groups, but the flexibility of the reporting also increases.
 
