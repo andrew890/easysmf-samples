@@ -33,6 +33,7 @@ Convert CICS Statistics records to JSON format.
 Create a minute by minute summary of CICS transaction data.
 
 Data is grouped by a combination of the following fields:
+
 * SMFMNPRN - Generic APPLID
 * SMFMNSPN - Specific APPLID
 * minute - Minute from the STOP time
