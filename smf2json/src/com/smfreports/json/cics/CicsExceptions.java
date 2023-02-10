@@ -9,15 +9,24 @@ import com.blackhillsoftware.smf.cics.Smf110Record;
 import com.blackhillsoftware.smf.cics.monitoring.ExceptionData;
 import com.blackhillsoftware.smf2json.cli.*;
 
-
 public class CicsExceptions  
 {
     public static void main(String[] args) throws IOException                         
     {
-        Smf2JsonCLI.create()
+        Smf2JsonCLI cli = Smf2JsonCLI.create()
             .description("Convert CICS Exception Records to JSON")
-            .includeRecords(110)
-            .start(new CliClient(), args);
+            .includeRecords(110);
+        
+        cli.easySmfGsonBuilder()
+            // exclude default formatted values for these fields and substitute a 
+            // calculated value which formats them as hex strings
+            .exclude(ExceptionData.class, "excmnnsx")
+            .calculateEntry(ExceptionData.class, "excmnnsx", exData -> String.format("%16X", exData.excmnnsx()))
+            .exclude(ExceptionData.class, "excmntrf")
+            .calculateEntry(ExceptionData.class, "excmntrf", exData -> String.format("%16X", exData.excmntrf()))
+            ;
+        
+        cli.start(new CliClient(), args);
     }
     
     private static class CliClient implements Smf2JsonCLI.Client
