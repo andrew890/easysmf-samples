@@ -9,6 +9,15 @@ import com.blackhillsoftware.smf.cics.Smf110Record;
 import com.blackhillsoftware.smf.cics.monitoring.ExceptionData;
 import com.blackhillsoftware.smf2json.cli.*;
 
+/**
+ * Write CICS exception records as JSON
+ * 
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON.  *
+ */
+
 public class CicsExceptions  
 {
     public static void main(String[] args) throws IOException                         
