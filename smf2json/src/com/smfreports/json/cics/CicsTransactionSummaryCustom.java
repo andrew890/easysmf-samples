@@ -1,20 +1,24 @@
 package com.smfreports.json.cics;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.blackhillsoftware.json.cics.*;
 import com.blackhillsoftware.json.util.*;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
+import com.blackhillsoftware.smf.cics.monitoring.PerformanceRecord;
 import com.blackhillsoftware.smf.cics.monitoring.fields.*;
 import com.blackhillsoftware.smf2json.cli.*;
 
 /**
- * Write a minute by minute summary of CICS transactions to JSON 
+ * Write a minute by minute summary of CICS transactions to JSON.
+ * The fields to be summarized are specified in the TransactionData
+ * class, which collects the data for each group of transactions. 
+ * 
  * <p>
  * This class uses the Smf2JsonCLI class to provide a command line 
  * interface to handle input and output specified by command line 
@@ -22,7 +26,7 @@ import com.blackhillsoftware.smf2json.cli.*;
  * 
  */
 
-public class CicsTransactionSummary 
+public class CicsTransactionSummaryCustom 
 {
     public static void main(String[] args) throws IOException                                   
     {
@@ -46,35 +50,15 @@ public class CicsTransactionSummary
     }
     
     private static class CliClient implements Smf2JsonCLI.Client
-    {
-        public CliClient()
-        {
-            // Create and configure the factory to create new transaction groups.
-            // Exclude fields used in the key from the grouped data.
-            transactionGroupFactory = new CicsTransactionGroupFactory()
-                    .exclude(Field.START)
-                    .exclude(Field.STOP)
-                    .exclude(Field.TRAN)
-                    .exclude(Field.TTYPE)
-                    .exclude(Field.RTYPE)
-                    .exclude(Field.PGMNAME)
-                    .exclude(Field.SRVCLSNM)
-                    .exclude(Field.RPTCLSNM)
-                    .exclude(Field.TCLSNAME)
-                    ;
-            
-            transactionGroupFactory.clockDetail(false);
-        }
-             
+    {        
         // Keep the transaction groups in a ConcurrentHashMap because we want to make 
         // the processRecord thread safe so we can process transactions in parallel         
-        private Map<HashKey, CicsTransactionGroup> transactionGroups = new ConcurrentHashMap<>();
+        private Map<HashKey, TransactionData> transactionGroups = new ConcurrentHashMap<>();
         
         // Keep track of instances seen without a dictionary
         // ConcurrentHashMap provides a thread safe Set
         private Set<CicsInstanceId> noDictionary = ConcurrentHashMap.newKeySet();
         
-        private CicsTransactionGroupFactory transactionGroupFactory;
                 
         @Override
         public List<Object> processRecord(SmfRecord record) 
@@ -114,7 +98,7 @@ public class CicsTransactionSummary
                             // CicsTransactionGroup.add is also specified to be thread safe
                             transactionGroups.computeIfAbsent(
                                     key, 
-                                    value -> transactionGroupFactory.createGroup())
+                                    value -> new TransactionData())
                                  .add(performanceRecord);
                         }
                     );
@@ -142,5 +126,33 @@ public class CicsTransactionSummary
                             .add(entry.getValue()))
                     .collect(Collectors.toList());
         }
-    } 
+    }
+    
+    private static class TransactionData 
+    {
+        private static final long nanosPerSecond = Duration.ofSeconds(1).toNanos();
+        
+        // add is synchronized so collecting transaction data is thread safe 
+        public synchronized void add(PerformanceRecord txData) 
+        {
+            count++;
+            double elapsedNanos = Duration.between(txData.getField(Field.START), txData.getField(Field.STOP))
+                    .toNanos();
+            elapsed += elapsedNanos / nanosPerSecond;
+            dispatch += txData.getFieldTimerSeconds(Field.USRDISPT);
+            dispatchWait += txData.getFieldTimerSeconds(Field.DISPWTT);
+            cpu += txData.getFieldTimerSeconds(Field.USRCPUT);
+            if (!txData.getField(Field.ABCODEC).equals("") || !txData.getField(Field.ABCODEO).equals(""))
+            {
+                abends++;
+            }
+        } 
+
+        public int count = 0;
+        public int abends = 0;
+        public double elapsed = 0;
+        public double dispatch = 0;
+        public double dispatchWait = 0;
+        public double cpu = 0;
+    }   
 }
