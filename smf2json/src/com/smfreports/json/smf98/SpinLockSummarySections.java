@@ -8,15 +8,16 @@ import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class Eccc 
+public class SpinLockSummarySections 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
                 .includeRecords(98,1)
-                .description("Format SMF 98 ECCC Section");
+                .description("Format SMF 98 Spin Lock Summary Section");
         
         cli.easySmfGsonBuilder()
+            //.setPrettyPrinting()     
         
             // we calculate interval start/end values using the Context Summary section
             .exclude(IdentificationSection.class, "smf98intervalEnd")
@@ -26,6 +27,10 @@ public class Eccc
             .exclude(IdentificationSection.class, "smf98rsd")
             .exclude(IdentificationSection.class, "smf98rst")
             
+            // other uninteresting fields
+            .exclude(IdentificationSection.class, "smf98jbn")
+            .exclude(IdentificationSection.class, "smf98stp")
+
             ;
                         
         cli.start(new CliClient(), args);
@@ -44,7 +49,7 @@ public class Eccc
         {
             Smf98s1Record r98 = Smf98s1Record.from(record);
             
-            if (r98.ecccSection() != null)
+            if (r98.spinLockSummary() != null)
             {      
                 CompositeEntry result = new CompositeEntry()
                         .add("smfid", r98.system())
@@ -55,7 +60,7 @@ public class Eccc
                                 r98.identificationSection().smf98intervalEnd()
                                     .atOffset(r98.contextSummarySection().cvtldto()))
                         .add(r98.identificationSection())
-                        .add(r98.ecccSection())
+                        .add(r98.spinLockSummary())
                         ;
     
                 return Collections.singletonList(result);

@@ -7,7 +7,7 @@ import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.Smf98Record;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class Smf98 
+public class Smf98Records 
 {
     public static void main(String[] args) throws IOException                                   
     {
@@ -15,7 +15,9 @@ public class Smf98
                 .includeRecords(98,1)
                 .description("SMF 98 Records");
         
-        cli.easySmfGsonBuilder().setPrettyPrinting();
+        cli.easySmfGsonBuilder()
+            .includeSectionType(true)
+            .setPrettyPrinting();
                 
         cli.start(new CliClient(), args);
     }
@@ -31,12 +33,7 @@ public class Smf98
         @Override
         public List<Object> processRecord(SmfRecord record)
         {
-            List<Object> result = new ArrayList<>();
-            result.add(Smf98Record.from(record));
-            result.add(Smf2JsonCLI.FINISHED);
-            return result;
+            return Collections.singletonList(Smf98Record.from(record));
         }
-    
     }
-    
 }

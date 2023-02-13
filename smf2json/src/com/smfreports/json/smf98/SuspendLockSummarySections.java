@@ -18,6 +18,7 @@ public class SuspendLockSummarySections
                 .description("Format SMF 98 Suspend Lock Summary Sections");
         
         cli.easySmfGsonBuilder()
+            //.setPrettyPrinting()     
         
             // we calculate interval start/end values using the Context Summary section
             .exclude(IdentificationSection.class, "smf98intervalEnd")
@@ -27,6 +28,10 @@ public class SuspendLockSummarySections
             .exclude(IdentificationSection.class, "smf98rsd")
             .exclude(IdentificationSection.class, "smf98rst")
             
+            // other uninteresting fields
+            .exclude(IdentificationSection.class, "smf98jbn")
+            .exclude(IdentificationSection.class, "smf98stp")
+
             ;
                         
         cli.start(new CliClient(), args);
