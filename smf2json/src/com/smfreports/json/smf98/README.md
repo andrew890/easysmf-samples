@@ -8,7 +8,9 @@ Smf2JsonCLI can read SMF data from files or z/OS DD names. Output can be written
 
 ## Reports
 
-### Smf98Subtype1Records, Smf98Subtype1024Records, Smf98Subtype1025Records
+* Smf98Subtype1Records
+* Smf98Subtype1024Records
+* Smf98Subtype1025Records
 
 These samples convert a single record of each subtype to JSON format using JSON "pretty printing" which illustrates the structure of the records and makes it easier to see relationships between different section.
 
