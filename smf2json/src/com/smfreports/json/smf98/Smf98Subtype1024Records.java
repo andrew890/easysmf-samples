@@ -7,13 +7,21 @@ import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.Smf98Record;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class Smf98Records 
+/**
+ * Format a SMF 98 subtype 1024 (CICS) record to show the different sections
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON. 
+ *
+ */
+public class Smf98Subtype1024Records 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
-                .includeRecords(98,1)
-                .description("SMF 98 Records");
+                .includeRecords(98,1024)
+                .description("SMF 98 subtype 1024 (CICS) Records");
         
         cli.easySmfGsonBuilder()
             .includeSectionType(true)
@@ -33,7 +41,10 @@ public class Smf98Records
         @Override
         public List<Object> processRecord(SmfRecord record)
         {
-            return Collections.singletonList(Smf98Record.from(record));
+            List<Object> result = new ArrayList<>();
+            result.add(Smf98Record.from(record));
+            result.add(Smf2JsonCLI.FINISHED); // only process first record
+            return result;
         }
     }
 }

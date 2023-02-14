@@ -1,4 +1,4 @@
-package com.smfreports.json.smf98;
+package com.smfreports.json.smf98.zos;
 
 import java.io.IOException;
 import java.util.*;
@@ -6,18 +6,26 @@ import java.util.*;
 import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
-import com.blackhillsoftware.smf.smf98.zos.AddressSpaceConsumption;
 import com.blackhillsoftware.smf.smf98.zos.AsidInfo;
-import com.blackhillsoftware.smf.smf98.zos.ExecutionEfficiency;
+import com.blackhillsoftware.smf.smf98.zos.LockLocalCmlDetail;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class AddressSpaceConsumptionExecutionEfficiency 
+/**
+ * Format the Local and CML Lock detail data 
+ * in SMF 98 subtype 1 (z/OS) records
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON. 
+ *
+ */
+public class LocalCmlLockDetailSections 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
                 .includeRecords(98,1)
-                .description("Format SMF 98 Execution Efficiency Sections from Address Space Consumption Sections");
+                .description("Format SMF 98 Local or CML Lock Detail Sections");
         
         cli.easySmfGsonBuilder()
             //.setPrettyPrinting()
@@ -33,12 +41,10 @@ public class AddressSpaceConsumptionExecutionEfficiency
             // other uninteresting fields
             .exclude(IdentificationSection.class, "smf98jbn")
             .exclude(IdentificationSection.class, "smf98stp")
-            
+
             // substitute flags field with hex formatted string
             .exclude(AsidInfo.class, "flags")
             .calculateEntry(AsidInfo.class, "flags", x -> String.format("0x%02X", x.flags()))
-            .exclude(ExecutionEfficiency.class, "flags")
-            .calculateEntry(ExecutionEfficiency.class, "flags", x -> String.format("0x%02X", x.flags()))
             
             ;
                         
@@ -59,25 +65,19 @@ public class AddressSpaceConsumptionExecutionEfficiency
             Smf98s1Record r98 = Smf98s1Record.from(record);
                
             List<Object> result = new ArrayList<>(); 
-            for (AddressSpaceConsumption consume: r98.addressSpaceConsumption())
+            for (LockLocalCmlDetail localCmlLock: r98.lockLocalCmlDetail())
             {     
-                for (ExecutionEfficiency exEff: consume.executionEfficiency())
-                {     
-                    result.add(new CompositeEntry()
-                            .add("smfid", r98.system())
-                            .add("intervalStart", 
-                                    r98.identificationSection().smf98intervalStart()
-                                        .atOffset(r98.contextSummarySection().cvtldto()))
-                            .add("intervalEnd", 
-                                    r98.identificationSection().smf98intervalEnd()
-                                        .atOffset(r98.contextSummarySection().cvtldto()))
-                            .add(r98.identificationSection())
-                            .add("priorityBucket", consume.priorityBucket())
-                            .add("procClass", consume.procClass())
-                            .add("subBucket", consume.subBucket())
-                            .add(exEff))
-                            ;
-                }
+                result.add(new CompositeEntry()
+                        .add("smfid", r98.system())
+                        .add("intervalStart", 
+                                r98.identificationSection().smf98intervalStart()
+                                    .atOffset(r98.contextSummarySection().cvtldto()))
+                        .add("intervalEnd", 
+                                r98.identificationSection().smf98intervalEnd()
+                                    .atOffset(r98.contextSummarySection().cvtldto()))
+                        .add(r98.identificationSection())
+                        .add(localCmlLock))
+                        ;
             }
             return result;
         } 

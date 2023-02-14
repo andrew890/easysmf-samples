@@ -1,4 +1,4 @@
-package com.smfreports.json.smf98;
+package com.smfreports.json.smf98.zos;
 
 import java.io.IOException;
 import java.util.*;
@@ -8,6 +8,15 @@ import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
+/**
+ * Format the External CPU Configuration Counter (ECCC) 
+ * sections in SMF 98 subtype 1 (z/OS) records
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON. 
+ *
+ */
 public class EcccSections 
 {
     public static void main(String[] args) throws IOException                                   

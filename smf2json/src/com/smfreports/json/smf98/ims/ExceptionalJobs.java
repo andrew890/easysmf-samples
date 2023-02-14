@@ -1,4 +1,4 @@
-package com.smfreports.json.smf98;
+package com.smfreports.json.smf98.ims;
 
 import java.io.IOException;
 import java.util.*;
@@ -6,19 +6,27 @@ import java.util.*;
 import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
-import com.blackhillsoftware.smf.smf98.zos.SuspendLockSummary;
+import com.blackhillsoftware.smf.smf98.ims.ExceptionalJobIndex;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class SuspendLockSummarySections 
+/**
+ * Format the Exceptional Jobs data from SMF 98 subtype 1025 (IMS) records
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON. 
+ *
+ */
+public class ExceptionalJobs 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
-                .includeRecords(98,1)
-                .description("Format SMF 98 Suspend Lock Summary Sections");
+                .includeRecords(98, 1025)
+                .description("Format SMF 98 IMS Exceptional Jobs Section");
         
         cli.easySmfGsonBuilder()
-            //.setPrettyPrinting()     
+            .setPrettyPrinting()     
         
             // we calculate interval start/end values using the Context Summary section
             .exclude(IdentificationSection.class, "smf98intervalEnd")
@@ -31,6 +39,12 @@ public class SuspendLockSummarySections
             // other uninteresting fields
             .exclude(IdentificationSection.class, "smf98jbn")
             .exclude(IdentificationSection.class, "smf98stp")
+            
+            // indexes into the job list are not useful in the output 
+            .exclude(ExceptionalJobIndex.class, "tct")
+            .exclude(ExceptionalJobIndex.class, "apt")
+            .exclude(ExceptionalJobIndex.class, "aet")
+            .exclude(ExceptionalJobIndex.class, "tcp")
 
             ;
                         
@@ -48,10 +62,10 @@ public class SuspendLockSummarySections
         @Override
         public List<Object> processRecord(SmfRecord record)
         {
-            Smf98s1Record r98 = Smf98s1Record.from(record);
-               
+            Smf98s1025Record r98 = Smf98s1025Record.from(record);
+            
             List<Object> result = new ArrayList<>(); 
-            for (SuspendLockSummary suspendLock: r98.suspendLockSummary())
+            for (ExceptionalJobIndex exceptionalJobIx : r98.exceptionalJobIndex())
             {     
                 result.add(new CompositeEntry()
                         .add("smfid", r98.system())
@@ -62,10 +76,11 @@ public class SuspendLockSummarySections
                                 r98.identificationSection().smf98intervalEnd()
                                     .atOffset(r98.contextSummarySection().cvtldto()))
                         .add(r98.identificationSection())
-                        .add(suspendLock))
+                        .add(exceptionalJobIx))
                         ;
             }
             return result;
+
         } 
     }
 }

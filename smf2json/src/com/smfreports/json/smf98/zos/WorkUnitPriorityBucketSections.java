@@ -1,4 +1,4 @@
-package com.smfreports.json.smf98;
+package com.smfreports.json.smf98.zos;
 
 import java.io.IOException;
 import java.util.*;
@@ -6,18 +6,29 @@ import java.util.*;
 import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
+import com.blackhillsoftware.smf.smf98.zos.AsidInfo;
+import com.blackhillsoftware.smf.smf98.zos.WorkUnitPriorityBucket;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class SpinLockSummarySections 
+/**
+ * Format the Work Unit Priority Bucket data 
+ * in SMF 98 subtype 1 (z/OS) records
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON. 
+ *
+ */
+public class WorkUnitPriorityBucketSections 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
                 .includeRecords(98,1)
-                .description("Format SMF 98 Spin Lock Summary Section");
+                .description("Format SMF 98 Work Unit Priority Bucket Sections");
         
         cli.easySmfGsonBuilder()
-            //.setPrettyPrinting()     
+            //.setPrettyPrinting()
         
             // we calculate interval start/end values using the Context Summary section
             .exclude(IdentificationSection.class, "smf98intervalEnd")
@@ -31,6 +42,10 @@ public class SpinLockSummarySections
             .exclude(IdentificationSection.class, "smf98jbn")
             .exclude(IdentificationSection.class, "smf98stp")
 
+            // substitute flags field with hex formatted string
+            .exclude(AsidInfo.class, "flags")
+            .calculateEntry(AsidInfo.class, "flags", x -> String.format("0x%02X", x.flags()))
+            
             ;
                         
         cli.start(new CliClient(), args);
@@ -48,10 +63,11 @@ public class SpinLockSummarySections
         public List<Object> processRecord(SmfRecord record)
         {
             Smf98s1Record r98 = Smf98s1Record.from(record);
-            
-            if (r98.spinLockSummary() != null)
-            {      
-                CompositeEntry result = new CompositeEntry()
+               
+            List<Object> result = new ArrayList<>(); 
+            for (WorkUnitPriorityBucket bucket: r98.workUnitPriorityBuckets())
+            {     
+                result.add(new CompositeEntry()
                         .add("smfid", r98.system())
                         .add("intervalStart", 
                                 r98.identificationSection().smf98intervalStart()
@@ -60,15 +76,10 @@ public class SpinLockSummarySections
                                 r98.identificationSection().smf98intervalEnd()
                                     .atOffset(r98.contextSummarySection().cvtldto()))
                         .add(r98.identificationSection())
-                        .add(r98.spinLockSummary())
+                        .add(bucket))
                         ;
-    
-                return Collections.singletonList(result);
             }
-            else
-            {
-                return null;
-            }
+            return result;
         } 
     }
 }

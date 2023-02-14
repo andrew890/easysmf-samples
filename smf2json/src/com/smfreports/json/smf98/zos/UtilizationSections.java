@@ -1,4 +1,4 @@
-package com.smfreports.json.smf98;
+package com.smfreports.json.smf98.zos;
 
 import java.io.IOException;
 import java.util.*;
@@ -6,16 +6,24 @@ import java.util.*;
 import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
-import com.blackhillsoftware.smf.smf98.zos.SpinLockDetail;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class SpinLockDetailSections 
+/**
+ * Format the Utilization Section 
+ * in SMF 98 subtype 1 (z/OS) records
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON. 
+ *
+ */
+public class UtilizationSections 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
                 .includeRecords(98,1)
-                .description("Format SMF 98 Spin Lock Detail Section");
+                .description("Format SMF 98 Utilization Section");
         
         cli.easySmfGsonBuilder()
             //.setPrettyPrinting()     
@@ -49,11 +57,10 @@ public class SpinLockDetailSections
         public List<Object> processRecord(SmfRecord record)
         {
             Smf98s1Record r98 = Smf98s1Record.from(record);
-               
-            List<Object> result = new ArrayList<>(); 
-            for (SpinLockDetail spinLock: r98.spinLockDetails())
-            {     
-                result.add(new CompositeEntry()
+            
+            if (r98.utilizationSection() != null)
+            {      
+                CompositeEntry result = new CompositeEntry()
                         .add("smfid", r98.system())
                         .add("intervalStart", 
                                 r98.identificationSection().smf98intervalStart()
@@ -62,10 +69,15 @@ public class SpinLockDetailSections
                                 r98.identificationSection().smf98intervalEnd()
                                     .atOffset(r98.contextSummarySection().cvtldto()))
                         .add(r98.identificationSection())
-                        .add(spinLock))
+                        .add(r98.utilizationSection())
                         ;
+    
+                return Collections.singletonList(result);
             }
-            return result;
+            else
+            {
+                return null;
+            }
         } 
     }
 }

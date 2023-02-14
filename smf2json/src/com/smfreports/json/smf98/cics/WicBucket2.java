@@ -1,4 +1,4 @@
-package com.smfreports.json.smf98;
+package com.smfreports.json.smf98.cics;
 
 import java.io.IOException;
 import java.util.*;
@@ -6,20 +6,26 @@ import java.util.*;
 import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
-import com.blackhillsoftware.smf.smf98.zos.AsidInfo;
-import com.blackhillsoftware.smf.smf98.zos.LockLocalCmlDetail;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class LocalCmlLockDetailSections 
+/**
+ * Format the WIC bucket 2 data from SMF 98 subtype 1024 (CICS) records
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON. 
+ *
+ */
+public class WicBucket2 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
-                .includeRecords(98,1)
-                .description("Format SMF 98 Local or CML Lock Detail Sections");
+                .includeRecords(98, 1024)
+                .description("Format SMF 98 CICS WIC bucket 2 Section");
         
         cli.easySmfGsonBuilder()
-            //.setPrettyPrinting()
+            //.setPrettyPrinting()     
         
             // we calculate interval start/end values using the Context Summary section
             .exclude(IdentificationSection.class, "smf98intervalEnd")
@@ -32,10 +38,6 @@ public class LocalCmlLockDetailSections
             // other uninteresting fields
             .exclude(IdentificationSection.class, "smf98jbn")
             .exclude(IdentificationSection.class, "smf98stp")
-
-            // substitute flags field with hex formatted string
-            .exclude(AsidInfo.class, "flags")
-            .calculateEntry(AsidInfo.class, "flags", x -> String.format("0x%02X", x.flags()))
             
             ;
                         
@@ -53,10 +55,10 @@ public class LocalCmlLockDetailSections
         @Override
         public List<Object> processRecord(SmfRecord record)
         {
-            Smf98s1Record r98 = Smf98s1Record.from(record);
-               
+            Smf98s1024Record r98 = Smf98s1024Record.from(record);
+            
             List<Object> result = new ArrayList<>(); 
-            for (LockLocalCmlDetail localCmlLock: r98.lockLocalCmlDetail())
+            for (com.blackhillsoftware.smf.smf98.cics.WicBucket2 bucket2 : r98.wicBucket2())
             {     
                 result.add(new CompositeEntry()
                         .add("smfid", r98.system())
@@ -67,10 +69,11 @@ public class LocalCmlLockDetailSections
                                 r98.identificationSection().smf98intervalEnd()
                                     .atOffset(r98.contextSummarySection().cvtldto()))
                         .add(r98.identificationSection())
-                        .add(localCmlLock))
+                        .add(bucket2))
                         ;
             }
             return result;
+
         } 
     }
 }

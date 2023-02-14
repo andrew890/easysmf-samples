@@ -1,4 +1,4 @@
-package com.smfreports.json.smf98;
+package com.smfreports.json.smf98.zos;
 
 import java.io.IOException;
 import java.util.*;
@@ -6,16 +6,25 @@ import java.util.*;
 import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
-import com.blackhillsoftware.smf.smf98.zos.*;
+import com.blackhillsoftware.smf.smf98.zos.SuspendLockSummary;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
-public class EnvironmentSections 
+/**
+ * Format the Suspend Lock Summary data 
+ * in SMF 98 subtype 1 (z/OS) records
+ * <p>
+ * This class uses the Smf2JsonCLI class to provide a command line 
+ * interface to handle input and output specified by command line 
+ * options and generate the JSON. 
+ *
+ */
+public class SuspendLockSummarySections 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
                 .includeRecords(98,1)
-                .description("Format SMF 98 Environment Section");
+                .description("Format SMF 98 Suspend Lock Summary Sections");
         
         cli.easySmfGsonBuilder()
             //.setPrettyPrinting()     
@@ -31,15 +40,7 @@ public class EnvironmentSections
             // other uninteresting fields
             .exclude(IdentificationSection.class, "smf98jbn")
             .exclude(IdentificationSection.class, "smf98stp")
-            
-            // format flags as hex
-            .exclude(EnvironmentalSection.class, "flagsByte1")
-            .exclude(EnvironmentalSection.class, "flagsByte2")
-            .exclude(EnvironmentalSection.class, "flagsByte3")
-            .calculateEntry(EnvironmentalSection.class, "flagsByte1", x -> String.format("0x%02X", x.flagsByte1()))
-            .calculateEntry(EnvironmentalSection.class, "flagsByte2", x -> String.format("0x%02X", x.flagsByte2()))
-            .calculateEntry(EnvironmentalSection.class, "flagsByte3", x -> String.format("0x%02X", x.flagsByte3()))
-            
+
             ;
                         
         cli.start(new CliClient(), args);
@@ -57,10 +58,11 @@ public class EnvironmentSections
         public List<Object> processRecord(SmfRecord record)
         {
             Smf98s1Record r98 = Smf98s1Record.from(record);
-            
-            if (r98.environmentalSection() != null)
-            {      
-                CompositeEntry result = new CompositeEntry()
+               
+            List<Object> result = new ArrayList<>(); 
+            for (SuspendLockSummary suspendLock: r98.suspendLockSummary())
+            {     
+                result.add(new CompositeEntry()
                         .add("smfid", r98.system())
                         .add("intervalStart", 
                                 r98.identificationSection().smf98intervalStart()
@@ -69,15 +71,10 @@ public class EnvironmentSections
                                 r98.identificationSection().smf98intervalEnd()
                                     .atOffset(r98.contextSummarySection().cvtldto()))
                         .add(r98.identificationSection())
-                        .add(r98.environmentalSection())
+                        .add(suspendLock))
                         ;
-    
-                return Collections.singletonList(result);
             }
-            else
-            {
-                return null;
-            }
+            return result;
         } 
     }
 }
