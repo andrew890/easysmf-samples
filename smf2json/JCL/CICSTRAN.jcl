@@ -8,6 +8,10 @@
 //*                                                            Col 72->|
 // EXPORT SYMLIST=*
 //*
+//* CICS transaction reports require CICS dictionary entries
+//* concatenated before the CICS transaction data. See the
+//* CICSDICT symbol.
+//*
 //* Customize symbols as required:
 //*
 //* Location of sample jar files and dependencies (EasySMF etc):
@@ -15,17 +19,25 @@
 //*
 // SET JAVAHOME='/usr/lpp/java/J8.0'
 //*
+// SET CICSDICT=MY.CICS.DICTIONARY.RECORDS
 // SET    INDSN=MY.INPUT.SMF.DATASET
 // SET   OUTDSN=MY.OUTPUT.JSON.DATASET
 //*
+//*
 //JAVA     EXEC PROC=JVMPRC80,
-// JAVACLS='com.smfreports.json.cics.CicsStatistics'
+//* Uncomment class as desired:
+// JAVACLS='com.smfreports.json.cics.CicsAbendTransactions'
+//*JAVACLS='com.smfreports.json.cics.CicsTransactionSummary'
+//*JAVACLS='com.smfreports.json.cics.CicsTransactionSummaryCustom'
+//*JAVACLS='com.smfreports.json.cics.CicsSlowTransactions'
 //*
 //MAINARGS DD *
 --indd  INPUT
 --outdd OUTPUT
-//*
-//INPUT    DD DISP=SHR,DSN=&INDSN
+//* MAINARGS option required for CicsSlowTransactions:
+//* --milliseconds 500
+//INPUT    DD DISP=SHR,DSN=&CICSDICT
+//         DD DISP=SHR,DSN=&INDSN
 //OUTPUT   DD DISP=(NEW,CATLG),UNIT=SYSDA,DSN=&OUTDSN,
 //            RECFM=VB,LRECL=27994,BLKSIZE=27998,
 //            SPACE=(1,(500,200),RLSE),AVGREC=M
