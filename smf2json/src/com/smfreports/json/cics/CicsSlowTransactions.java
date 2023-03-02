@@ -14,7 +14,7 @@ import com.blackhillsoftware.smf2json.cli.*;
 
 /**
  * Write transaction information to JSON for CICS transactions with 
- * an elapsed time greater than a specified threshold.
+ * an elapsed time greater than a specified threshold (zero for all transactions).
  * 
  * <p>
  * This class uses the Smf2JsonCLI class to provide a command line 
@@ -83,7 +83,8 @@ public class CicsSlowTransactions
             
             for (PerformanceRecord section : r110.performanceRecords())
             {
-                if (section.elapsedSeconds() > thresholdSeconds)
+                if (thresholdSeconds == 0 ||
+                        section.elapsedSeconds() > thresholdSeconds)
                 {
                     CompositeEntry entry = new CompositeEntry()
                             .add("time", section.getField(Field.STOP))
