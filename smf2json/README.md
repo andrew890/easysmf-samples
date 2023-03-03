@@ -18,7 +18,7 @@ If you want to build and run the project without using Maven you need the **easy
 
 ## Basic Usage
 
-Samples to show simple usage are located here: [Basic Usage](com/smfreports/json/README.md)
+Samples to show simple usage are located here: [Basic Usage](./src/com/smfreports/json/)
 
 ## SMF 2 JSON Command Line Interface (Smf2JsonCLI)
 
@@ -38,7 +38,7 @@ All programs using Smf2JsonJCLI need to do is:
 
 ## CICS Reports
 
-Samples are provided to write [CICS SMF data in JSON format](com/smfreports/json/cics/README.md).
+Samples are provided to write [CICS SMF data in JSON format](./src/com/smfreports/json/cics/).
 
 Samples include:
 
