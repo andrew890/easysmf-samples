@@ -1,4 +1,4 @@
-# Converting CICS SMF data to JSON format #
+# Converting CICS SMF data to JSON format
 
 These sample programs convert a number of different types of CICS SMF data to JSON format.
 The JSON data can be processed further using other reporting tools that process JSON, e.g. Splunk.
@@ -7,34 +7,34 @@ All programs use the Smf2JsonCLI class, which provides a command line interface 
 
 Smf2JsonCLI can read SMF data from files or z/OS DD names. Output can be written to a file, to a z/OS DD or to stdout. The program can run on z/OS as a batch job using the JZOS batch launcher or BPXBATCH, or on any Java platform where the SMF data is available.
 
-## CICS Dictionaries ##
+## CICS Dictionaries
 
 CICS transaction reports require a dictionary to interpret the SMF records.
 
 The CICS dictionary records need to be read before the transaction records. The simplest way to do that is to have a separate file/dataset with the dictionary records, and concatenate it ahead of the transaction data if using JCL or list the dictionary file before the transaction data file on the command line.
 
-## Reports ##
+## Reports
 
 The following sample reports are provided:
 
-### CicsAbendTransactions ###
+### CicsAbendTransactions
 
 List detailed transaction information for transactions which abended 
 (fields ABCODEC or ABCODEO contain data).
 
-### CicsExceptions ###
+### CicsExceptions
 
 Convert CICS Exception SMF records to JSON format.
 
-### CicsSlowTransactions ###
+### CicsSlowTransactions
 
 List detailed transaction information for transactions with an elapsed time greater than a specified threshold.
 
-### CicsStatistics ###
+### CicsStatistics
 
 Convert CICS Statistics records to JSON format.
 
-### CicsTransactionSummary ###
+### CicsTransactionSummary
 
 Create a minute by minute summary of CICS transaction data.
 

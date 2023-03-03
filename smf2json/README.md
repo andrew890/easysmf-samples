@@ -16,11 +16,11 @@ If you import the Maven project into Eclipse the dependencies should also be res
 
 If you want to build and run the project without using Maven you need the **easysmf-json** and **gson** jars in the classpath e.g. easysmf-json-1.0.3.jar, gson-2.9.1.jar
 
-## Basic Usage ## 
+## Basic Usage
 
-Samples to show simple usage are located here: [Basic Usage](com/smfreports/json)
+Samples to show simple usage are located here: [Basic Usage](com/smfreports/json/README.md)
 
-## SMF 2 JSON Command Line Interface (Smf2JsonCLI) ##
+## SMF 2 JSON Command Line Interface (Smf2JsonCLI)
 
 All these programs have a common structure - they read SMF data and use EasySMF-JSON to write JSON.
 
@@ -36,9 +36,9 @@ All programs using Smf2JsonJCLI need to do is:
 - Receive the SMF records as they are read
 - Return Objects (SMF records, SMF record sections or objects built from the data in the SMF record) to be converted to JSON.
 
-## CICS Reports ##
+## CICS Reports
 
-Samples are provided to write [CICS SMF data in JSON format](com/smfreports/json/cics).
+Samples are provided to write [CICS SMF data in JSON format](com/smfreports/json/cics/README.md).
 
 Samples include:
 
