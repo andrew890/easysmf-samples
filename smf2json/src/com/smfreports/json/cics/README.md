@@ -61,3 +61,17 @@ Similar to **CicsTransactionSummary**, except that transaction summary informati
 
 The TransactionData class can be customized to control which data is collected. Collecting a smaller number of fields improves performance of the program.
 
+## Running the Programs
+
+JCL to run on z/OS can be found in the [JCL](./JCL) directory.
+
+To run on Windows/Linux:
+
+1) Build the Smf2Json project if required
+2) Run the Java program, specifying the class as required:   
+
+   ```
+   java -cp target/* com.smfreports.json.cics.CicsTransactionSummary --out json.txt <input1> <input2> ...   
+   ```
+   
+   where \<input1\> \<input2\> are SMF data files. For CICS transactions reports, CICS dictionary records must be read before the CICS transaction records.
