@@ -30,30 +30,8 @@ public class CicsTransactions
             .description("Convert transaction information for slow CICS transactions to JSON")
             .includeRecords(110, 1);
         
-        // Add a command line option to specify the slow transaction threshold in milliseconds
-        smf2JsonCli.options().addOption(
-                Option.builder("ms")
-                    .longOpt("milliseconds")
-                    .hasArg(true)
-                    .desc("report transactions longer than this duration (0 for all)")
-                    .required()
-                    .build());
-        
-        // Then check the value that the user specified
-        // (smf2JsonCli.commandLine will parse the provided args and
-        // issue it's own error if e.g. the required argument is missing) 
-        double thresholdSeconds = 0;
-        try
-        {
-            thresholdSeconds = Double.parseDouble(
-                    smf2JsonCli.commandLine(args).getOptionValue("ms")) 
-                        / 1000;
-        }
-        catch (NumberFormatException ex)
-        {
-            System.err.println("Failed to parse ms option: " + ex.toString());
-            System.exit(0);
-        }
+        setupCommandLineArgs(smf2JsonCli); 
+        Configuration config = readCommandLineArgs(args, smf2JsonCli);
         
         // Specify options for creating JSON
         smf2JsonCli.easySmfGsonBuilder()
@@ -63,16 +41,68 @@ public class CicsTransactions
             .includeUnsetFlags(false)
             ;
         
-        smf2JsonCli.start(new CliClient(thresholdSeconds), args);    
+        smf2JsonCli.start(new CliClient(config), args);    
+    }
+
+    private static void setupCommandLineArgs(Smf2JsonCLI smf2JsonCli) 
+    {
+        smf2JsonCli.options().addOption(
+                Option.builder("ms")
+                    .longOpt("milliseconds")
+                    .hasArg(true)
+                    .desc("report transactions longer than this duration")
+                    .build());
+        
+        smf2JsonCli.options().addOption(
+                Option.builder("abend")
+                    .longOpt("abend")
+                    .hasArg(false)
+                    .desc("only report abended transactions (ABCODEC or ABCODEO has a value)")
+                    .build());
+    }
+    
+    private static Configuration readCommandLineArgs(String[] args, Smf2JsonCLI smf2JsonCli) 
+    {
+        CommandLine commandLine = smf2JsonCli.commandLine(args);
+        Configuration config = new Configuration();
+
+        if (commandLine.hasOption("abend"))
+        {
+            config.abendsOnly = true;
+        }
+        
+        if (commandLine.hasOption("ms"))
+        {
+            try
+            {
+                
+                config.thresholdSeconds = Double.parseDouble(
+                        smf2JsonCli.commandLine(args).getOptionValue("ms")) 
+                            / 1000;
+            }
+            catch (NumberFormatException ex)
+            {
+                System.err.println("Failed to parse ms option: " + ex.toString());
+                System.exit(0);
+            }
+        }
+        
+        return config;
+    }
+    
+    private static class Configuration
+    {
+        double thresholdSeconds = 0;
+        boolean abendsOnly = false;
     }
     
     private static class CliClient implements Smf2JsonCLI.Client
     {
-        double thresholdSeconds;
+        private Configuration config;
         
-        CliClient(double thresholdSeconds)
+        CliClient(Configuration config)
         {
-            this.thresholdSeconds = thresholdSeconds;
+            this.config = config;
         }
         
         @Override
@@ -81,22 +111,37 @@ public class CicsTransactions
             List<Object> result = new ArrayList<>();
             Smf110Record r110 = Smf110Record.from(record);
             
-            for (PerformanceRecord section : r110.performanceRecords())
+            for (PerformanceRecord transaction : r110.performanceRecords())
             {
-                if (thresholdSeconds == 0 ||
-                        section.elapsedSeconds() > thresholdSeconds)
+                if (includeTransaction(transaction))
                 {
                     CompositeEntry entry = new CompositeEntry()
-                            .add("time", section.getField(Field.STOP))
+                            .add("time", transaction.getField(Field.STOP))
                             .add("system", r110.smfsid())
                             .add("smfmnjbn", r110.mnProductSection().smfmnjbn())
                             .add("smfmnprn", r110.mnProductSection().smfmnprn())
                             .add("smfmnspn", r110.mnProductSection().smfmnspn())
-                            .add(section);
+                            .add(transaction);
                     result.add(entry);
                 }
             }
             return result;
+        }
+        
+        private boolean includeTransaction(PerformanceRecord transaction)
+        {
+            if (config.thresholdSeconds > 0 &&
+                    !(transaction.elapsedSeconds() > config.thresholdSeconds))
+            {
+                return false;
+            }
+            if (config.abendsOnly && 
+                    transaction.getField(Field.ABCODEC).length() == 0 && 
+                    transaction.getField(Field.ABCODEO).length() == 0)
+            {
+                return false;
+            }
+            return true;
         }
         
         @Override

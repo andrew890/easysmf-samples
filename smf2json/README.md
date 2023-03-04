@@ -44,9 +44,10 @@ Samples include:
 
 - CICS Statistics Records to JSON
 - CICS Exception records to JSON
-- CICS Slow Transactions   
-  Write all information for CICS transactions that take more than a specified data time to JSON. Specify zero for the elapsed time to write all CICS transaction information to JSON.
-- CICS Abend Transactions   
-  Write all information for CICS transactions that abended (fields ABCODEC or ABCODEO contain data) to JSON.
+- CICS Transactions   
+  Write all information for CICS transactions to JSON.
+  Transactions can optionally be selected by:
+  - Elapsed time. Only transactions with an elapsed time greater than a specified number of milliseconds will be included.
+  - Abended. Only transactions with values in fields ABCODEC or ABCODEO will be included.
 - CICS transaction summary   
   Create a minute by minute summary of CICS transaction data, grouped by transaction, program, APPLID etc. This data is designed to be further summarized by reporting programs that process JSON data so you could e.g. report by hour, applid, transaction, program...

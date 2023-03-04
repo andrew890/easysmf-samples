@@ -17,18 +17,16 @@ The CICS dictionary records need to be read before the transaction records. The 
 
 The following sample reports are provided:
 
-### CicsAbendTransactions
-
-List detailed transaction information for transactions which abended 
-(fields ABCODEC or ABCODEO contain data).
-
 ### CicsExceptions
 
 Convert CICS Exception SMF records to JSON format.
 
-### CicsSlowTransactions
+### CicsTransactions
 
-List detailed transaction information for transactions with an elapsed time greater than a specified threshold.
+List detailed transaction information. Optionally select by
+
+- Elapsed time greater than a specified value
+- Transactions that abended (fields ABCODEC or ABCODEO contain data)
 
 ### CicsStatistics
 
