@@ -59,6 +59,14 @@ public class CicsTransactions
                     .hasArg(false)
                     .desc("only report abended transactions (ABCODEC or ABCODEO has a value)")
                     .build());
+        
+        smf2JsonCli.options().addOption(
+                Option.builder("tx")
+                    .longOpt("tran")
+                    .hasArgs()
+                    .valueSeparator(',')
+                    .desc("select specific transactions")
+                    .build());
     }
     
     private static Configuration readCommandLineArgs(String[] args, Smf2JsonCLI smf2JsonCli) 
@@ -87,6 +95,15 @@ public class CicsTransactions
             }
         }
         
+        if (commandLine.hasOption("tx"))
+        {
+            config.includeTransactions = new HashSet<>();
+            for (String value : commandLine.getOptionValues("tx"))
+            {
+                config.includeTransactions.add(value);
+            }
+        }
+        
         return config;
     }
     
@@ -94,6 +111,7 @@ public class CicsTransactions
     {
         double thresholdSeconds = 0;
         boolean abendsOnly = false;
+        Set<String> includeTransactions = null;
     }
     
     private static class CliClient implements Smf2JsonCLI.Client
@@ -130,14 +148,20 @@ public class CicsTransactions
         
         private boolean includeTransaction(PerformanceRecord transaction)
         {
-            if (config.thresholdSeconds > 0 &&
-                    !(transaction.elapsedSeconds() > config.thresholdSeconds))
+            if (config.includeTransactions != null 
+                    && !config.includeTransactions
+                        .contains(transaction.getField(Field.TRAN)))
             {
                 return false;
             }
-            if (config.abendsOnly && 
-                    transaction.getField(Field.ABCODEC).length() == 0 && 
-                    transaction.getField(Field.ABCODEO).length() == 0)
+            if (config.thresholdSeconds > 0 
+                    && !(transaction.elapsedSeconds() > config.thresholdSeconds))
+            {
+                return false;
+            }
+            if (config.abendsOnly  
+                    && transaction.getField(Field.ABCODEC).length() == 0  
+                    &&  transaction.getField(Field.ABCODEO).length() == 0)
             {
                 return false;
             }
