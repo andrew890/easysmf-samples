@@ -22,7 +22,7 @@ import com.blackhillsoftware.smf2json.cli.*;
  * options and generate the JSON. 
  * 
  */
-public class CicsSlowTransactions 
+public class CicsTransactions 
 {          
     public static void main(String[] args) throws IOException                                   
     {
