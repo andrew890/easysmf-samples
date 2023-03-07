@@ -47,6 +47,14 @@ public class CicsTransactions
     private static void setupCommandLineArgs(Smf2JsonCLI smf2JsonCli) 
     {
         smf2JsonCli.options().addOption(
+                Option.builder("applid")
+                    .longOpt("applid")
+                    .hasArgs()
+                    .valueSeparator(',')
+                    .desc("select specific generic applid")
+                    .build());
+        
+        smf2JsonCli.options().addOption(
                 Option.builder("ms")
                     .longOpt("milliseconds")
                     .hasArg(true)
@@ -74,9 +82,22 @@ public class CicsTransactions
         CommandLine commandLine = smf2JsonCli.commandLine(args);
         Configuration config = new Configuration();
 
-        if (commandLine.hasOption("abend"))
+        if (commandLine.hasOption("applid"))
         {
-            config.abendsOnly = true;
+            config.includeApplids = new HashSet<>();
+            for (String value : commandLine.getOptionValues("applid"))
+            {
+                config.includeApplids.add(value);
+            }
+        }
+        
+        if (commandLine.hasOption("tx"))
+        {
+            config.includeTransactions = new HashSet<>();
+            for (String value : commandLine.getOptionValues("tx"))
+            {
+                config.includeTransactions.add(value);
+            }
         }
         
         if (commandLine.hasOption("ms"))
@@ -95,13 +116,9 @@ public class CicsTransactions
             }
         }
         
-        if (commandLine.hasOption("tx"))
+        if (commandLine.hasOption("abend"))
         {
-            config.includeTransactions = new HashSet<>();
-            for (String value : commandLine.getOptionValues("tx"))
-            {
-                config.includeTransactions.add(value);
-            }
+            config.abendsOnly = true;
         }
         
         return config;
@@ -109,9 +126,10 @@ public class CicsTransactions
     
     private static class Configuration
     {
+        Set<String> includeApplids = null;
+        Set<String> includeTransactions = null;
         double thresholdSeconds = 0;
         boolean abendsOnly = false;
-        Set<String> includeTransactions = null;
     }
     
     private static class CliClient implements Smf2JsonCLI.Client
@@ -129,18 +147,22 @@ public class CicsTransactions
             List<Object> result = new ArrayList<>();
             Smf110Record r110 = Smf110Record.from(record);
             
-            for (PerformanceRecord transaction : r110.performanceRecords())
+            if (config.includeApplids == null 
+                    || config.includeApplids.contains(r110.mnProductSection().smfmnprn()))
             {
-                if (includeTransaction(transaction))
+                for (PerformanceRecord transaction : r110.performanceRecords())
                 {
-                    CompositeEntry entry = new CompositeEntry()
-                            .add("time", transaction.getField(Field.STOP))
-                            .add("system", r110.smfsid())
-                            .add("smfmnjbn", r110.mnProductSection().smfmnjbn())
-                            .add("smfmnprn", r110.mnProductSection().smfmnprn())
-                            .add("smfmnspn", r110.mnProductSection().smfmnspn())
-                            .add(transaction);
-                    result.add(entry);
+                    if (includeTransaction(transaction))
+                    {
+                        CompositeEntry entry = new CompositeEntry()
+                                .add("time", transaction.getField(Field.STOP))
+                                .add("system", r110.smfsid())
+                                .add("smfmnjbn", r110.mnProductSection().smfmnjbn())
+                                .add("smfmnprn", r110.mnProductSection().smfmnprn())
+                                .add("smfmnspn", r110.mnProductSection().smfmnspn())
+                                .add(transaction);
+                        result.add(entry);
+                    }
                 }
             }
             return result;
