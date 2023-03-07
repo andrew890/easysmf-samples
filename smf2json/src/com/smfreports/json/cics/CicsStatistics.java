@@ -67,7 +67,7 @@ public class CicsStatistics
         public List<Object> onEndOfData() 
         {
             System.err.println("Finished");
-            return null;
+            return Collections.emptyList();
         }
     }
 }

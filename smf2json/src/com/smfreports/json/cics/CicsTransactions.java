@@ -47,11 +47,19 @@ public class CicsTransactions
     private static void setupCommandLineArgs(Smf2JsonCLI smf2JsonCli) 
     {
         smf2JsonCli.options().addOption(
-                Option.builder("applid")
+                Option.builder()
                     .longOpt("applid")
                     .hasArgs()
                     .valueSeparator(',')
-                    .desc("select specific generic applid")
+                    .desc("select applid(s): --applid=AAABAAA[,BBBBBBB...]")
+                    .build());
+        
+        smf2JsonCli.options().addOption(
+                Option.builder()
+                    .longOpt("xapplid")
+                    .hasArgs()
+                    .valueSeparator(',')
+                    .desc("exclude applid(s):  --xapplid=AAABAAA[,BBBBBBB...]")
                     .build());
         
         smf2JsonCli.options().addOption(
@@ -62,43 +70,41 @@ public class CicsTransactions
                     .build());
         
         smf2JsonCli.options().addOption(
-                Option.builder("abend")
+                Option.builder()
                     .longOpt("abend")
                     .hasArg(false)
                     .desc("only report abended transactions (ABCODEC or ABCODEO has a value)")
                     .build());
         
         smf2JsonCli.options().addOption(
-                Option.builder("tx")
-                    .longOpt("tran")
+                Option.builder()
+                    .longOpt("tranid")
                     .hasArgs()
                     .valueSeparator(',')
-                    .desc("select specific transactions")
+                    .desc("select specific transactions:  --tranid=AAAA[,BBBB...]")
                     .build());
+        
+        smf2JsonCli.options().addOption(
+                Option.builder()
+                    .longOpt("xtranid")
+                    .hasArgs()
+                    .valueSeparator(',')
+                    .desc("exclude specific transactions: --xtranid=AAAA[,BBBB...]")
+                    .build());
+        
     }
     
     private static Configuration readCommandLineArgs(String[] args, Smf2JsonCLI smf2JsonCli) 
     {
         CommandLine commandLine = smf2JsonCli.commandLine(args);
         Configuration config = new Configuration();
-
-        if (commandLine.hasOption("applid"))
-        {
-            config.includeApplids = new HashSet<>();
-            for (String value : commandLine.getOptionValues("applid"))
-            {
-                config.includeApplids.add(value);
-            }
-        }
         
-        if (commandLine.hasOption("tx"))
-        {
-            config.includeTransactions = new HashSet<>();
-            for (String value : commandLine.getOptionValues("tx"))
-            {
-                config.includeTransactions.add(value);
-            }
-        }
+        config.includeApplids = getValues(commandLine, "applid");
+        config.excludeApplids = getValues(commandLine, "xapplid");        
+        config.includeTransactions= getValues(commandLine, "tranid");
+        config.excludeTransactions = getValues(commandLine, "xtranid");
+
+        config.abendsOnly = commandLine.hasOption("abend");
         
         if (commandLine.hasOption("ms"))
         {
@@ -116,18 +122,26 @@ public class CicsTransactions
             }
         }
         
-        if (commandLine.hasOption("abend"))
-        {
-            config.abendsOnly = true;
-        }
-        
         return config;
+    }
+
+    private static Set<String> getValues(CommandLine commandLine, String option) 
+    {
+        if (!commandLine.hasOption(option)) return Collections.emptySet();
+        Set<String> result = new HashSet<>();
+        for (String value : commandLine.getOptionValues(option))
+        {
+            result.add(value);
+        }
+        return result;
     }
     
     private static class Configuration
     {
-        Set<String> includeApplids = null;
-        Set<String> includeTransactions = null;
+        Set<String> includeApplids = Collections.emptySet();
+        Set<String> includeTransactions = Collections.emptySet();
+        Set<String> excludeApplids = Collections.emptySet();
+        Set<String> excludeTransactions = Collections.emptySet();
         double thresholdSeconds = 0;
         boolean abendsOnly = false;
     }
@@ -147,8 +161,7 @@ public class CicsTransactions
             List<Object> result = new ArrayList<>();
             Smf110Record r110 = Smf110Record.from(record);
             
-            if (config.includeApplids == null 
-                    || config.includeApplids.contains(r110.mnProductSection().smfmnprn()))
+            if (includeApplid(r110.mnProductSection().smfmnprn()))
             {
                 for (PerformanceRecord transaction : r110.performanceRecords())
                 {
@@ -167,10 +180,26 @@ public class CicsTransactions
             }
             return result;
         }
+
+        private boolean includeApplid(String smfmnprn) 
+        {
+            if (config.excludeApplids.contains(smfmnprn)) return false;
+            
+            // if we include specific applids, all others are excluded
+            if (!config.includeApplids.isEmpty() 
+                    && !config.includeApplids.contains(smfmnprn)) return false;
+            return true;
+        }
         
         private boolean includeTransaction(PerformanceRecord transaction)
         {
-            if (config.includeTransactions != null 
+            if (config.excludeTransactions.contains(transaction.getField(Field.TRAN)))
+            {
+                return false;
+            }
+            
+            // if we include specific transactions, all others are excluded
+            if (!config.includeTransactions.isEmpty() 
                     && !config.includeTransactions
                         .contains(transaction.getField(Field.TRAN)))
             {
@@ -192,7 +221,7 @@ public class CicsTransactions
         
         @Override
         public List<Object> onEndOfData() {
-            return null;
+            return Collections.emptyList();
         }
     }
 }
