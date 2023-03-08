@@ -13,8 +13,7 @@ import com.blackhillsoftware.smf.cics.monitoring.fields.*;
 import com.blackhillsoftware.smf2json.cli.*;
 
 /**
- * Write transaction information to JSON for CICS transactions with 
- * an elapsed time greater than a specified threshold (zero for all transactions).
+ * Write CICS transaction information to JSON.
  * 
  * <p>
  * This class uses the Smf2JsonCLI class to provide a command line 
@@ -27,7 +26,7 @@ public class CicsTransactions
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI smf2JsonCli = Smf2JsonCLI.create()
-            .description("Convert transaction information for slow CICS transactions to JSON")
+            .description("Convert CICS transaction information to JSON")
             .includeRecords(110, 1);
         
         setupCommandLineArgs(smf2JsonCli); 
