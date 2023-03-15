@@ -23,7 +23,7 @@ import com.blackhillsoftware.smf2json.cli.*;
  */
 public class CicsTransactions 
 {          
-    public static void main(String[] args) throws IOException                                   
+    public static void main(String[] args) throws IOException
     {
         Smf2JsonCLI smf2JsonCli = Smf2JsonCLI.create()
             .description("Convert CICS transaction information to JSON")
@@ -168,6 +168,7 @@ public class CicsTransactions
                     {
                         CompositeEntry entry = new CompositeEntry()
                                 .add("time", transaction.getField(Field.STOP))
+                                .add("recordtype", "CICS Transaction")
                                 .add("system", r110.smfsid())
                                 .add("smfmnjbn", r110.mnProductSection().smfmnjbn())
                                 .add("smfmnprn", r110.mnProductSection().smfmnprn())

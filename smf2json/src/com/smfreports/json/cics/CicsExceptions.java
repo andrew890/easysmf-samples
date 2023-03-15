@@ -48,8 +48,9 @@ public class CicsExceptions
             for (ExceptionData exception : r110.exceptionData())
             {
                 result.add(
-                        new CompositeEntry()                   
+                        new CompositeEntry()
                             .add("time", exception.excmnsto())
+                            .add("recordtype", "CICS Exception")
                             .add("system", r110.smfsid())
                             .add("smfmnjbn", r110.mnProductSection().smfmnjbn())
                             .add("smfmnprn", r110.mnProductSection().smfmnprn())

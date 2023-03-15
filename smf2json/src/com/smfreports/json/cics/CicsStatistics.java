@@ -26,10 +26,8 @@ public class CicsStatistics
             .description("Convert CICS Statistics Sections to JSON")
             .includeRecords(110);
         
-        // combine fields into a complete LocalDateTime and exclude individual fields 
-        smf2JsonCli.easySmfGsonBuilder()            
-            .calculateEntry(StProductSection.class, "time", 
-                    x -> x.smfstdat().atTime(x.smfstclt()))
+        // exclude individual date/time fields, will be combined into time entry below 
+        smf2JsonCli.easySmfGsonBuilder()
             .exclude(StProductSection.class, "smfstdat")
             .exclude(StProductSection.class, "smfstclt");
     
@@ -56,6 +54,9 @@ public class CicsStatistics
             for (StatisticsDataSection stats : r110.statisticsDataSections())
             {
                 result.add(new CompositeEntry()
+                        .add("time", r110.stProductSection().smfstdat()
+                                .atTime(r110.stProductSection().smfstclt()))
+                        .add("recordtype", "CICS Statistics")
                         .add("system", system)
                         .add(r110.stProductSection())
                         .add(stats));
