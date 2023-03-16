@@ -64,11 +64,11 @@ The TransactionData class can be customized to control which data is collected. 
 
 ### On z/OS
 
-JCL to run on z/OS can be found in the [JCL](./JCL) directory.
+JCL to run on z/OS can be found in the [JCL](../../../../../JCL) directory.
 
-- [CICSEXEP](./JCL/CICSEXEP.jcl) convert CICS exception records to JSON
-- [CICSSTAT](./JCL/CICSSTAT.jcl) convert CICS statistics records to JSON
-- [CICSTRAN](./JCL/CICSTRAN.jcl) convert CICS CMF transaction records to JSON
+- [CICSEXEP](../../../../../JCL/CICSEXEP.jcl) convert CICS exception records to JSON
+- [CICSSTAT](../../../../../JCL/CICSSTAT.jcl) convert CICS statistics records to JSON
+- [CICSTRAN](../../../../../JCL/CICSTRAN.jcl) convert CICS CMF transaction records to JSON
 
 To run:
 
