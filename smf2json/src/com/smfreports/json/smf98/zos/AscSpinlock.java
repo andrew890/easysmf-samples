@@ -20,7 +20,7 @@ import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
  * options and generate the JSON. 
  *
  */
-public class AddressSpaceConsumptionSpinlock 
+public class AscSpinlock 
 {
     public static void main(String[] args) throws IOException                                   
     {

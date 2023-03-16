@@ -18,7 +18,7 @@ import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
  * options and generate the JSON. 
  *
  */
-public class SuspendLockSummarySections 
+public class SuspLockSummarySections 
 {
     public static void main(String[] args) throws IOException                                   
     {

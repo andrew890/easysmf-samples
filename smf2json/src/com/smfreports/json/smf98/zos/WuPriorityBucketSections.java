@@ -7,11 +7,11 @@ import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
 import com.blackhillsoftware.smf.smf98.*;
 import com.blackhillsoftware.smf.smf98.zos.AsidInfo;
-import com.blackhillsoftware.smf.smf98.zos.SuspendLockDetail;
+import com.blackhillsoftware.smf.smf98.zos.WorkUnitPriorityBucket;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
 /**
- * Format the Suspend Lock Detail data 
+ * Format the Work Unit Priority Bucket data 
  * in SMF 98 subtype 1 (z/OS) records
  * <p>
  * This class uses the Smf2JsonCLI class to provide a command line 
@@ -19,16 +19,16 @@ import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
  * options and generate the JSON. 
  *
  */
-public class SuspendLockDetailSections 
+public class WuPriorityBucketSections 
 {
     public static void main(String[] args) throws IOException                                   
     {
         Smf2JsonCLI cli = Smf2JsonCLI.create()
                 .includeRecords(98,1)
-                .description("Format SMF 98 Suspend Lock Detail Sections");
+                .description("Format SMF 98 Work Unit Priority Bucket Sections");
         
         cli.easySmfGsonBuilder()
-            //.setPrettyPrinting()     
+            //.setPrettyPrinting()
         
             // we calculate interval start/end values using the Context Summary section
             .exclude(IdentificationSection.class, "smf98intervalEnd")
@@ -37,11 +37,11 @@ public class SuspendLockDetailSections
             .exclude(IdentificationSection.class, "smf98intervalStartEtod")
             .exclude(IdentificationSection.class, "smf98rsd")
             .exclude(IdentificationSection.class, "smf98rst")
-
+            
             // other uninteresting fields
             .exclude(IdentificationSection.class, "smf98jbn")
             .exclude(IdentificationSection.class, "smf98stp")
-            
+
             // substitute flags field with hex formatted string
             .exclude(AsidInfo.class, "flags")
             .calculateEntry(AsidInfo.class, "flags", x -> String.format("0x%02X", x.flags()))
@@ -65,7 +65,7 @@ public class SuspendLockDetailSections
             Smf98s1Record r98 = Smf98s1Record.from(record);
                
             List<Object> result = new ArrayList<>(); 
-            for (SuspendLockDetail suspendLock: r98.suspendLockDetail())
+            for (WorkUnitPriorityBucket bucket: r98.workUnitPriorityBuckets())
             {     
                 result.add(new CompositeEntry()
                         .add("smfid", r98.system())
@@ -76,7 +76,7 @@ public class SuspendLockDetailSections
                                 r98.identificationSection().smf98intervalEnd()
                                     .atOffset(r98.contextSummarySection().cvtldto()))
                         .add(r98.identificationSection())
-                        .add(suspendLock))
+                        .add(bucket))
                         ;
             }
             return result;
