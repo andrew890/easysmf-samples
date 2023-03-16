@@ -111,7 +111,7 @@ public class CicsTransactionSummaryCustom
                     System.err.println("No dictionary for: " + r110.cicsInstance().toString() + ", skipping record(s)");
                 }
             }
-            return null;
+            return Collections.emptyList();
         }
         
         @Override

@@ -24,7 +24,7 @@ import com.blackhillsoftware.smf2json.cli.*;
 
 public class CicsTransactionSummary 
 {
-    public static void main(String[] args) throws IOException                                   
+    public static void main(String[] args) throws IOException
     {
         Smf2JsonCLI smf2JsonCli = Smf2JsonCLI.create()
             .description("Summarize CICS transactions into JSON")
@@ -127,7 +127,7 @@ public class CicsTransactionSummary
                     System.err.println("No dictionary for: " + r110.cicsInstance().toString() + ", skipping record(s)");
                 }
             }
-            return null;
+            return Collections.emptyList();
         }
         
         @Override
@@ -138,6 +138,7 @@ public class CicsTransactionSummary
             return transactionGroups.entrySet().stream()
                     .map(entry -> 
                         new CompositeEntry()
+                            .add("recordtype", "CICS Summary")
                             .add(entry.getKey())
                             .add(entry.getValue()))
                     .collect(Collectors.toList());

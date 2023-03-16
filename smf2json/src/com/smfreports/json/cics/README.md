@@ -17,26 +17,19 @@ The CICS dictionary records need to be read before the transaction records. The 
 
 The following sample reports are provided:
 
-### CicsAbendTransactions
+### CicsTransactions
 
-List detailed transaction information for transactions which abended 
-(fields ABCODEC or ABCODEO contain data).
-
-### CicsExceptions
-
-Convert CICS Exception SMF records to JSON format.
-
-### CicsSlowTransactions
-
-List detailed transaction information for transactions with an elapsed time greater than a specified threshold.
-
-### CicsStatistics
-
-Convert CICS Statistics records to JSON format.
+List detailed transaction information similar to that provided by DFH$MOLS, but in JSON format.
+Optionally select by
+- SMF record time
+- APPLID
+- Transaction ID
+- Elapsed time greater than a specified value
+- Transactions that abended (fields ABCODEC or ABCODEO contain data)
 
 ### CicsTransactionSummary
 
-Create a minute by minute summary of CICS transaction data.
+Create a minute by minute summary of CICS transaction data, suitable for further processing by JSON reporting tools. This can provide the basis of many different transaction reports, with granularity down to a 1 minute interval
 
 Data is grouped by a combination of the following fields:
 
@@ -53,7 +46,13 @@ Data is grouped by a combination of the following fields:
 
 Fields can be added or deleted from the group key as required. The amount of output data increases based on the resulting number of groups, but the flexibility of the reporting also increases.
 
-The intention is that the grouped data can be filtered and/or further grouped by JSON reporting tools to provide detailed minute by minute views of transaction data.
+### CicsExceptions
+
+Convert CICS Exception SMF records to JSON format.
+
+### CicsStatistics
+
+Convert CICS Statistics records to JSON format.
 
 ### CicsTransactionSummaryCustom
 
@@ -61,3 +60,31 @@ Similar to **CicsTransactionSummary**, except that transaction summary informati
 
 The TransactionData class can be customized to control which data is collected. Collecting a smaller number of fields improves performance of the program.
 
+## Running the Programs
+
+### On z/OS
+
+JCL to run on z/OS can be found in the [JCL](../../../../../JCL) directory.
+
+- [CICSEXEP](../../../../../JCL/CICSEXEP.jcl) convert CICS exception records to JSON
+- [CICSSTAT](../../../../../JCL/CICSSTAT.jcl) convert CICS statistics records to JSON
+- [CICSTRAN](../../../../../JCL/CICSTRAN.jcl) convert CICS CMF transaction records to JSON
+
+To run:
+
+1. Build the Smf2Json project if required, and copy the jar files from the target directory to a directory on z/OS (using binary transfer options).
+2. Set the **APPHOME** variable in the JCL to the location of the jar files
+3. Set the **INDSN** and **OUTDSN** variables as required 
+4. Check the **JAVAHOME** variable and update if required
+5. Run the job
+
+### On Windows/Linux:
+
+1. Build the Smf2Json project if required
+2. Run the Java program, specifying the class as required:   
+
+   ```
+   java -cp target/* com.smfreports.json.cics.CicsTransactionSummary --out json.txt <input1> <input2> ...   
+   ```
+   
+   where \<input1\> \<input2\> ... are SMF data files. For CICS transactions reports, CICS dictionary records must be read before the CICS transaction records.
