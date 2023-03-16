@@ -72,16 +72,16 @@ JCL to run on z/OS can be found in the [JCL](../../../../../JCL) directory.
 
 To run:
 
-1) Build the Smf2Json project if required, and copy the jar files from the target directory to a directory on z/OS (using binary transfer options).
-2) Set the **APPHOME** variable in the JCL to the location of the jar files
-3) Set the **INDSN** and **OUTDSN** variables as required 
-4) Check the **JAVAHOME** variable and update if required
-5) Run the job
+1. Build the Smf2Json project if required, and copy the jar files from the target directory to a directory on z/OS (using binary transfer options).
+2. Set the **APPHOME** variable in the JCL to the location of the jar files
+3. Set the **INDSN** and **OUTDSN** variables as required 
+4. Check the **JAVAHOME** variable and update if required
+5. Run the job
 
 ### On Windows/Linux:
 
-1) Build the Smf2Json project if required
-2) Run the Java program, specifying the class as required:   
+1. Build the Smf2Json project if required
+2. Run the Java program, specifying the class as required:   
 
    ```
    java -cp target/* com.smfreports.json.cics.CicsTransactionSummary --out json.txt <input1> <input2> ...   
