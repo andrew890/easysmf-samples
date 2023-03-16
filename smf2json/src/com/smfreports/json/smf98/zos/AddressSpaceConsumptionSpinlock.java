@@ -12,7 +12,7 @@ import com.blackhillsoftware.smf.smf98.zos.AsidInfo;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
 /**
- * Format the Splin Lock data from Address Space Consumption 
+ * Format the Spin Lock data from Address Space Consumption 
  * sections in SMF 98 subtype 1 (z/OS) records
  * <p>
  * This class uses the Smf2JsonCLI class to provide a command line 
