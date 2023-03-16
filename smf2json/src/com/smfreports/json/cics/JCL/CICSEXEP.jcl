@@ -18,7 +18,7 @@
 // SET   OUTDSN=MY.OUTPUT.JSON.DATASET
 //*
 //JAVA     EXEC PROC=JVMPRC80,
-// JAVACLS='com.smfreports.json.cics.CicsStatistics'
+// JAVACLS='com.smfreports.json.cics.CicsExceptions'
 //*
 //MAINARGS DD *
 --indd  INPUT

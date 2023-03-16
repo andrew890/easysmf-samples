@@ -4,7 +4,6 @@
 //*
 //* Run EasySMF:JE using JZOS batch launcher.
 //* Based on sample JCL provided with z/OS JAVA JZOS.
-//* Original sample JCL is Licensed Materials Property of IBM.
 //*                                                            Col 72->|
 // EXPORT SYMLIST=*
 //*
@@ -26,16 +25,20 @@
 //*
 //JAVA     EXEC PROC=JVMPRC80,
 //* Uncomment class as desired:
-// JAVACLS='com.smfreports.json.cics.CicsAbendTransactions'
+// JAVACLS='com.smfreports.json.cics.CicsTransactions'
 //*JAVACLS='com.smfreports.json.cics.CicsTransactionSummary'
 //*JAVACLS='com.smfreports.json.cics.CicsTransactionSummaryCustom'
-//*JAVACLS='com.smfreports.json.cics.CicsSlowTransactions'
 //*
 //MAINARGS DD *
 --indd  INPUT
 --outdd OUTPUT
-//* MAINARGS option required for CicsSlowTransactions:
+//*
+//* Additional possible MAINARGS options for CicsTransactions:
 //* --milliseconds 500
+//* --abend
+//* --applid=AAAAAAAAA,BBBBBBBB....
+//* --tranid=AAAA,BBBB....
+//*
 //INPUT    DD DISP=SHR,DSN=&CICSDICT
 //         DD DISP=SHR,DSN=&INDSN
 //OUTPUT   DD DISP=(NEW,CATLG),UNIT=SYSDA,DSN=&OUTDSN,
