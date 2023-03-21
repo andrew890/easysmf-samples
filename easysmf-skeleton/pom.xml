@@ -19,7 +19,6 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <easysmfVersion>2.0.0</easysmfVersion>
     </properties>
 
     <build>
