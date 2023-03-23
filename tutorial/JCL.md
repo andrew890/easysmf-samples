@@ -22,7 +22,7 @@ JCL parameters are assigned to unix environment variables via the STDENV DD and 
 
 Customize the parameters:
 
-- SRC - Location of the source to compile e.g. './java/easysmf-je-2.0.1/samples/smf2json/src'
+- SRC - Location of the source to compile e.g. './java/easysmf-je-2.0.1/samples/smf2json/src/main/java'
 - TGT - Destination for the compiled .class files e.g. './java/target'
 - CLASS - The path of the java file to compile, relative to the SRC directory e.g. 'com/smfreports/json/Smf30RecordToJson.java'
 - EZSMFDIR - The EasySMF:JE installation directory e.g. './java/easysmf-je-2.0.1'

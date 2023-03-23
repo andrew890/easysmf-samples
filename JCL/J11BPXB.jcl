@@ -14,7 +14,7 @@
 //* important, the path is separated and passed to the shell
 //* as 2 variables to avoid JCL line length limitations.
 //*
-// SET DIR='./git/easysmf-samples/smf2json/src'
+// SET DIR='./git/easysmf-samples/smf2json/src/main/java'
 // SET FILE='com/smfreports/json/Smf30RecordToJson.java'
 //*
 //* EasySMF directory
