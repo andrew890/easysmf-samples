@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.blackhillsoftware</groupId>
 	<artifactId>easysmf-tutorial</artifactId>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 
 	<name>EasySMF:JE Tutorial</name>
 	<url>https://www.blackhillsoftware.com</url>
