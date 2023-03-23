@@ -11,7 +11,7 @@
 //* Java source and target directories.
 //* As distributed, they are relative to user's home directory
 //*
-// SET SRC='./git/easysmf-samples/smf2json/src'
+// SET SRC='./java/easysmf-je-2.0.1/samples/smf2json/src'
 // SET TGT='./java/target'
 //*
 //* File to compile, relative to SRC directory
