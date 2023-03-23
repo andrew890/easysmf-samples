@@ -45,7 +45,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
                             <includeScope>runtime</includeScope>
                         </configuration>
                     </execution>
@@ -58,6 +58,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
+                            <classpathPrefix>./lib</classpathPrefix>
                             <mainClass>com.smfreports.SmfReportDups</mainClass>
                         </manifest>
                     </archive>
