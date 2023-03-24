@@ -2,7 +2,9 @@
 
 Scripts and batch files are supplied to compile and run the samples on Windows and unix systems.
 
-In most cases you would probably use an IDE e.g. Eclipse rather than these scripts, but they are provided for documentation purposes.
+We strongly recommend building using [Apache Maven](https://maven.apache.org/) and an IDE e.g. Eclipse rather than these compile scripts, but they are provided for documentation purposes.
+
+The run scripts provide samples of setting the classpath and environment variable for the EasySMF key.
 
 ### Windows
 
@@ -38,5 +40,5 @@ Again, set the environment variables to reflect your environment.
 
 Run the program specifying the full class name and the SMF data file e.g.
 ```
-./runsample.sh com.blackhillsoftware.samples.RecordCount SMF.DATA
+./runsample.sh com.smfreports.RecordCount SMF.DATA
 ```
