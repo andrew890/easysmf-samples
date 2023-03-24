@@ -26,4 +26,4 @@ set "EASYSMFKEY=C:\path to your\key.txt"
 @REM     Optional, directory with compiled EasySMF Java programs:
 set "TARGET=java\target"
 
-java -classpath "%TARGET%;%EASYSMFLOCATION%\jar\*;%EASYSMFLOCATION%\samples\jar\lib\*;%EASYSMFLOCATION%\samples\jar\*" %*
+java -classpath "%TARGET%;"%TARGET%\*;"%TARGET%\lib\*;%EASYSMFLOCATION%\jar\*;%EASYSMFLOCATION%\samples\jar\lib\*;%EASYSMFLOCATION%\samples\jar\*" %*
