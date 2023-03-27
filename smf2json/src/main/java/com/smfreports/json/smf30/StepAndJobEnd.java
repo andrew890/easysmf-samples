@@ -5,7 +5,6 @@ import java.util.*;
 
 import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.SmfRecord;
-import com.blackhillsoftware.smf.cics.StProductSection;
 import com.blackhillsoftware.smf.smf30.*;
 import com.blackhillsoftware.smf2json.cli.Smf2JsonCLI;
 
@@ -92,22 +91,27 @@ public class StepAndJobEnd
                 || r30.header().smf30drn() > 0  // APPC/MVS Resource Section
             )
             {
-                CompositeEntry result = new CompositeEntry()
-                        .add("time", r30.smfDateTime())
-                        .add("event", r30.subType() == 5 ? "Job End" : "Step End")
-                        .add(r30.identificationSection())
-                        .add(r30.completionSection())
-                        .add(r30.processorAccountingSection())
-                        .add(r30.performanceSection())
-                        .add(r30.storageSection())
-                        .add(r30.ioActivitySection())
-                        .add(r30.operatorSection())
-                        .add(r30.appcCumulativeResourceSection())
-                        .add(r30.appcResourceSection());
+                CompositeEntry result = new CompositeEntry();
+                
+                result.add("event", r30.subType() == 5 ? "Job End" : "Step End")
+                    .add("time", r30.smfDateTime())
+                    .add("system", r30.system())
+                    .add("sysplex", r30.subSystemSection().smf30syp())
+                    .add("smf30wid", r30.header().smf30wid())
+                    .add(r30.identificationSection())
+                    .add(r30.completionSection())
+                    .add(r30.processorAccountingSection())
+                    .add(r30.performanceSection())
+                    .add(r30.storageSection())
+                    .add(r30.ioActivitySection())
+                    .add(r30.operatorSection())
+                    .add(r30.appcCumulativeResourceSection())
+                    .add(r30.appcResourceSection());
+                
                 if (r30.accountingSections() != null && r30.accountingSections().size() > 0)
                 {
                     result.add("accounting",r30.accountingSections());
-                }                        
+                }
                 return Collections.singletonList(result);
             }
             else
