@@ -11,18 +11,18 @@ import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.monitoring.*;
 import com.blackhillsoftware.smf.cics.monitoring.fields.*;
 
-public class CicsTransactionSummary 
+public class CicsServiceClass 
 {
     public static void main(String[] args) throws IOException 
     {
         if (args.length < 1)
         {
-            System.out.println("Usage: CicsTransactionSummary <input-name> <input-name2> ...");
+            System.out.println("Usage: CicsServiceClass <input-name> <input-name2> ...");
             System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
             return;
         }
         
-        Map<String, Map<String, TransactionData>> applids = new HashMap<>();
+        Map<String, Map<String, Map<String, TransactionData>>> applids = new HashMap<>();
 
         int noDictionary = 0;
         int txCount = 0;
@@ -40,19 +40,21 @@ public class CicsTransactionSummary
                     Smf110Record r110 = Smf110Record.from(record);
                     
                     if (r110.haveDictionary()) 
-                    {
-                        Map<String, TransactionData> applidTransactions = 
+                    {                          
+                        Map<String, Map<String, TransactionData>> applidTransactions = 
                             applids.computeIfAbsent(
                                 r110.mnProductSection().smfmnprn(), 
-                                transactions -> new HashMap<String, TransactionData>());
+                                transactions -> new HashMap<>());
     
                         for (PerformanceRecord txData : r110.performanceRecords()) 
                         {
+                            String sClass = txData.getField(Field.SRVCLSNM);
                             String txName = txData.getField(Field.TRAN);
                             txCount++;
-                            applidTransactions.computeIfAbsent(
-                                    txName, 
-                                    x -> new TransactionData(txName)).add(txData);
+                            applidTransactions
+                                    .computeIfAbsent(sClass, x -> new HashMap<>())
+                                    .computeIfAbsent(txName, x -> new TransactionData(txName))
+                                    .add(txData);
                         }
                     } 
                     else 
@@ -86,43 +88,48 @@ public class CicsTransactionSummary
         }
     }
 
-    private static void writeReport(Map<String, Map<String, TransactionData>> transactions) 
+    private static void writeReport(Map<String, Map<String, Map<String, TransactionData>>> transactions) 
     {
         transactions.entrySet().stream()
             .sorted((a, b) -> a.getKey().compareTo(b.getKey()))
-            .forEachOrdered(applid -> 
+            .forEachOrdered(applid ->
             {
-                // Headings
                 System.out.format("%n%-8s", applid.getKey());
-    
-                System.out.format("%n%-4s %15s %15s %15s %15s %15s %15s%n%n", 
-                        "Name", 
-                        "Count", 
-                        "Avg Elapsed", 
-                        "CPU", 
-                        "Avg CPU", 
-                        "Avg Disp.", 
-                        "Avg Disp Wait");
-    
                 applid.getValue().entrySet().stream()
-                    .map(x -> x.getValue())
-                    .sorted(comparing(TransactionData::getCpu, reverseOrder())
-                            .thenComparing(TransactionData::getCount, reverseOrder()))
-                    .forEachOrdered(txInfo -> 
-                    {
-                        // write detail line
-                        System.out.format("%-4s %15d %15f %15f %15f %15f %15f%n", 
-                                txInfo.getName(),
-                                txInfo.getCount(), 
-                                txInfo.getAvgElapsed(), 
-                                txInfo.getCpu(),
-                                txInfo.getAvgCpu(), 
-                                txInfo.getAvgDispatch(),
-                                txInfo.getAvgDispatchWait());
 
-                    });
+                .forEachOrdered(servClass -> 
+                {
+                    // Headings
+                    System.out.format("%n    %-8s", servClass.getKey());
+        
+                    System.out.format("%n        %-4s %15s %15s %15s %15s %15s %15s%n%n", 
+                            "Name", 
+                            "Count", 
+                            "Avg Elapsed", 
+                            "CPU", 
+                            "Avg CPU", 
+                            "Avg Disp.", 
+                            "Avg Disp Wait");
+        
+                    servClass.getValue().entrySet().stream()
+                        .map(x -> x.getValue())
+                        .sorted(comparing(TransactionData::getCpu, reverseOrder())
+                                .thenComparing(TransactionData::getCount, reverseOrder()))
+                        .forEachOrdered(txInfo -> 
+                        {
+                            // write detail line
+                            System.out.format("        %-4s %15d %15f %15f %15f %15f %15f%n", 
+                                    txInfo.getName(),
+                                    txInfo.getCount(), 
+                                    txInfo.getAvgElapsed(), 
+                                    txInfo.getCpu(),
+                                    txInfo.getAvgCpu(), 
+                                    txInfo.getAvgDispatch(),
+                                    txInfo.getAvgDispatchWait());
+    
+                        });
+                });
             });
-
     }
 
     private static class TransactionData 
