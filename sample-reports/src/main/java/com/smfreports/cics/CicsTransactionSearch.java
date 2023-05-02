@@ -1,17 +1,36 @@
 package com.smfreports.cics;
 
 import java.io.*;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 
 import com.blackhillsoftware.json.EasySmfGsonBuilder;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.cics.*;
-import com.blackhillsoftware.smf.cics.monitoring.DictionaryEntry;
+import com.blackhillsoftware.smf.cics.monitoring.*;
 import com.blackhillsoftware.smf.cics.monitoring.fields.*;
+
 import com.google.gson.Gson;
 
+/**
+ * This class provides various options to search for and display 
+ * CICS transactions using Java Streams filtering and processing. 
+ * 
+ * There are many different attributes that can be used to select
+ * a transaction.
+ * 
+ * Various examples are provided and commented out. Uncomment the 
+ * ones that match what you want to do, and modify as required.
+ * 
+ * Likewise, examples of various output formats are provided.
+ * Uncomment the ones you want to use. 
+ *
+ * CICS Dictionaries
+ * -----------------
+ * CICS dictionary records must be read first to extract the 
+ * transaction information. A dataset containing the dictionary
+ * records can be concatenated ahead of the transaction data, or
+ * in a separate DD name given as the first command line argument.
+ */
 public class CicsTransactionSearch 
 {
     public static void main(String[] args) throws IOException 
@@ -27,19 +46,19 @@ public class CicsTransactionSearch
         
         // set up a Gson instance for optional JSON output 
         Gson gson = new EasySmfGsonBuilder() // set up a Gson instance for optional 
-                //.setPrettyPrinting()
+                .setPrettyPrinting()
                 .avoidScientificNotation(true) // make decimals more readable
                 .cicsClockDetail(false)
                 .includeZeroValues(false)
                 .includeUnsetFlags(false)
                 .includeEmptyStrings(false)
                 .createGson();
-        
-        // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
-        // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
-        
-        for (String name : args)
+                
+        for (String name : args) // process arguments as file/DD names in turn
         {
+            // SmfRecordReader.fromName(...) accepts a filename, a DD name in the
+            // format //DD:DDNAME or MVS dataset name in the form //'DATASET.NAME'
+
             try (SmfRecordReader reader = SmfRecordReader.fromName(name)
                     .include(110, 1)) 
             {     
@@ -64,7 +83,7 @@ public class CicsTransactionSearch
 //                        .smfmnprn().equals("CICSABCD"))
                     
                     
-                    // get the list of PerfromanceRecord/transactions
+                    // get the list of PerformanceRecord/transactions
                     .map(r110 -> r110.performanceRecords())
                     // turn the multiple lists into a stream of transactions
                     .flatMap(entries -> entries.stream()) 
@@ -91,27 +110,36 @@ public class CicsTransactionSearch
 //                    .filter(tx -> tx.getField(Field.PGMNAME).equals("ICC$HEL"))
 
                     // filter by elapsed time
-//                    .filter(tx -> tx.elapsedSeconds() > 5)
+                    .filter(tx -> tx.elapsedSeconds() > 5)
                     
-                    // filter by various field values, e.g. USRCPUT, DSPDELAY, IP Address
+                    // filter by field values, e.g. USRCPUT, DSPDELAY, IP Address
 //                    .filter(tx -> tx.getField(Field.DSPDELAY).timerSeconds() > 0.1)
 //                    .filter(tx -> tx.getField(Field.USRCPUT).timerSeconds() > 1)
 //                    .filter(tx -> !tx.getField(Field.CLIPADDR).equals("") 
 //                          && !tx.getField(Field.CLIPADDR).startsWith(("172.")))
                     
-                    // Sort e.g. by transaction start time
-                    // Note: sort means that all data matching the filter to this
+                    // Sort 
+                    // Note 1: sort means that all data matching the filter to this
                     // point will be retained in memory
+                    // Note 2: methods to get a value are probably called for each 
+                    // comparison, so it is useful to minimize the number of entries.
+                    
+                    // Sort e.g. by transaction start time
 //                    .sorted((a,b) -> a.getField(Field.START)
 //                            .compareTo(b.getField(Field.START)))
                     
+                    // Sort e.g. by transaction USRCPUT time descending
+                    // a and b reversed in this comparison for reverse order sort
+//                    .sorted((a,b) -> b.getField(Field.USRCPUT).timer()
+//                            .compareTo(a.getField(Field.USRCPUT).timer()))                  
+
                     
                     // Limit number of matching entries
                     .limit(1000)
                     
                     .forEachOrdered(tx ->  // "Ordered" in case we applied a sort 
                     {
-                        // Optional output types
+                        // Optional output types - uncomment as required
                         
                         // Text
                         System.out.println(tx.toString());
@@ -130,7 +158,7 @@ public class CicsTransactionSearch
                     
                         // Write any CICS Clock fields where the time represents
                         // more than 5% of the elapsed time
-//                        for (DictionaryEntry entry : tx.getDictionary().Entries())
+//                        for (DictionaryEntry entry : tx.getDictionary().entries())
 //                        {
 //                           if (entry.getFieldId() instanceof ClockField 
 //                                    && tx.getClockField(entry).timerSeconds() > tx.elapsedSeconds() * 0.05)
