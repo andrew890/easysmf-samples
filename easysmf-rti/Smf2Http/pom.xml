@@ -1,0 +1,127 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.blackhillsoftware.samples</groupId>
+	<artifactId>Smf2Http</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+
+	<name>Smf2Http</name>
+	<url>http://maven.apache.org</url>
+
+	<repositories>
+		<repository>
+			<id>black-hill-software</id>
+			<name>Black Hill Software Repository</name>
+			<url>https://blackhillsoftware.jfrog.io/artifactory/public</url>
+		</repository>
+	</repositories>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<easysmfVersion>2.0.5</easysmfVersion>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.3</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib/</classpathPrefix>
+							<mainClass>com.smfreports.Smf2Http</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/dependencies</outputDirectory>
+							<includeScope>runtime</includeScope>
+							<configuration>
+								<excludeScope>provided</excludeScope>
+							</configuration>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+							<ignoredDependencies>
+								<!-- ignore jsr305 for both "used but undeclared" and "declared but 
+									unused" -->
+								<ignoredDependency>com.google.code.findbugs:jsr305</ignoredDependency>
+							</ignoredDependencies>
+
+							<!-- ignore annotations for "used but undeclared" warnings -->
+							<ignoredUsedUndeclaredDependencies>
+								<ignoredUsedUndeclaredDependency>com.google.code.findbugs:annotations</ignoredUsedUndeclaredDependency>
+							</ignoredUsedUndeclaredDependencies>
+
+							<!-- ignore annotations for "unused but declared" warnings -->
+							<ignoredUnusedDeclaredDependencies>
+								<ignoredUnusedDeclaredDependency>com.google.code.findbugs:annotations</ignoredUnusedDeclaredDependency>
+							</ignoredUnusedDeclaredDependencies>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.blackhillsoftware.smf</groupId>
+			<artifactId>easysmf-je</artifactId>
+			<version>${easysmfVersion}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents.client5</groupId>
+			<artifactId>httpclient5-fluent</artifactId>
+			<version>5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents.client5</groupId>
+			<artifactId>httpclient5</artifactId>
+			<version>5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.blackhillsoftware</groupId>
+			<artifactId>easysmf-rti</artifactId>
+			<version>0.9.5-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.ibm.jzos</groupId>
+			<artifactId>ibmjzos</artifactId>
+			<version>2.4.8</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+</project>
