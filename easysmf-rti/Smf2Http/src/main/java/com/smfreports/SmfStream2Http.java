@@ -27,7 +27,9 @@ public class SmfStream2Http
 		    ByteArrayOutputStream queuedRecords = new ByteArrayOutputStream();
 		    
 	        HttpClient client = HttpClient.newBuilder().build();    
-		    Builder requestBuilder = HttpRequest.newBuilder(new URI(args[1]));
+		    Builder requestBuilder = HttpRequest
+		            .newBuilder(new URI(args[1]))
+		            .header("Content-Type", "application/octet-stream");
 					
 			for (byte[] record : rti)
 			{
@@ -41,7 +43,6 @@ public class SmfStream2Http
 					// http post records
 					
 					HttpRequest request = requestBuilder.POST(BodyPublishers.ofByteArray(payload))
-					    .header("Content-Type", "application/octet-stream")
 					    .build();
 					
 					try
@@ -69,6 +70,10 @@ public class SmfStream2Http
         if (response.statusCode() != 200)
         {
         	System.out.println(response.statusCode() + " " + response.body());
+        }
+        if (response.statusCode() >= 400) // some sort of error 
+        {
+            throw new RuntimeException("Unrecoverable error");
         }
     }	
 	
