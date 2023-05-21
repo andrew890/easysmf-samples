@@ -2,11 +2,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.blackhillsoftware.samples</groupId>
-	<artifactId>Smf2Http</artifactId>
+	<artifactId>easysmf-rti-http-json</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
-	<name>Smf2Http</name>
+	<name>SmfJson2Http</name>
 	<url>http://maven.apache.org</url>
 
 	<repositories>
@@ -81,6 +81,11 @@
 			<groupId>com.blackhillsoftware</groupId>
 			<artifactId>easysmf-rti</artifactId>
 			<version>0.9.5-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.blackhillsoftware.json</groupId>
+			<artifactId>easysmf-json</artifactId>
+			<version>1.1.6</version>
 		</dependency>
 	</dependencies>
 </project>

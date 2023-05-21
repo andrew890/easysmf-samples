@@ -2,7 +2,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.blackhillsoftware</groupId>
-	<artifactId>smf-servlet</artifactId>
+	<artifactId>easysmf-rti-http-servlet</artifactId>
 	<version>1.0.0</version>
 	<packaging>war</packaging>
 	<name>EasySMF-RTI HTTP Servlet</name>
