@@ -18,7 +18,7 @@ This will build the project and start the Maven Jetty server, listening on port 
 
 Run the EasySMF-RTI projects specifying your IP address in the URL e.g.
 ```
-http://172.16.3.4:9999/easysmf
+http://192.168.12.34:9999/easysmf
 ```
 
 Firewalls permitting, you should see the data arriving at the server.

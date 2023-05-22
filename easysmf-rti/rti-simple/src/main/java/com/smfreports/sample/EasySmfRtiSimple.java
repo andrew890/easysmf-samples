@@ -7,26 +7,31 @@ import com.blackhillsoftware.smf.realtime.*;
 public class EasySmfRtiSimple
 {
     public static void main(String[] args) throws IOException
-    {                
-        try (SmfConnection rti = 
-                SmfConnection.resourceName(args[0])
-                    .onMissedData(EasySmfRtiSimple::handleMissedData)
-                    .disconnectOnStop()
-                    .connect())
+    {              
+        if (args.length < 1)
         {
-            try (SmfRecordReader reader = 
-                    SmfRecordReader.fromByteArrays(rti))
+            System.out.println("Usage: EasySmfRtiSimple <resource-name>");
+            return;
+        }
+        
+        try (SmfConnection rti = 
+                 SmfConnection.resourceName(args[0])
+                     .onMissedData(EasySmfRtiSimple::handleMissedData)
+                     .disconnectOnStop()
+                     .connect();
+                
+             SmfRecordReader reader = 
+                 SmfRecordReader.fromByteArrays(rti))
+        {
+            int count = 0;
+            for (SmfRecord record : reader)
             {
-                int count = 0;
-                for (SmfRecord record : reader)
-                {
-                    count++;
-                    System.out.format("%-24s record type: %4d size: %5d%n",
-                            record.smfDateTime().toString(),
-                            record.recordType(),
-                            record.length());
-                    if (count >= 100) break;
-                }
+                count++;
+                System.out.format("%-24s record type: %4d size: %5d%n",
+                        record.smfDateTime().toString(),
+                        record.recordType(),
+                        record.length());
+                if (count >= 100) break;
             }
         }
     }

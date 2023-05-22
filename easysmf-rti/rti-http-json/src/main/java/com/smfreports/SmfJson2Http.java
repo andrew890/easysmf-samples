@@ -22,71 +22,77 @@ public class SmfJson2Http
 {
     public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException 
     {
-        Gson gson = new EasySmfGsonBuilder().avoidScientificNotation(true) // make decimals more readable
-                .includeZeroValues(false).includeUnsetFlags(false).includeEmptyStrings(false).createGson();
-
-        HttpClient client = HttpClient.newBuilder().build();
-        Builder requestBuilder = HttpRequest.newBuilder(new URI(args[1])).header("Content-Type", "application/json");
-
-        try (SmfConnection rti = SmfConnection.resourceName(args[0])
-                .disconnectOnStop()
-                .onMissedData(x -> handleMissedData(x)).connect()) 
+        if (args.length < 2)
         {
-            try (SmfRecordReader reader = SmfRecordReader.fromByteArrays(rti)
+            System.out.println("Usage: SmfJson2Http <resource-name> <url>");
+            return;
+        }
+        
+        String inMemoryResource = args[0];
+        String url = args[1];
+
+        // Create a HttpClient and request builder (requires Java 11) 
+        HttpClient client = 
+                HttpClient.newBuilder()
+                    .build();
+        Builder requestBuilder = 
+                HttpRequest.newBuilder(new URI(url))
+                    .header("Content-Type", "application/json");
+
+        // Create a Gson instance to generate JSON, using EasySMF-JSON 
+        // EasySmfGsonBuilder
+        Gson gson = new EasySmfGsonBuilder()
+                .avoidScientificNotation(true) // make decimals more readable
+                .includeZeroValues(false)
+                .includeUnsetFlags(false)
+                .includeEmptyStrings(false)
+                .createGson();
+        
+        // Create the connection, to be closed when a MVS STOP command is received
+        // and wrap it in a SmfRecordReader to include only SMF 30 subtype 5
+        try (SmfConnection rti = 
+                SmfConnection.resourceName(inMemoryResource)
+                    .disconnectOnStop()
+                    .onMissedData(SmfJson2Http::handleMissedData)
+                    .connect();
+             SmfRecordReader reader =     
+                SmfRecordReader.fromByteArrays(rti)
                     .include(30, 5)) 
+        {
+            // Read the records
+            for (SmfRecord record : reader) 
             {
-                for (SmfRecord record : reader) 
+                // Create the SMF 30 record
+                Smf30Record r30 = Smf30Record.from(record);
+                
+                // A job can generate multiple SMF 30 records, only
+                // the first one has a Completion Section
+                if (r30.completionSection() != null) 
                 {
-                    Smf30Record r30 = Smf30Record.from(record);
-                    if (r30.completionSection() != null) 
+                    // Create an EasySMF-JSON CompositeEntry and add the interesting data
+                    CompositeEntry compositeEntry = new CompositeEntry();
+                    compositeEntry.add("time", r30.smfDateTime());
+                    compositeEntry.add("id", r30.identificationSection());
+                    compositeEntry.add("comppletion", r30.completionSection());
+                    compositeEntry.add("proc", r30.processorAccountingSection());
+                    compositeEntry.add("perf",r30.performanceSection());
+                    compositeEntry.add("io",r30.ioActivitySection());
+                    
+                    // generate the JSON
+                    String json = gson.toJson(compositeEntry);
+
+                    // build the post request and send it
+                    HttpRequest request = requestBuilder
+                            .POST(BodyPublishers.ofString(json))
+                            .build();
+                    HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+
+                    if (response.statusCode() != 200) 
                     {
-                        CompositeEntry ce = new CompositeEntry();
-                        ce.add("time", r30.smfDateTime());
-                        ce.add("id", r30.identificationSection());
-                        ce.add("comppletion", r30.completionSection());
-                        ce.add("proc", r30.processorAccountingSection());
-                        ce.add("perf",r30.performanceSection());
-                        ce.add("io",r30.ioActivitySection());
-                        
-                        String json = gson.toJson(ce);
-
-                        // http post records
-
-                        HttpRequest request = requestBuilder
-                                .POST(BodyPublishers.ofString(json))
-                                .build();
-
-                        try 
-                        {
-                            send(client, request);
-                        } 
-                        catch (IOException e) 
-                        {
-                            System.out.println(e.toString());
-                            System.out.println("will retry in 5 seconds");
-                            Thread.sleep(5000);
-                            // send the same request again
-                            // if this fails too we allow the exception to propagate
-                            send(client, request);
-                        }
-                        
+                        System.out.println(response.statusCode() + " " + response.body());
                     }
-                }
+                }             
             }
-        }
-    }
-
-    private static void send(HttpClient client, HttpRequest request) throws IOException, InterruptedException 
-    {
-        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-
-        if (response.statusCode() != 200) 
-        {
-            System.out.println(response.statusCode() + " " + response.body());
-        }
-        if (response.statusCode() >= 400) // some sort of error
-        {
-            throw new RuntimeException("Unrecoverable error");
         }
     }
 

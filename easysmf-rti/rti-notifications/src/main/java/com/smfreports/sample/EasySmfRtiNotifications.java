@@ -46,19 +46,25 @@ public class EasySmfRtiNotifications
 
     public static void main(String[] args) throws IOException
     {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: EasySmfRtiNotifications <resource-name>");
+            return;
+        }
+        
         // Open SMF RTI connection and SmfRecordReader in 
         // try-with-resources block so they will be automatically closed
 
         try (SmfConnection rti = 
-                SmfConnection.resourceName(args[0])
-                    .onMissedData(EasySmfRtiNotifications::handleMissedData)
-                    .disconnectOnStop()
-                    .connect();
+                 SmfConnection.resourceName(args[0])
+                     .onMissedData(EasySmfRtiNotifications::handleMissedData)
+                     .disconnectOnStop()
+                     .connect();
 
-            SmfRecordReader reader = 
-                SmfRecordReader.fromByteArrays(rti)
-                    .include(30,4)
-                    .include(30,5))
+             SmfRecordReader reader = 
+                 SmfRecordReader.fromByteArrays(rti)
+                     .include(30,4)
+                     .include(30,5))
         {
             // Failures are mostly recorded in step end records (subtype 4)
             // but we want to notify at end of job (subtype 5) so we save

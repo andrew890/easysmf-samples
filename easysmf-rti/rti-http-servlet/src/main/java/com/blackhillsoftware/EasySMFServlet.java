@@ -18,8 +18,9 @@ import jakarta.servlet.http.*;
  * 
  */
 public class EasySMFServlet extends HttpServlet
-{    
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+{
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException
     {   	
     	System.out.println("Received post...");
     	
@@ -45,18 +46,23 @@ public class EasySMFServlet extends HttpServlet
     {
         InputStream inputStream = request.getInputStream();
         
-        try (SmfRecordReader reader = SmfRecordReader.fromStream(inputStream))
+        try (SmfRecordReader reader = 
+                SmfRecordReader.fromStream(inputStream))
         { 
             for (SmfRecord record : reader)
             {
-                System.out.format("%24s SMF type: %5d Size: %5d%n", record.smfDateTime(), record.recordType(), record.recordLength());
+                System.out.format("%24s SMF type: %5d Size: %5d%n", 
+                        record.smfDateTime(), 
+                        record.recordType(), 
+                        record.recordLength());
             }
         }
     }
 
     private void receiveJson(HttpServletRequest request) throws IOException 
     {
-        try (BufferedReader reader = request.getReader())
+        try (BufferedReader reader = 
+                request.getReader())
         {
             String line;
             while((line = reader.readLine()) != null)
