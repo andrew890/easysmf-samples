@@ -5,7 +5,9 @@
 	<artifactId>easysmf-rti-http-servlet</artifactId>
 	<version>1.0.0</version>
 	<packaging>war</packaging>
+
 	<name>EasySMF-RTI HTTP Servlet</name>
+	<url>https://www.blackhillsoftware.com</url>
 
 	<repositories>
 		<repository>
@@ -51,6 +53,21 @@
 									<version>[3.8.1,)</version>
 								</requireMavenVersion>
 							</rules>
+						</configuration>
+					</execution>
+					<execution>
+						<id>enforce-no-snapshots</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireReleaseDeps>
+									<message>Release configuration includes SNAPSHOT dependencies</message>
+									<onlyWhenRelease>true</onlyWhenRelease>
+								</requireReleaseDeps>
+							</rules>
+							<fail>true</fail>
 						</configuration>
 					</execution>
 				</executions>
