@@ -8,20 +8,25 @@ import java.net.http.HttpResponse.*;
 
 import com.blackhillsoftware.smf.realtime.*;
 
-public class SmfStream2Http
+/**
+ * Read data from a SMF in memory resource and send the 
+ * complete SMF records in binary format over HTTP.
+ */
+public class RtiHttpBinary
 {
-	public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException 
+	public static void main(String[] args) 
+	        throws IOException, InterruptedException, URISyntaxException 
 	{
         if (args.length < 2)
         {
-            System.out.println("Usage: SmfStream2Http <resource-name> <url>");
+            System.out.println("Usage: RtiHttpBinary <resource-name> <url>");
             return;
         }
         
         String inMemoryResource = args[0];
         String url = args[1];
         
-        // Create a HttpClient and request builder (requires Java 11) 
+        // Create a HttpClient and request builder (HttpClient requires Java 11) 
         HttpClient client = 
             HttpClient.newBuilder()
                 .build();    
@@ -29,12 +34,13 @@ public class SmfStream2Http
             HttpRequest.newBuilder(new URI(url))
                 .header("Content-Type", "application/octet-stream");
         
-        // Create the connection, to be closed when a MVS STOP command is received.
-		try (SmfConnection rti = 
+        // Create the connection to the in memory resource,
+        // to be closed when a MVS STOP command is received.
+		try (SmfConnection connection = 
 				SmfConnection
 					.resourceName(inMemoryResource) 
 					.disconnectOnStop()
-					.onMissedData(SmfStream2Http::handleMissedData)
+					.onMissedData(RtiHttpBinary::handleMissedData)
 					.connect())
 		{
 		    // We can send multiple SMF records in a single post, concatenated 
@@ -46,29 +52,40 @@ public class SmfStream2Http
 		    
 		    ByteArrayOutputStream outputQueue = new ByteArrayOutputStream();
 
-			for (byte[] record : rti) // read next SMF record
+			for (byte[] record : connection) // read next SMF record
 			{
 				outputQueue.write(record); // add it to our queue
 				// if nothing more currently available, or 10MB queued
-				if (rti.isEmpty()
+				if (connection.isEmpty()
 						|| outputQueue.size() > 10 * 1024 * 1024)   
 				{
+				    // send data and create a new queue 
 					sendData(client, requestBuilder, outputQueue.toByteArray());             
-                    outputQueue= new ByteArrayOutputStream(); // new empty queue 
+                    outputQueue= new ByteArrayOutputStream();
 				}
 			}
-			if (outputQueue.size() > 0) // send any remaining data
+			// end of input, most likely due to MVS STOP command.
+			// send any remaining data
+			if (outputQueue.size() > 0) 
 			{
                 sendData(client, requestBuilder, outputQueue.toByteArray());             			    
 			}
 		} 	
 	}
 
+	/**
+	 * POST the SMF data to a HTTP server. 
+	 * 
+	 * @param client a HttpClient
+	 * @param requestBuilder a HttpRequestBuilder
+	 * @param payload the byte array containing 1 or more complete SMF records
+	 * @throws IOException if the HttpClient send throws an IOException
+	 * @throws InterruptedException if the HttpClient send is interrupted
+	 */
     private static void sendData(HttpClient client, Builder requestBuilder, byte[] payload)
             throws IOException, InterruptedException 
     {
-        // http post records
-        
+        // create the HttpRequest and POST the records
         HttpRequest request = 
             requestBuilder
                 .POST(BodyPublishers.ofByteArray(payload))
@@ -82,6 +99,11 @@ public class SmfStream2Http
         }
     }
 
+    /**
+     * Process the missed data event. This method prints a message
+     * and indicates that an exception should not be thrown.
+     * @param e the missed data event information
+     */
 	static void handleMissedData(MissedDataEvent e)
 	{
 		System.out.println("Missed Data!");

@@ -1,37 +1,40 @@
 package com.smfreports;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpRequest.Builder;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
+import java.net.*;
+import java.net.http.*;
+import java.net.http.HttpRequest.*;
+import java.net.http.HttpResponse.*;
 
 import com.blackhillsoftware.json.EasySmfGsonBuilder;
 import com.blackhillsoftware.json.util.CompositeEntry;
-import com.blackhillsoftware.smf.SmfRecord;
-import com.blackhillsoftware.smf.SmfRecordReader;
+import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.realtime.*;
-import com.blackhillsoftware.smf.smf30.Smf30Record;
+import com.blackhillsoftware.smf.smf30.*;
 import com.google.gson.Gson;
 
-public class SmfJson2Http 
+
+/**
+ * Read data from a SMF in memory resource, and post
+ * information from job end records (type 30 subtype 5)
+ * to a HTTP server in JSON format.  
+ *
+ */
+public class RtiHttpJson 
 {
-    public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException 
+    public static void main(String[] args) 
+            throws IOException, InterruptedException, URISyntaxException 
     {
         if (args.length < 2)
         {
-            System.out.println("Usage: SmfJson2Http <resource-name> <url>");
+            System.out.println("Usage: RtiHttpJson <resource-name> <url>");
             return;
         }
         
         String inMemoryResource = args[0];
         String url = args[1];
 
-        // Create a HttpClient and request builder (requires Java 11) 
+        // Create a HttpClient and request builder (HttpClient requires Java 11) 
         HttpClient client = 
                 HttpClient.newBuilder()
                     .build();
@@ -39,24 +42,29 @@ public class SmfJson2Http
                 HttpRequest.newBuilder(new URI(url))
                     .header("Content-Type", "application/json");
 
-        // Create a Gson instance to generate JSON, using EasySMF-JSON 
-        // EasySmfGsonBuilder
+        // Create a Gson instance to generate JSON, using EasySmfGsonBuilder
+        // from EasySMF-JSON
         Gson gson = new EasySmfGsonBuilder()
-                .avoidScientificNotation(true) // make decimals more readable
-                .includeZeroValues(false)
+                
+                // make decimals more readable
+                .avoidScientificNotation(true) 
+                
+                // exclude various data to reduce the size of the output 
+                .includeZeroValues(false)  
                 .includeUnsetFlags(false)
                 .includeEmptyStrings(false)
+                
                 .createGson();
         
         // Create the connection, to be closed when a MVS STOP command is received
         // and wrap it in a SmfRecordReader to include only SMF 30 subtype 5
-        try (SmfConnection rti = 
+        try (SmfConnection connection = 
                 SmfConnection.resourceName(inMemoryResource)
                     .disconnectOnStop()
-                    .onMissedData(SmfJson2Http::handleMissedData)
+                    .onMissedData(RtiHttpJson::handleMissedData)
                     .connect();
              SmfRecordReader reader =     
-                SmfRecordReader.fromByteArrays(rti)
+                SmfRecordReader.fromByteArrays(connection)
                     .include(30, 5)) 
         {
             // Read the records
@@ -73,7 +81,7 @@ public class SmfJson2Http
                     CompositeEntry compositeEntry = new CompositeEntry();
                     compositeEntry.add("time", r30.smfDateTime());
                     compositeEntry.add("id", r30.identificationSection());
-                    compositeEntry.add("comppletion", r30.completionSection());
+                    compositeEntry.add("completion", r30.completionSection());
                     compositeEntry.add("proc", r30.processorAccountingSection());
                     compositeEntry.add("perf",r30.performanceSection());
                     compositeEntry.add("io",r30.ioActivitySection());
@@ -96,6 +104,11 @@ public class SmfJson2Http
         }
     }
 
+    /**
+     * Process the missed data event. This method prints a message
+     * and indicates that an exception should not be thrown.
+     * @param e the missed data event information
+     */
     static void handleMissedData(MissedDataEvent e) 
     {
         System.out.println("Missed Data!");

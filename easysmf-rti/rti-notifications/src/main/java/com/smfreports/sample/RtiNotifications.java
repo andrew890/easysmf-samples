@@ -13,23 +13,23 @@ import com.twilio.rest.api.v2010.account.Message;
  * This sample class demonstrates sending SMS notifications for
  * failed jobs from the mainframe using the EasySMF API for
  * the SMF Real Time Interface and the Twilio Java API.
- * 
+ * <p>
  * The sample monitors jobs of type STC and JES2 (not OMVS or
  * TSO). Notifications are generated for JES2 jobs in a list of 
  * production job classes. This could be changed to e.g. production
  * userids, specific jobnames etc.
- * 
+ * <p>
  * Jobs are considered failed if the last step to execute abended
  * (except for S222 i.e. cancelled) or the condition code was greater
  * than 8. If the job continues and subsequent steps run it is 
  * not considered a failed job.
- * 
+ * <p>
  * The completion information is not necessarily available in the 
  * subtype 5 job end record. So we need to track failed steps, and 
  * check for failed steps when the subtype 5 record is encountered.  
  *
  */
-public class EasySmfRtiNotifications
+public class RtiNotifications
 {
     // Twilio parameters supplied via environment variables
     private static final String ACCOUNT_SID = System.getenv("TWILIO_ACCOUNT_SID");
@@ -37,7 +37,7 @@ public class EasySmfRtiNotifications
     private static final String TO_PHONE = System.getenv("TO_PHONE");
     private static final String FROM_PHONE = System.getenv("FROM_PHONE");
 
-    // The job classes that require notifications
+    // Job classes that require notifications
     private static Set<String> productionClasses = new HashSet<>(
             Arrays.asList(
                     "A",
@@ -48,21 +48,23 @@ public class EasySmfRtiNotifications
     {
         if (args.length < 1)
         {
-            System.out.println("Usage: EasySmfRtiNotifications <resource-name>");
+            System.out.println("Usage: RtiNotifications <resource-name>");
             return;
         }
+        
+        String inMemoryResource = args[0];
         
         // Open SMF RTI connection and SmfRecordReader in 
         // try-with-resources block so they will be automatically closed
 
-        try (SmfConnection rti = 
-                 SmfConnection.resourceName(args[0])
-                     .onMissedData(EasySmfRtiNotifications::handleMissedData)
+        try (SmfConnection connection = 
+                 SmfConnection.resourceName(inMemoryResource)
+                     .onMissedData(RtiNotifications::handleMissedData)
                      .disconnectOnStop()
                      .connect();
 
              SmfRecordReader reader = 
-                 SmfRecordReader.fromByteArrays(rti)
+                 SmfRecordReader.fromByteArrays(connection)
                      .include(30,4)
                      .include(30,5))
         {
@@ -85,16 +87,18 @@ public class EasySmfRtiNotifications
                 {
                     switch (record.subType())
                     {
-                    case 4:
+                    case 4: // subtype 4 : step end
                         if (failed(r30)) 
                         {
                             // if the step failed, save the record for later
                             // replaces existing entry if present
                             failedSteps.put(new JobKey(r30), r30);
                         }
-                        // didn't fail, check it wasn't flushed
+                        // else it didn't fail, check it wasn't flushed
                         else if (!r30.completionSection().smf30flh()) 
                         {
+                            // If the step wasn't flushed, remove any earlier failed step
+                            
                             // check the step and substep numbers to see if there was an earlier step, 
                             // no point in checking if there wasn't
                             if (r30.identificationSection().smf30stn() > 1 
@@ -105,17 +109,21 @@ public class EasySmfRtiNotifications
                             }
                         }
                         break;
-                    case 5:
-                        JobKey key = new JobKey(r30);
-                        // if the last executed step failed
+                        
+                    case 5: // subtype 5 : job end
+                        
+                        // Check if the last executed step failed
+                        JobKey key = new JobKey(r30);                        
                         if (failedSteps.containsKey(key))
                         {
+                            // send notification using information from failed step 
                             sendNotification(failedSteps.get(key));                            
                             failedSteps.remove(key); // finished with this
                         }
                         // or if the type 5 record indicates failure
                         else if(failed(r30))
                         {
+                            // send notification using information from job
                             sendNotification(r30);                            
                         }
                         break;
@@ -131,7 +139,7 @@ public class EasySmfRtiNotifications
     /**
      * Check whether this is a job we are generating notifications for.
      * In this case it is all STC, and jobs in production job classes but
-     * critieria can be whatever you need
+     * criteria can be whatever you need
      * @param r30 the SMF 30 record
      * @return true if we are monitoring this job
      */
@@ -167,11 +175,11 @@ public class EasySmfRtiNotifications
         String messagetext = 
                 String.format("%s Job failed: %s %s Step: %d %s Program: %s CC: %s",
                         r30.smfDateTime().toString(),
-                        r30.identificationSection().smf30jnm(),
-                        r30.identificationSection().smf30jbn(),
-                        r30.identificationSection().smf30stn(),
-                        r30.identificationSection().smf30stm(),
-                        r30.identificationSection().smf30pgm(),
+                        r30.identificationSection().smf30jbn(), // job name
+                        r30.identificationSection().smf30jnm(), // job number
+                        r30.identificationSection().smf30stn(), // step number
+                        r30.identificationSection().smf30stm(), // step name
+                        r30.identificationSection().smf30pgm(), // program
                         r30.completionSection().completionDescription());
         
         // Send a SMS notification through Twilio
@@ -185,8 +193,10 @@ public class EasySmfRtiNotifications
     }
 
     /**
-     * Issue a message if we missed SMF data from the inmemory resource
-     * @param e the event parameters so we can suppress the exception
+     * Process the missed data event. This method prints a message
+     * and indicates that an exception should not be thrown.
+     * 
+     * @param e the missed data event information
      */
     private static void handleMissedData(MissedDataEvent e)
     {
@@ -196,12 +206,14 @@ public class EasySmfRtiNotifications
 
     /**
      * A class to use as a key to identify records from the same job.
+     * <p>
      * A job is identified by a combination of system, job name, 
      * job number and read date/time.
+     * <p>
      * The JobKey is used as the key in the HashMap to relate 
      * subtype 4 and subtype 5 records.
      * It needs correctly implemented hashCode and equals methods
-     * for use as a hash key, Eclipse will generate them form the
+     * for use as a hash key. Eclipse will generate them form the
      * fields in the class.  
      */
     private static class JobKey
@@ -212,6 +224,10 @@ public class EasySmfRtiNotifications
         long readtime;
         int readdate;
 
+        /**
+         * Create a new key from a type 30 record
+         * @param r30 the type 30 record
+         */
         JobKey(Smf30Record r30)
         {
             system = r30.system();
