@@ -1,4 +1,4 @@
-package com.blackhillsoftware;
+package com.smfreports.sample;
 
 import java.io.*;
 import com.blackhillsoftware.smf.*;

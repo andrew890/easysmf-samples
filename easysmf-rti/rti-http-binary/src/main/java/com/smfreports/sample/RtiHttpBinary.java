@@ -1,4 +1,4 @@
-package com.smfreports;
+package com.smfreports.sample;
 
 import java.io.*;
 import java.net.*;
