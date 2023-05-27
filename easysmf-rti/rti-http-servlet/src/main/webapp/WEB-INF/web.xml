@@ -6,7 +6,7 @@
 
 	<servlet>
 		<servlet-name>EasySMF</servlet-name>
-		<servlet-class>com.blackhillsoftware.EasySMFServlet</servlet-class>
+		<servlet-class>com.smfreports.sample.RtiServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>EasySMF</servlet-name>
