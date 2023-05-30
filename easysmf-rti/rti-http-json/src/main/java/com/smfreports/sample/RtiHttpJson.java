@@ -38,7 +38,7 @@ public class RtiHttpJson
         HttpClient client = 
                 HttpClient.newBuilder()
                     .build();
-        Builder requestBuilder = 
+        HttpRequest.Builder requestBuilder = 
                 HttpRequest.newBuilder(new URI(url))
                     .header("Content-Type", "application/json");
 
