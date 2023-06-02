@@ -33,29 +33,26 @@ public class RtiSimple
         // Connect to the resource, specifying a missed data handler
         // and to disconnect when a STOP command is received.
         // try-with-resources block automatically closes the 
-        // SmfConnection and SmfRecordReader when leaving the block
+        // SmfConnection when leaving the block
         try (SmfConnection connection = 
                  SmfConnection.resourceName(inMemoryResource)
                      .onMissedData(RtiSimple::handleMissedData)
                      .disconnectOnStop()
-                     .connect();
-                
-             // Use SmfRecordReader to create the records    
-             SmfRecordReader reader = 
-                 SmfRecordReader.fromByteArrays(connection))
+                     .connect())
         {
-            int count = 0;
-            // read and count records, and print information
-            for (SmfRecord record : reader)
-            {
-                count++;
-                System.out.format("%-24s record type: %4d size: %5d%n",
-                        record.smfDateTime(),
-                        record.recordType(),
-                        record.length());
-                if (count >= 100) break;
-            }
-            // SmfConnection and SmfRecordReader automatically closed here 
+            // Receive records using Java Stream API
+            connection.stream()
+                .limit(100)
+                .forEach(record ->
+                {
+                    // connection provides byte[] arrays - create a SMF record
+                    SmfRecord smfrecord = new SmfRecord(record);
+                    System.out.format("%-24s record type: %4d size: %5d%n",
+                            smfrecord.smfDateTime(),
+                            smfrecord.recordType(),
+                            smfrecord.length());
+                });
+            // SmfConnection automatically closed here 
             // by try-with-resources block
         }
     }
