@@ -56,7 +56,7 @@ public class RtiHttpBinary
 			{
 				outputQueue.write(record); // add it to our queue
 				// if nothing more currently available, or 10MB queued
-				if (connection.isEmpty()
+				if (!connection.moreQueued()
 						|| outputQueue.size() > 10 * 1024 * 1024)   
 				{
 				    // send data and create a new queue 
