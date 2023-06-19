@@ -23,25 +23,32 @@ public class RtiServlet extends HttpServlet
 {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException
-    {   	
-    	System.out.println("Received post...");
-    	
-    	switch(request.getContentType())
-    	{
-    	case "application/octet-stream":
-            receiveSmfData(request);   
-            response.setStatus(HttpServletResponse.SC_OK);
-            break;
-    	case "application/json":
-            receiveJson(request);
-            response.setStatus(HttpServletResponse.SC_OK);   
-            break;
-            
-    	default:
-    	    System.out.println("Content type not implemented: " + request.getContentType());
-            response.setStatus(HttpServletResponse.SC_OK);   
-    	    break;
-    	}
+    {
+        if (!request.getRequestURI().equals("/easysmf"))
+        {
+            System.out.println("Incorrect path: \"" + request.getRequestURI() + "\", expected \"/easysmf\"");
+        }
+        else
+        {
+        	System.out.println("Received post...");
+        	
+        	switch(request.getContentType())
+        	{
+        	case "application/octet-stream":
+                receiveSmfData(request);   
+                response.setStatus(HttpServletResponse.SC_OK);
+                break;
+        	case "application/json":
+                receiveJson(request);
+                response.setStatus(HttpServletResponse.SC_OK);   
+                break;
+                
+        	default:
+        	    System.out.println("Content type not implemented: " + request.getContentType());
+                response.setStatus(HttpServletResponse.SC_OK);   
+        	    break;
+        	}
+        }
     }
 
     /**
