@@ -1,4 +1,4 @@
-//ANDREWRN JOB CLASS=A,
+//JOBNAME  JOB CLASS=A,                                                 JOB06252
 //             MSGCLASS=H,
 //             NOTIFY=&SYSUID
 //*                                                          Col 72 -> |
@@ -12,21 +12,33 @@
 //*
 // SET CLASS='com.smfreports.sample.RtiNotifications'
 //*
-//* Java target directory
-//* As distributed, relative to user's home directory
+//* Java target directory.
+//* As distributed, relative to user's home directory.
 //* The target directory will be searched first for
-//* classes and dependencies, then target/lib
+//* classes and dependencies, then target/lib.
 //*
 // SET TGT='./java/rti-notifications'
 //*
+//* File containing commands to set Twilio authorization
+//* environment variables.
+//* As distributed, relative to user's home directory
+//* Content would be something like:
+//*
+//* export TWILIO_ACCOUNT_SID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+//* export TWILIO_AUTH_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+//* export TO_PHONE=+12345678901
+//* export FROM_PHONE=+12345678901
+//*
+// SET TWILIO='./twilio_auth'
+//*
 //* Location of JZOS batch launcher module JVMLDM86:
-// SET JZOSLIB=VENDOR.LINKLIBE
+// SET JZOSLIB=JZOS.LINKLIBE
 //*
 //* Location of Java:
 // SET JAVA='/usr/lpp/java/J8.0_64'
 //*
 //* SMF data to process
-// SET SMFINMEM=IFASMF.ALLRECS
+// SET SMFINMEM=IFASMF.MYRECS
 //*
 //* Run a Java program under JZOS Batch Launcher
 //*
@@ -60,15 +72,12 @@ qnIVPAyiE81k0a4m3hBhbZXXaZi38C7SBMam1xqG000=
 //*
 //* Configure for JZOS: based on JVMJCL80/JVMPRC80
 //*
-//* Plus environment variables for Twilio
+//* Plus source file which sets Twilio auth parameters
 //*
 //STDENV   DD *,SYMBOLS=JCLONLY
 . /etc/profile
 
-export TWILIO_ACCOUNT_SID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-export TWILIO_AUTH_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-export TO_PHONE=+123456789
-export FROM_PHONE=+123456789
+. &TWILIO
 
 export JAVA_HOME=&JAVA
 export PATH=/bin:"${JAVA_HOME}"/bin

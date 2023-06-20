@@ -1,4 +1,4 @@
-//ANDREWRA JOB CLASS=A,
+//JOBNAME  JOB CLASS=A,
 //             MSGCLASS=H,
 //             NOTIFY=&SYSUID
 //*                                                          Col 72 -> |
@@ -12,21 +12,21 @@
 //*
 // SET CLASS='com.smfreports.sample.RtiSimple'
 //*
-//* Java target directory
-//* As distributed, relative to user's home directory
+//* Java target directory.
+//* As distributed, relative to user's home directory.
 //* The target directory will be searched first for
-//* classes and dependencies, then target/lib
+//* classes and dependencies, then target/lib.
 //*
 // SET TGT='./java/rti-simple'
 //*
 //* Location of JZOS batch launcher module JVMLDM86:
-// SET JZOSLIB=VENDOR.LINKLIBE
+// SET JZOSLIB=JZOS.LINKLIBE
 //*
 //* Location of Java:
 // SET JAVA='/usr/lpp/java/J8.0_64'
 //*
 //* SMF data to process
-// SET SMFINMEM=IFASMF.ALLRECS
+// SET SMFINMEM=IFASMF.MYRECS
 //*
 //* Run a Java program under JZOS Batch Launcher
 //*

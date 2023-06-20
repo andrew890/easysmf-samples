@@ -1,4 +1,4 @@
-//ANDREWRA JOB CLASS=A,
+//JOBNAME  JOB CLASS=A,
 //             MSGCLASS=H,
 //             NOTIFY=&SYSUID
 //*                                                          Col 72 -> |
@@ -13,22 +13,22 @@
 //*
 // SET CLASS='com.smfreports.sample.RtiHttpBinary'
 //*
-//* Java target directory
-//* As distributed, relative to user's home directory
+//* Java target directory.
+//* As distributed, relative to user's home directory.
 //* The target directory will be searched first for
-//* classes and dependencies, then target/lib
+//* classes and dependencies, then target/lib.
 //*
 // SET TGT='./java/rti-http-binary'
 //*
-//* Location of JZOS batch launcher module JVMLDM86:
-// SET JZOSLIB=VENDOR.LINKLIBE
+//* Location of JZOS batch launcher module JVMLDM16:
+// SET JZOSLIB=JZOS.LINKLIBE
 //*
 //* Location of Java:
 // SET JAVA='/usr/lpp/java/J11.0_64'
 //*
 //* SMF data to process
-// SET SMFINMEM=IFASMF.ALLRECS
-// SET URL='http://107.20.16.13:9999/easysmf'
+// SET SMFINMEM=IFASMF.MYRECS
+// SET URL='http://192.168.12.34:9999/easysmf'
 //*
 //* Run a Java program under JZOS Batch Launcher
 //*
