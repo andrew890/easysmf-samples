@@ -17,7 +17,7 @@
 // SET JAR=''
 //*
 //*SET CLASS='-jar'
-//*SET JARDIR='./easysmf-je-2.0.5/samples/jar/'
+//*SET JARDIR='./easysmf-je-2.0.6/samples/jar/'
 //*SET JAR='easysmf-rti-simple-1.0.0.jar'
 //*
 //* Java target directory
