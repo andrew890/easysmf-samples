@@ -5,14 +5,14 @@ import java.net.*;
 import java.net.http.*;
 import java.net.http.HttpRequest.*;
 import java.net.http.HttpResponse.*;
+import java.time.*;
 
 import com.blackhillsoftware.json.EasySmfGsonBuilder;
 import com.blackhillsoftware.json.util.CompositeEntry;
 import com.blackhillsoftware.smf.*;
-import com.blackhillsoftware.smf.realtime.*;
 import com.blackhillsoftware.smf.smf30.*;
+import com.blackhillsoftware.smf.realtime.*;
 import com.google.gson.Gson;
-
 
 /**
  * Read data from a SMF in memory resource, and post
@@ -38,7 +38,7 @@ public class RtiHttpJson
         HttpClient client = 
                 HttpClient.newBuilder()
                     .build();
-        Builder requestBuilder = 
+        HttpRequest.Builder requestBuilder = 
                 HttpRequest.newBuilder(new URI(url))
                     .header("Content-Type", "application/json");
 
@@ -46,7 +46,7 @@ public class RtiHttpJson
         // from EasySMF-JSON
         Gson gson = new EasySmfGsonBuilder()
                 
-                // make decimals more readable
+                // make decimals more human readable
                 .avoidScientificNotation(true) 
                 
                 // exclude various data to reduce the size of the output 
@@ -79,12 +79,41 @@ public class RtiHttpJson
                 {
                     // Create an EasySMF-JSON CompositeEntry and add the interesting data
                     CompositeEntry compositeEntry = new CompositeEntry();
+                    
                     compositeEntry.add("time", r30.smfDateTime());
-                    compositeEntry.add("id", r30.identificationSection());
-                    compositeEntry.add("completion", r30.completionSection());
-                    compositeEntry.add("proc", r30.processorAccountingSection());
-                    compositeEntry.add("perf",r30.performanceSection());
-                    compositeEntry.add("io",r30.ioActivitySection());
+                    compositeEntry.add("system", r30.system());
+                    compositeEntry.add("jobname", r30.identificationSection().smf30jbn());
+                    compositeEntry.add("jobid", r30.identificationSection().smf30jnm());                    
+                    
+                    LocalDateTime start = r30.identificationSection().smf30std()
+                            .atTime(r30.identificationSection().smf30sit());
+                    
+                    compositeEntry.add("start_time", start);
+                    compositeEntry.add("elapsed", Duration.between(start, r30.smfDateTime()));
+                    
+                    compositeEntry.add("cpTime",
+                            r30.processorAccountingSection().smf30cptSeconds()
+                            + r30.processorAccountingSection().smf30cpsSeconds()
+                            + r30.processorAccountingSection().smf30icuStepInitSeconds()
+                            + r30.processorAccountingSection().smf30icuStepTermSeconds()
+                            + r30.processorAccountingSection().smf30isbStepInitSeconds()
+                            + r30.processorAccountingSection().smf30isbStepTermSeconds()
+                            + r30.processorAccountingSection().smf30iipSeconds()
+                            + r30.processorAccountingSection().smf30rctSeconds()
+                            + r30.processorAccountingSection().smf30hptSeconds()
+                            );
+
+                    compositeEntry.add("ziipTime",
+                            r30.processorAccountingSection().smf30TimeOnZiipSeconds()
+                            );
+                    
+                    // add some complete sections
+                    compositeEntry.add("identification",       r30.identificationSection());
+                    compositeEntry.add("completion",           r30.completionSection());
+                    compositeEntry.add("processor_accounting", r30.processorAccountingSection());
+                    compositeEntry.add("performance",          r30.performanceSection());
+                    compositeEntry.add("io_activity",          r30.ioActivitySection());
+                    compositeEntry.add("storage",              r30.storageSection());
                     
                     // generate the JSON
                     String json = gson.toJson(compositeEntry);

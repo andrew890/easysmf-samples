@@ -63,14 +63,15 @@ public class RtiNotifications
                      .disconnectOnStop()
                      .connect();
 
+             // Set up SmfrecordReader to read type 30 subtypes 4 and 5    
              SmfRecordReader reader = 
                  SmfRecordReader.fromByteArrays(connection)
                      .include(30,4)
                      .include(30,5))
         {
             // Failures are mostly recorded in step end records (subtype 4)
-            // but we want to notify at end of job (subtype 5) so we save
-            // failed step information, and either remove it if another step 
+            // but we want to notify at end of job (subtype 5), so we save
+            // failed step information and either remove it if another step 
             // executes successfully, or notify if the last step failed.
             Map<JobKey, Smf30Record> failedSteps = new HashMap<>(); 
 
@@ -82,7 +83,7 @@ public class RtiNotifications
                 // check we have the completion section - a job/step can have multiple
                 // records, completion section is only in the first
                 if (r30.completionSection() != null
-                        // and we are notifying for this job
+                        // and we are generating notifications for this job
                         && includeJob(r30))
                 {
                     switch (record.subType())
@@ -90,8 +91,8 @@ public class RtiNotifications
                     case 4: // subtype 4 : step end
                         if (failed(r30)) 
                         {
-                            // if the step failed, save the record for later
-                            // replaces existing entry if present
+                            // if the step failed, save the record for later -
+                            // this replaces existing entry if present
                             failedSteps.put(new JobKey(r30), r30);
                         }
                         // else it didn't fail, check it wasn't flushed
@@ -139,7 +140,7 @@ public class RtiNotifications
     /**
      * Check whether this is a job we are generating notifications for.
      * In this case it is all STC, and jobs in production job classes but
-     * criteria can be whatever you need
+     * the criteria can be whatever you need
      * @param r30 the SMF 30 record
      * @return true if we are monitoring this job
      */
@@ -193,7 +194,7 @@ public class RtiNotifications
     }
 
     /**
-     * Process the missed data event. This method prints a message
+     * Process the SMF missed data event. This method prints a message
      * and indicates that an exception should not be thrown.
      * 
      * @param e the missed data event information

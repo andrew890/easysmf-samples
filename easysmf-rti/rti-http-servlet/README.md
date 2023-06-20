@@ -10,6 +10,15 @@ Note: The http sending functions **do** support https if a https URL is specifie
 
 ## Build and Run
 
+Set the path to the EasySMF key file:
+```
+export EASYSMFKEY=/home/andrew/easysmfkey.txt
+```
+or
+```
+set EASYSMFKEY=C:\Users\Andrew\Documents\easysmfkey.txt
+```
+
 To start the server, change to the directory containing pom.xml and start the jetty-maven-plugin using Maven:
 ```
 mvn jetty:run -Djetty.http.port=9999
