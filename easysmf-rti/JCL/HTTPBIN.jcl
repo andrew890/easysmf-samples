@@ -1,23 +1,24 @@
-//JOBNAME  JOB CLASS=A,
+//ANDREWRA JOB CLASS=A,
 //             MSGCLASS=H,
 //             NOTIFY=&SYSUID
 //*                                                          Col 72 -> |
 //* ***** Edit with CAPS OFF and NUMBER OFF *****
 //*
 //* Run a Java program using JZOS Batch Launcher
+//* Must run under Java 11
 //*
 // EXPORT SYMLIST=*
 //*
 //* Class to run with empty JAR and JARDIR, or
 //* CLASS='-jar' with JARDIR and JAR values for an executable jar.
 //*
-// SET CLASS='com.smfreports.RecordCount'
+// SET CLASS='com.smfreports.sample.RtiHttpBinary'
 // SET JARDIR=''
 // SET JAR=''
 //*
 //*SET CLASS='-jar'
-//*SET JARDIR='./easysmf-je-2.0.3/samples/jar/'
-//*SET JAR='smf-report-dups-1.2.0.jar'
+//*SET JARDIR='./easysmf-je-2.0.5/samples/jar/'
+//*SET JAR='easysmf-rti-simple-1.0.0.jar'
 //*
 //* Java target directory
 //* As distributed, relative to user's home directory
@@ -27,31 +28,31 @@
 //* &EZSMFDIR./samples/jar/lib directories
 //* All CLASSPATH values are ignored for an executable jar.
 //*
-// SET TGT='./java/target'
+// SET TGT='./java/rti-http-binary'
 //*
 //* EasySMF directory:
-// SET EZSMFDIR='./easysmf-je-2.0.3'
+// SET EZSMFDIR='./easysmf-je-2.0.6'
 //*
-//* Location of JZOS batch launcher module JVMLDM80:
-// SET JZOSLIB=JZOS.LINKLIBE
+//* Location of JZOS batch launcher module JVMLDM86:
+// SET JZOSLIB=VENDOR.LINKLIBE
 //*
 //* Location of Java:
-// SET JAVA='/usr/lpp/java/J8.0'
+// SET JAVA='/usr/lpp/java/J11.0_64'
 //*
 //* SMF data to process
-// SET SMFDATA=SMF.RECORDS
+// SET SMFINMEM=IFASMF.ALLRECS
+// SET URL='http://54.90.253.173:8080/easysmf'
 //*
 //* Run a Java program under JZOS Batch Launcher
 //*
-//G        EXEC PGM=JVMLDM80,REGION=0M,
+//G        EXEC PGM=JVMLDM16,REGION=0M,
 // PARM='/ &CLASS &JARDIR.&JAR.'
 //*
 //STEPLIB  DD DISP=SHR,DSN=&JZOSLIB
 //*
 //MAINARGS DD *,DLM=$$,SYMBOLS=JCLONLY
- //DD:INPUT
+ &SMFINMEM &URL
 $$
-//INPUT    DD DISP=SHR,DSN=&SMFDATA
 //SYSPRINT DD SYSOUT=*
 //SYSOUT   DD SYSOUT=*
 //STDOUT   DD SYSOUT=*
@@ -65,14 +66,14 @@ $$
 //*
 //EZSMFKEY DD *
 **License:
-MQ0KMjAyMy0wNC0xNQ0KVGVtcG9yYXJ5IEtleQ0K
+MQ0KMjAyMy0wNi0yNA0KRXZhbHVhdGlvbg0KSkUsUlRJDQo=
 **Sig:
-mcBCoJt2H/XErCI7kiWA647KJAUE++SJy3Q2rRCuQZzlbXoMu/hCLRoPa9UBloIz
-g/ABXaBF23weg8PNSPTczlHFP6vrC8eBOx5SkGDzwR0JlTa0iDQ3tgH3gJqNnt4I
-RO/BCP8rAUr4NjMA5yFSqxGFnLG8pIOs+/64jB6fXV4=
+3wjod6unVui/sIGWm7XUg/PxewQ0VY01a9GDO+gPEoH5DTDAUvGUbfEo/V76BTF5
+zP/BZluubHEQ90CHXba1EMwg2I8OCMDdpN/OcvrNe+8SPE8DLoPZ5cH2jI/3uaGz
+qnIVPAyiE81k0a4m3hBhbZXXaZi38C7SBMam1xqG000=
 **End
 //*
-//* Configure for JZOS: based on JVMJCL80/JVMPRC80
+//* Configure for JZOS: based on JVMJCL16/JVMPRC16
 //*
 //STDENV   DD *,SYMBOLS=JCLONLY
 . /etc/profile
@@ -80,9 +81,8 @@ export JAVA_HOME=&JAVA
 export PATH=/bin:"${JAVA_HOME}"/bin
 
 LIBPATH=/lib:/usr/lib:"${JAVA_HOME}"/bin
-LIBPATH="${LIBPATH}":"${JAVA_HOME}"/lib/s390
-LIBPATH="${LIBPATH}":"${JAVA_HOME}"/lib/s390/j9vm
-LIBPATH="${LIBPATH}":"${JAVA_HOME}"/bin/classic
+LIBPATH="${LIBPATH}":"${JAVA_HOME}"/lib
+LIBPATH="${LIBPATH}":"${JAVA_HOME}"/lib/j9vm
 export LIBPATH="${LIBPATH}":
 
 CLASSPATH="${CLASSPATH}":"&TGT."
