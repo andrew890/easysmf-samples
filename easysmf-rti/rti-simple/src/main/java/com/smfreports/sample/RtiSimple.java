@@ -42,7 +42,7 @@ public class RtiSimple
         {
             // Receive records using Java Stream API
             connection.stream()
-                .limit(100)
+                .limit(100) // stop after 100 records
                 .forEach(record ->
                 {
                     // connection provides byte[] arrays - create a SMF record
