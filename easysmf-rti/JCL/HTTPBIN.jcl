@@ -17,7 +17,7 @@
 // SET JAR=''
 //*
 //*SET CLASS='-jar'
-//*SET JARDIR='./easysmf-je-2.0.5/samples/jar/'
+//*SET JARDIR='./easysmf-je-2.0.6/samples/jar/'
 //*SET JAR='easysmf-rti-simple-1.0.0.jar'
 //*
 //* Java target directory
@@ -41,7 +41,7 @@
 //*
 //* SMF data to process
 // SET SMFINMEM=IFASMF.ALLRECS
-// SET URL='http://54.90.253.173:8080/easysmf'
+// SET URL='http://107.20.16.13:9999/easysmf'
 //*
 //* Run a Java program under JZOS Batch Launcher
 //*
