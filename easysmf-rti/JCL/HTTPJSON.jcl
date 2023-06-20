@@ -9,29 +9,16 @@
 //*
 // EXPORT SYMLIST=*
 //*
-//* Class to run with empty JAR and JARDIR, or
-//* CLASS='-jar' with JARDIR and JAR values for an executable jar.
+//* Class to run:
 //*
 // SET CLASS='com.smfreports.sample.RtiHttpJson'
-// SET JARDIR=''
-// SET JAR=''
-//*
-//*SET CLASS='-jar'
-//*SET JARDIR='./easysmf-je-2.0.6/samples/jar/'
-//*SET JAR='easysmf-rti-simple-1.0.0.jar'
 //*
 //* Java target directory
 //* As distributed, relative to user's home directory
 //* The target directory will be searched first for
-//* classes and dependencies, then target/lib, then the
-//* &EZSMFDIR./jar, &EZSMFDIR./samples/jar and
-//* &EZSMFDIR./samples/jar/lib directories
-//* All CLASSPATH values are ignored for an executable jar.
+//* classes and dependencies, then target/lib
 //*
 // SET TGT='./java/rti-http-json'
-//*
-//* EasySMF directory:
-// SET EZSMFDIR='./easysmf-je-2.0.6'
 //*
 //* Location of JZOS batch launcher module JVMLDM86:
 // SET JZOSLIB=VENDOR.LINKLIBE
@@ -46,7 +33,7 @@
 //* Run a Java program under JZOS Batch Launcher
 //*
 //G        EXEC PGM=JVMLDM16,REGION=0M,
-// PARM='/ &CLASS &JARDIR.&JAR.'
+// PARM='/ &CLASS'
 //*
 //STEPLIB  DD DISP=SHR,DSN=&JZOSLIB
 //*
@@ -90,15 +77,6 @@ for i in "&TGT."/*.jar; do
     CLASSPATH="${CLASSPATH}":"${i}"
     done
 for i in "&TGT./lib"/*.jar; do
-    CLASSPATH="${CLASSPATH}":"${i}"
-    done
-for i in "&EZSMFDIR./jar"/*.jar; do
-    CLASSPATH="${CLASSPATH}":"${i}"
-    done
-for i in "&EZSMFDIR./samples/jar"/*.jar; do
-    CLASSPATH="${CLASSPATH}":"${i}"
-    done
-for i in "&EZSMFDIR./samples/jar/lib"/*.jar; do
     CLASSPATH="${CLASSPATH}":"${i}"
     done
 export CLASSPATH="${CLASSPATH}":
