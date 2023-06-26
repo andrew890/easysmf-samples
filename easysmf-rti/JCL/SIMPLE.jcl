@@ -47,15 +47,15 @@ $$
 //*
 //* EasySMF Key - get a 30 day trial from
 //* https://www.blackhillsoftware.com/30-day-trial/
-//* This sample key expires 2023-04-15
+//* This sample key expires 2023-07-26
 //*
 //EZSMFKEY DD *
 **License:
-MQ0KMjAyMy0wNi0yNA0KRXZhbHVhdGlvbg0KSkUsUlRJDQo=
+MQ0KMjAyMy0wNy0yNg0KVGVtcG9yYXJ5IEtleQ0KSkUsUlRJDQo=
 **Sig:
-3wjod6unVui/sIGWm7XUg/PxewQ0VY01a9GDO+gPEoH5DTDAUvGUbfEo/V76BTF5
-zP/BZluubHEQ90CHXba1EMwg2I8OCMDdpN/OcvrNe+8SPE8DLoPZ5cH2jI/3uaGz
-qnIVPAyiE81k0a4m3hBhbZXXaZi38C7SBMam1xqG000=
+mrTbKshR+WfytUSES6uCWijvmH00oThTqY+VHag0x92z3q5/s1xMYv0hP+p1d/fl
+bfs7xAdjI0XOpUr8KpdYrotpm8H7BoW5zTj06hOIPASOu+v0UMVLEBO7binrjjZQ
+IhY5Btu79q7ol6+saC6DKVkweUVzX4Vb7GLMhJkIH+U=
 **End
 //*
 //* Configure for JZOS: based on JVMJCL80/JVMPRC80
