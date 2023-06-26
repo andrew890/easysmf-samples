@@ -24,6 +24,7 @@ To start the server, change to the directory containing pom.xml and start the je
 mvn jetty:run -Djetty.http.port=9999
 ```
 This will build the project and start the Maven Jetty server, listening on port 9999.
+Change the port as required, or accept the default port 8080.
 
 Run the EasySMF-RTI projects specifying your IP address in the URL e.g.
 ```

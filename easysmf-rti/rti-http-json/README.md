@@ -1,10 +1,10 @@
-# rti-http-binary
+# rti-http-json
 
-**rti-http-binary** sends binary SMF records to a http(s) URL.
+**rti-http-json** sends job end records (SMF 30 subtype 5) in JSON format to a http(s) 
+URL.
 
-Multiple records can be combined into a single POST. The data is sent when there
-are no records immediately available in the in memory resource, or when the POST
-size exceeds a specified threshold.
+The program reads SMF 30 subtype 5 records from an in memory resource, formats 
+the major sections into a JSON record and POSTs the JSON text to a http(s) URL.
 
 You can test this sample using the rti-http-servlet project to receive the records.
 
@@ -12,13 +12,13 @@ This project requires Java 11 due to the use of the Java 11 HttpClient class.
 
 ## Build
 
-Build the rti-http-binary project using Maven:
+Build the rti-http-json project using Maven:
 
 ```
 mvn -f pom.xml clean package
 ```
 
-The easysmf-rti-http-binary jar file will be created in the ```./target``` directory. The project dependencies will also be copied to ```./target```.
+The easysmf-rti-http-json jar file will be created in the ```./target``` directory. The project dependencies will also be copied to ```./target```.
 
 ## z/OS prerequisites
 
@@ -36,5 +36,4 @@ Copy all the jar files from the ```./target``` directory to a directory on z/OS.
 
 Start the [rti-http-servlet](../rti-http-servlet/) project on a system reachable via TCP/IP from z/OS.
 
-Run the sample using the [HTTPBIN.jcl](../JCL/HTTPBIN.jcl) JCL from the easysmf-rti/JCL directory.
-
+Run the sample using the [HTTPJSON.jcl](../JCL/HTTPJSON.jcl) JCL from the easysmf-rti/JCL directory.
