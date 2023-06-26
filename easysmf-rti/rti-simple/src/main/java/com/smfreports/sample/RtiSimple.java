@@ -35,7 +35,7 @@ public class RtiSimple
         // try-with-resources block automatically closes the 
         // SmfConnection when leaving the block
         try (SmfConnection connection = 
-                 SmfConnection.resourceName(inMemoryResource)
+                 SmfConnection.forResourceName(inMemoryResource)
                      .onMissedData(RtiSimple::handleMissedData)
                      .disconnectOnStop()
                      .connect())

@@ -58,7 +58,7 @@ public class RtiNotifications
         // try-with-resources block so they will be automatically closed
 
         try (SmfConnection connection = 
-                 SmfConnection.resourceName(inMemoryResource)
+                 SmfConnection.forResourceName(inMemoryResource)
                      .onMissedData(RtiNotifications::handleMissedData)
                      .disconnectOnStop()
                      .connect();

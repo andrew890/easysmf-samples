@@ -59,7 +59,7 @@ public class RtiHttpJson
         // Create the connection, to be closed when a MVS STOP command is received
         // and wrap it in a SmfRecordReader to include only SMF 30 subtype 5
         try (SmfConnection connection = 
-                SmfConnection.resourceName(inMemoryResource)
+                SmfConnection.forResourceName(inMemoryResource)
                     .disconnectOnStop()
                     .onMissedData(RtiHttpJson::handleMissedData)
                     .connect();

@@ -38,7 +38,7 @@ public class RtiHttpBinary
         // to be closed when a MVS STOP command is received.
 		try (SmfConnection connection = 
 				SmfConnection
-					.resourceName(inMemoryResource) 
+					.forResourceName(inMemoryResource) 
 					.disconnectOnStop()
 					.onMissedData(RtiHttpBinary::handleMissedData)
 					.connect())
