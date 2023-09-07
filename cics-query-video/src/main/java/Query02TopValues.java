@@ -12,6 +12,13 @@ import com.google.gson.Gson;
 
 /**
  * 
+ *  This sample demonstrates Querying CICS transaction SMF data
+ *  to find the top 10 transactions by elapsed time for each 
+ *  transaction name.
+ * 
+ *  Alternate output formats can be uncommented to produce 
+ *  output in JSON format or a list of CICS clock values where
+ *  the clock value is greater than 10% of elapsed time.
  *
  */
 public class Query02TopValues {
@@ -57,7 +64,7 @@ public class Query02TopValues {
                 // for each group print the key then list the values.
                 .forEachOrdered(group ->
                 {
-                    System.out.println(group.getKey());
+                    System.out.println(group.getKey()); // transaction name 
                     
                     // getValue returns the list of transactions for this group
                     for (PerformanceRecord entry : group.getValue()) 
@@ -67,7 +74,8 @@ public class Query02TopValues {
                         // Uncomment for output in JSON format:
                         //System.out.println(gson.toJson(entry));
                         
-                        // Uncomment to print significant clock values 
+                        // Alternate output format, uncomment to print CICS clock values 
+                        // which are more than 10% of the elapsed time:
                         //printClocks(entry);
                         
                     }

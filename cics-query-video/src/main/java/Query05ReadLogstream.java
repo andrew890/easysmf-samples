@@ -10,8 +10,14 @@ import com.blackhillsoftware.json.*;
 import com.google.gson.Gson;
     
 /**
- * 
+ *  This sample demonstrates Querying CICS transaction SMF data
+ *  from a SMF logstream on z/OS.
+ *  
+ *  Transactions from a specific terminal are reported.
  *
+ *  Alternate output formats can be uncommented to produce 
+ *  output in JSON format or a list of CICS clock values where
+ *  the clock value is greater than 10% of elapsed time.
  */
 public class Query05ReadLogstream {
 
@@ -19,9 +25,7 @@ public class Query05ReadLogstream {
         
         // read CICS dictionary records from separate file
         Smf110Record
-            .dictionariesFromName("C:\\Users\\Andrew\\SMF\\dictionary.smf");
-            // Dataset name format:
-            //.dictionariesFromName("//'ANDREWR.DEMO.CICS.DICT'");
+            .dictionariesFromName("//'ANDREWR.DEMO.CICS.DICT'");
         
         // Gson instance used if the gson::toJson line is uncommented below 
         Gson gson = new EasySmfGsonBuilder()
@@ -47,6 +51,7 @@ public class Query05ReadLogstream {
            
            .include(110,1); // include only type 110 subtype 1
         
+        // Build SmfRecordReader from the logstreamBuilder
         try (SmfRecordReader reader = builder.build())
         {
             reader.stream()
@@ -68,7 +73,7 @@ public class Query05ReadLogstream {
                 .forEach(System.out::println);
             
                 // Alternate output format, uncomment to print CICS clock values 
-                // which are more than 10% of the elapsed time
+                // which are more than 10% of the elapsed time:
                 //.forEach(tx -> printClocks(tx));
         }
     }

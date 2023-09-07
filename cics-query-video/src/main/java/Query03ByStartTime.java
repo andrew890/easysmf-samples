@@ -11,7 +11,13 @@ import com.blackhillsoftware.json.*;
 import com.google.gson.Gson;
 
 /**
+ *  This sample demonstrates Querying CICS transaction SMF data
+ *  to find the first 100 long running transactions by start time
+ *  between 2 times.
  * 
+ *  Alternate output formats can be uncommented to produce 
+ *  output in JSON format or a list of CICS clock values where
+ *  the clock value is greater than 10% of elapsed time.
  *
  */
 public class Query03ByStartTime {
@@ -53,7 +59,7 @@ public class Query03ByStartTime {
                         .isBefore(ZonedDateTime.of(2023,8,16,18,0,0,0, 
                                 ZoneOffset.UTC)))
                 
-                .filter(tx -> tx.elapsedSeconds() > 1)
+                .filter(tx -> tx.elapsedSeconds() > 1.5)
                 
                 // Collect Top 100 values comparing by START time reversed, 
                 // i.e. the smallest START values (the first transactions)
@@ -67,7 +73,7 @@ public class Query03ByStartTime {
                 //.forEach(tx -> System.out.println(gson.toJson(tx)));
                 
                 // Alternate output format, uncomment to print CICS clock values 
-                // which are more than 10% of the elapsed time
+                // which are more than 10% of the elapsed time:
                 //.forEach(tx -> printClocks(tx));
         }
     }

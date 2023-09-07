@@ -7,7 +7,8 @@ import com.blackhillsoftware.smf.cics.*;
 import com.blackhillsoftware.smf.cics.monitoring.fields.*;
 
 /**
- * 
+ *  This sample demonstrates Querying CICS transaction SMF data,
+ *  counting or summing data fields.
  *
  */
 public class Query04CountingAndSumming {
@@ -36,7 +37,7 @@ public class Query04CountingAndSumming {
                         // count transactions in each group
                         Collectors.counting()))
                 
-                        // alternatively, uncomment to sum USRCPUT for each group                
+                        // alternatively, uncomment to sum USRCPUT for each group:              
                         //Collectors.summingDouble(tx -> tx.getField(Field.USRCPUT).timerSeconds())))
                 
                 // stream groups

@@ -9,7 +9,12 @@ import com.blackhillsoftware.json.*;
 import com.google.gson.Gson;
 
 /**
+ *  This sample demonstrates Querying CICS transaction SMF data
+ *  to find transactions that exceeded a specified elapsed time.
  * 
+ *  Alternate output formats can be uncommented to produce 
+ *  output in JSON format or a list of CICS clock values where
+ *  the clock value is greater than 10% of elapsed time.
  *
  */
 public class Query01ElapsedTime {
@@ -45,7 +50,7 @@ public class Query01ElapsedTime {
 				.filter(r110 -> r110.mnProductSection().smfmnprn().equals("CICS2A8B"))
 				.map(r110 -> r110.performanceRecords()) // multiple transaction records per SMF record
 				.flatMap(List::stream)                  // merge lists into single stream
-				.filter(tx -> tx.elapsedSeconds() > 1)  // filter by transaction elapsed time
+				.filter(tx -> tx.elapsedSeconds() > 1.5)  // filter by transaction elapsed time
 				
 				// Uncomment for output in JSON format:
 				//.map(gson::toJson)
