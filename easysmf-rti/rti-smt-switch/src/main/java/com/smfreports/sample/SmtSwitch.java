@@ -218,50 +218,51 @@ public class SmtSwitch
         currentInterval.processed = true;        
     }
     
+
+    
     /**
      * Issue a MVS console command by running tsocmd console syscmd in a shell 
      * @param command the MVS command to issue
      */
-    private static void mvsCmd(String command) 
-    {
-        // JobId might be better as console ID, but requires JZOS to build/run
-        // User name can conflict with logged in user
-        // Uncomment JZOS dependency in pom.xml for Maven build if using JobId
-        
-        String consoleid = System.getProperty("user.name");
-        //String consoleid = com.ibm.jzos.ZUtil.getCurrentJobId();
-        
-        try {
-            // build and start the process to run the command
-            Process process = new ProcessBuilder()
-                    .command("sh", "-c", "tsocmd \"console syscmd(" + command + ") name(" + consoleid + ")\"")
-                    .directory(new File(System.getProperty("user.home")))                                    
-                    .inheritIO()                                                                             
-                    .start();
-            // allow 10 seconds then time out
-            // potential errors:
-            // - time out
-            // - abnormal exit value
-            // - interrupted
-            // - IOException from process start
-            // Throwing or re-throwing makes the error easier to debug. 
-            if (process.waitFor(10, TimeUnit.SECONDS))
-            {
-                if (process.exitValue() != 0)
-                {
-                    throw new RuntimeException("MVSCMD ended with exitValue " + process.exitValue());
-                }      
-            }
-            else
-            {
-                throw new RuntimeException("MVSCMD timed out");
-            }
-        } 
-        catch (IOException | InterruptedException e) 
-        {
-            throw new RuntimeException(e);
-        }
-    }
+    
+    
+    // Uncomment the MVS command as required.
+    // Requires JZOS to build and run - uncomment JZOS dependency in pom.xml for Maven build
+//    private static void mvsCmd(String command) 
+//    {
+//        String consoleid = com.ibm.jzos.ZUtil.getCurrentJobname();
+//        
+//        try {
+//            // build and start the process to run the command
+//            Process process = new ProcessBuilder()
+//                    .command("/bin/sh", "-c", "tsocmd \"console syscmd(" + command + ") name(" + consoleid + ")\"")
+//                    .directory(new File(System.getProperty("user.home")))                                    
+//                    .inheritIO()                                                                             
+//                    .start();
+//            // allow 10 seconds then time out
+//            // potential errors:
+//            // - time out
+//            // - abnormal exit value
+//            // - interrupted
+//            // - IOException from process start
+//            // Throwing or re-throwing makes the error easier to debug. 
+//            if (process.waitFor(10, TimeUnit.SECONDS))
+//            {
+//                if (process.exitValue() != 0)
+//                {
+//                    throw new RuntimeException("MVSCMD ended with exitValue " + process.exitValue());
+//                }      
+//            }
+//            else
+//            {
+//                throw new RuntimeException("MVSCMD timed out");
+//            }
+//        } 
+//        catch (IOException | InterruptedException e) 
+//        {
+//            throw new RuntimeException(e);
+//        }
+//    }
     
     /**
      * Process the missed data event. This method prints a message
