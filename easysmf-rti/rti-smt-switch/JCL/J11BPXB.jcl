@@ -12,7 +12,8 @@
 //STDPARM DD *                                                          
 SH /usr/lpp/java/J11.0_64/bin/java                                      
  -cp "/home/andrewr/easysmf-je-2.1.2/samples/jar/lib/*"                             
- /home/andrewr/java/src/SmtSwitch.java                                  
+ /home/andrewr/java/src/SmtSwitch.java               
+ IFASMF.MYRECS                   
 //STDENV    DD *,SYMBOLS=JCLONLY                                        
 EASYSMFKEY=//'VENDOR.PARMLIB(EZSMFKEY)'                                 
 /*      
