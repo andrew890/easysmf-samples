@@ -79,7 +79,6 @@ public class SmtSwitch
             // read and process records
             readRecords(reader);
         }
-        System.out.println();
     }
 
     /**
@@ -173,7 +172,7 @@ public class SmtSwitch
         Optional<Double> ziipVelocity = currentInterval.ziipVelocity();       
         boolean smt2 = currentInterval.isSmt2();
         
-        System.out.format("%n%-35s SMT2: %s zIIP Velocity: %3.0f Thresholds %2.0f %2.0f  ",
+        System.out.format("%-35s SMT2: %s zIIP Velocity: %3.0f Thresholds %2.0f %2.0f%n",
                 currentInterval.intervalToken,
                 smt2,
                 ziipVelocity.orElse(null),
@@ -189,7 +188,7 @@ public class SmtSwitch
         // so may be better with single thread per CPU.
         if (smt2 && ziipVelocity.get() > SMTOFF)         
         {
-            System.out.print("TURN SMT OFF");
+            System.out.println("TURN SMT OFF");
                         
 //            com.ibm.jzos.MvsConsole.wto("TURN SMT OFF",
 //                    com.ibm.jzos.WtoConstants.ROUTCDE_MASTER_CONSOLE_INFORMATION,
@@ -203,7 +202,7 @@ public class SmtSwitch
         // so we might benefit from SMT2 to dispatch more threads.
         else if (!smt2 && ziipVelocity.get() < SMTON)
         {
-            System.out.print("TURN SMT ON");
+            System.out.println("TURN SMT ON");
             
 //            com.ibm.jzos.MvsConsole.wto("TURN SMT ON",
 //                    com.ibm.jzos.WtoConstants.ROUTCDE_MASTER_CONSOLE_INFORMATION,
