@@ -18,7 +18,7 @@ If the SMT setting should be changed, it can either
  Consult your performance specialist to decide whether you should
  run with SMT2 enabled, disabled or dynamically switched.
 
-## Velocity Values
+### Velocity Values
 
 The velocity values used to trigger a switch are values used for development of this program, and are 
 not a recommendation for production use.
@@ -37,7 +37,7 @@ Build the easysmf-rti-smt-switch project using Maven:
 mvn -f pom.xml clean package
 ```
 
-The easysmf-rti-smt-switch jar file will be created in the ```./target``` directory. The project dependencies will also be copied to ```./target```.
+The easysmf-rti-smt-switch jar file will be created in the ```./target``` directory. The project dependencies will be copied to ```./target/lib```.
 
 #### JZOS Dependencies
 
@@ -55,13 +55,13 @@ unzip -p ibmjzos.jar META-INF/MANIFEST.MF
 ```
 and check the Implementation-Version entry.
 
-The project references version 2.4.8 which is quite old, but it means the result should work even with older Java installations.
+The project references version 2.4.8 which is quite old, but it means the program should work even with older Java installations.
 
 Uncomment the ibmjzos dependency in [pom.xml](./pom.xml).
 
 ### Java 11 Single File Source Code
 
-The source code is contained in a single file, so it can be run under Java 11 without a separate compile step. Copy the source to z/OS (or clone the samples using Git) and run under BPXBATCH using the J11BPXB JCL.
+The source code is contained in a single file, so it can be run under Java 11 without a separate compile step. Copy the source to z/OS (or clone the samples using Git) and run under BPXBATCH using the [J11BPXB](./JCL/J11BPXB.jcl) JCL.
 
 ## z/OS prerequisites
 
@@ -73,5 +73,17 @@ In order to run the samples on z/OS, some preparation is required:
 
 ## Run
 
-Copy all the jar files from the ```./target``` directory to a directory on z/OS.
+JCL is provided to run the program using Java 11 as a single file source code program, 
+or from a jar file under JAVA 8 (64 bit) or Java 11 JZOS.
+
+* [J11BPXB.jcl](./JCL/J11BPXB.jcl) Java 11 single file source code
+* [RUNJZOS.jcl](./JCL/RUNJZOS.jcl) Run from jar file using JZOS
+
+The EasySMF:JE ```samples/jar/lib``` directory contains the dependencies needed to run the 
+program. Set the classpath to point to this directory in the single file source code JCL.
+
+If you build the program using Maven, dependencies will be copied to the ```./target```
+and ```./target/lib``` directories.
+Copy all the jar files from the ```./target```  and ```./target/lib``` directories to
+corresponding directories on z/OS, and update the ```JARDIR``` in the RUNJZOS JCL.
 
