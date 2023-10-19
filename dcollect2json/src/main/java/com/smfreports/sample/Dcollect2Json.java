@@ -15,34 +15,37 @@ public class Dcollect2Json {
     public static void main(String[] args) throws IOException 
     {
         EasySmfGsonBuilder gsonBuilder = new EasySmfGsonBuilder()
+            .exclude("recordLength")
+            .exclude("dculeng")            
             .includeUnsetFlags(false);
 
         EasySmfGsonBuilder prettyGsonBuilder = new EasySmfGsonBuilder()
+            .exclude("recordLength")
+            .exclude("dculeng")   
             .includeUnsetFlags(false)
             .setPrettyPrinting();
 
         try (
-
             VRecordReader reader = VRecordReader.fromDD("INPUT");
 
-            OutDD dWriter  = new OutDD("DOUT" , gsonBuilder.createGson());
-            OutDD aWriter  = new OutDD("AOUT" , gsonBuilder.createGson());
-            OutDD vWriter  = new OutDD("VOUT" , gsonBuilder.createGson());
-            OutDD mWriter  = new OutDD("MOUT" , gsonBuilder.createGson());
-            OutDD bWriter  = new OutDD("BOUT" , gsonBuilder.createGson());
-            OutDD cWriter  = new OutDD("COUT" , gsonBuilder.createGson());
-            OutDD tWriter  = new OutDD("TOUT" , gsonBuilder.createGson());
-            OutDD dcWriter = new OutDD("DCOUT", gsonBuilder.createGson());
-            OutDD scWriter = new OutDD("SCOUT", gsonBuilder.createGson());
-            OutDD mcWriter = new OutDD("MCOUT", gsonBuilder.createGson());
-            OutDD bcWriter = new OutDD("BCOUT", prettyGsonBuilder.createGson());
-            OutDD sgWriter = new OutDD("SGOUT", gsonBuilder.createGson());
-            OutDD vlWriter = new OutDD("VLOUT", gsonBuilder.createGson());
-            OutDD agWriter = new OutDD("AGOUT", gsonBuilder.createGson());
-            OutDD drWriter = new OutDD("DROUT", gsonBuilder.createGson());
-            OutDD lbWriter = new OutDD("LBOUT", gsonBuilder.createGson());
-            OutDD cnWriter = new OutDD("CNOUT", gsonBuilder.createGson());
-            OutDD aiWriter = new OutDD("AIOUT", prettyGsonBuilder.createGson());
+            OutDD dWriter  = new OutDD("OUTD" , gsonBuilder.createGson());
+            OutDD aWriter  = new OutDD("OUTA" , gsonBuilder.createGson());
+            OutDD vWriter  = new OutDD("OUTV" , gsonBuilder.createGson());
+            OutDD mWriter  = new OutDD("OUTM" , gsonBuilder.createGson());
+            OutDD bWriter  = new OutDD("OUTB" , gsonBuilder.createGson());
+            OutDD cWriter  = new OutDD("OUTC" , gsonBuilder.createGson());
+            OutDD tWriter  = new OutDD("OUTT" , gsonBuilder.createGson());
+            OutDD dcWriter = new OutDD("OUTDC", gsonBuilder.createGson());
+            OutDD scWriter = new OutDD("OUTSC", gsonBuilder.createGson());
+            OutDD mcWriter = new OutDD("OUTMC", gsonBuilder.createGson());
+            OutDD bcWriter = new OutDD("OUTBC", prettyGsonBuilder.createGson());
+            OutDD sgWriter = new OutDD("OUTSG", gsonBuilder.createGson());
+            OutDD vlWriter = new OutDD("OUTVL", gsonBuilder.createGson());
+            OutDD agWriter = new OutDD("OUTAG", gsonBuilder.createGson());
+            OutDD drWriter = new OutDD("OUTDR", gsonBuilder.createGson());
+            OutDD lbWriter = new OutDD("OUTLB", gsonBuilder.createGson());
+            OutDD cnWriter = new OutDD("OUTCN", gsonBuilder.createGson());
+            OutDD aiWriter = new OutDD("OUTAI", prettyGsonBuilder.createGson());
             )
         {
             for (VRecord record : reader)

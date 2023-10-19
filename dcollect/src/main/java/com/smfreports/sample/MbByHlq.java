@@ -3,9 +3,7 @@ package com.smfreports.sample;
 import java.io.*;
 import java.util.*;
 
-import com.blackhillsoftware.dcollect.ActiveDataset;
-import com.blackhillsoftware.dcollect.DcollectRecord;
-import com.blackhillsoftware.dcollect.DcollectType;
+import com.blackhillsoftware.dcollect.*;
 import com.blackhillsoftware.smf.*;
 
 public class MbByHlq
@@ -25,28 +23,59 @@ public class MbByHlq
         {
             reader.stream()
                 .map(DcollectRecord::from)
-                .filter(r -> r.dcurctyp().equals(DcollectType.D))
-                .map(ActiveDataset::from)
+                .filter(r -> r.dcurctyp().equals(DcollectType.D) || r.dcurctyp().equals(DcollectType.M))
                 .forEach(record -> 
                 {
-                    String[] qualifiers = record.dcddsnam().split("\\.", 2);
+                    switch (record.dcurctyp())
+                    {
+                    case D:
+                    {
+                        ActiveDataset dataset = ActiveDataset.from(record);
+                        String[] qualifiers = dataset.dcddsnam().split("\\.", 2);
+                        totalsByHlq.computeIfAbsent(qualifiers[0], key -> new Summary())
+                            .add(dataset);                  
+                        break;
+                    }
+                    case M:
+                        MigratedDataset dataset = MigratedDataset.from(record);
+                        String[] qualifiers = dataset.umdsnam().split("\\.", 2);
+                        totalsByHlq.computeIfAbsent(qualifiers[0], key -> new Summary())
+                            .add(dataset);                          
+                        break;
+                    default:
+                        break;
                     
-                    totalsByHlq.computeIfAbsent(qualifiers[0], key -> new Summary())
-                        .add(record); 
+                    }
                 });
         }
         
+        System.out.format("%-8s %8s %10s %8s %10s %10s %8s %10s %8s %10s%n", 
+                "HLQ",
+                "Count",
+                "Total MB",
+                "Level0",
+                "Alloc MB",
+                "Used MB",
+                "ML1",
+                "ML1 MB",
+                "ML2",
+                "ML2 MB");
+        
         totalsByHlq.entrySet().stream()
-            .sorted((a,b) -> Long.compare(b.getValue().allocatedMB, a.getValue().allocatedMB))
+            .sorted((a,b) -> Double.compare(b.getValue().level0Alloc, a.getValue().level0Alloc))
             .forEachOrdered(entry -> {
-                System.out.format("%-8s %6d %6d %6d%n", 
+                System.out.format("%-8s %,8d %10.0f %,8d %10.0f %10.0f %,8d %10.0f %,8d %10.0f%n", 
                         entry.getKey(),
                         entry.getValue().count,
-                        entry.getValue().allocatedMB,
-                        entry.getValue().usedMB);
+                        entry.getValue().totalMB,
+                        entry.getValue().level0Count,
+                        entry.getValue().level0Alloc,
+                        entry.getValue().level0UsedMB,
+                        entry.getValue().level1Count,
+                        entry.getValue().level1MB,
+                        entry.getValue().level2Count,
+                        entry.getValue().level2MB);
             });
-        
-        
     }
     
     private static class Summary
@@ -54,13 +83,48 @@ public class MbByHlq
         void add(ActiveDataset ds)
         {
             count++;
-            allocatedMB += ds.dcdallsx() / 1024; // value is kb
-            usedMB += ds.dcdusesx() / 1024;
+            level0Count++;
+            totalMB += ds.dcdallsxMB();
+            level0Alloc += ds.dcdallsxMB();
+            level0UsedMB += ds.dcdusesxMB();
+        }
+        
+        void add(MigratedDataset ds)
+        {
+            count++;
+            totalMB += ds.umrecspMB();
+            // There are various space values in the record, we
+            // will report the estimated space required if this
+            // dataset was recalled to level 0
+            
+            switch (ds.umlevel())
+            {
+            case LEVEL1:
+                level1Count++;
+                level1MB += ds.umrecspMB();
+                break;
+            case LEVEL2:
+                level2Count++;
+                level2MB += ds.umrecspMB();
+                break;
+            default:
+                throw new RuntimeException("Unexpected migration level: " + ds.umlevel());
+            }
         }
         
         int count = 0;
-        long allocatedMB = 0;
-        long usedMB = 0;
+        int level0Count = 0;
+        
+        double totalMB = 0;
+        
+        double level0Alloc = 0;
+        double level0UsedMB = 0;
+        
+        int level1Count = 0;
+        double level1MB = 0;
+        
+        int level2Count = 0;
+        double level2MB = 0;
     }
     
 }
