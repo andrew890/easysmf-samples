@@ -6,6 +6,14 @@ import java.util.*;
 import com.blackhillsoftware.dcollect.*;
 import com.blackhillsoftware.smf.*;
 
+/**
+ * 
+ * Report space by storage group.
+ * 
+ * The report shows overall statistics for the storage group, followed by 
+ * details of the volumes in each storage group.
+ *
+ */
 public class StorageGroups
 {
     public static void main(String[] args) throws IOException
@@ -17,29 +25,40 @@ public class StorageGroups
             return;
         }
         
+        // Create a Map to keep the information by storage group
         Map<String, StorageGroupInfo> storageGroups = new HashMap<>();
         
+        // open the file/dataset name passed on the command line
         try (VRecordReader reader = VRecordReader.fromName(args[0]))
         {
             reader.stream()
-                .map(DcollectRecord::from)
-                .filter(record -> record.dcurctyp().equals(DcollectType.VL))
-                .map(SmsVolume::from)
+                .map(DcollectRecord::from) // create Dcollect Record
+                .filter(record -> record.dcurctyp().equals(DcollectType.VL)) // check type
+                .map(SmsVolume::from) // create SmsVolume record
                 .forEach(volumerecord -> {
+                    // create new entry for storage group if it doesn't exist
                     storageGroups.computeIfAbsent(volumerecord.dvlstgrp(), 
                             key -> new StorageGroupInfo())
+                        // add the information for this volume to the storage group
                         .add(volumerecord);
                 });
         }
         
+        // write the summary report
         storageGroupSummary(storageGroups);  
         
+        // write the storage group volumes report
         storageGroupVolumes(storageGroups);
         
     }
 
+    /**
+     * Write the storage group summary report
+     * @param storageGroups the Map containing storage group information
+     */
     private static void storageGroupSummary(Map<String, StorageGroupInfo> storageGroups) 
     {
+        // write headings
         System.out.format("%-30s %10s %10s %10s %10s %10s%n",
                 "Storage Group",
                 "Volumes",
@@ -49,26 +68,33 @@ public class StorageGroups
                 "Lrgst MB");
         
         storageGroups.entrySet().stream()
-            .sorted(Map.Entry.comparingByKey())
-            .forEachOrdered(entry -> {
-                StorageGroupInfo sgi = entry.getValue();             
+            .sorted(Map.Entry.comparingByKey()) // sort by storage group name
+            .forEachOrdered(entry -> 
+            {
+                StorageGroupInfo storagegroup = entry.getValue();             
                 
                 System.out.format("%-30s %,10d %,10d %,10d %10.1f %,10d%n",
-                        entry.getKey(),
-                        sgi.volCount,
-                        sgi.spaceMB,
-                        sgi.freeMB,
-                        (double)(sgi.spaceMB - sgi.freeMB) / sgi.spaceMB * 100,
-                        sgi.largestMB);
+                        entry.getKey(), // key is storage group name
+                        storagegroup.volCount,
+                        storagegroup.spaceMB,
+                        storagegroup.freeMB,
+                        storagegroup.usedPct(),
+                        storagegroup.largestMB);
                 
             });
     }
     
-    private static void storageGroupVolumes(Map<String, StorageGroupInfo> storageGroups) {
+    /**
+     * Write the storage group volumes report
+     * @param storageGroups the Map containing storage group information
+     */
+    private static void storageGroupVolumes(Map<String, StorageGroupInfo> storageGroups) 
+    {
         storageGroups.entrySet().stream()
-            .sorted(Map.Entry.comparingByKey())
+            .sorted(Map.Entry.comparingByKey()) // key is storage group name
             .forEachOrdered(entry -> {
-                StorageGroupInfo sgi = entry.getValue();
+                StorageGroupInfo storagegroup = entry.getValue();
+                // write headings for storage group
                 System.out.format("%nStorage Group: %s%n%n", 
                         entry.getKey());
                 
@@ -79,7 +105,8 @@ public class StorageGroups
                         "Used%",
                         "Lrgst MB");
                 
-                sgi.volumes.stream()
+                // write volume details
+                storagegroup.volumes.stream()
                     .sorted(Comparator.comparing(vol -> vol.volser))
                     .forEachOrdered(vol -> {
                         
@@ -87,13 +114,18 @@ public class StorageGroups
                                 vol.volser,
                                 vol.spaceMB,
                                 vol.freeMB,
-                                (double)(vol.spaceMB - vol.freeMB) / vol.spaceMB * 100,
+                                vol.usedPct(),
                                 vol.largestMB);
                         
                     });            
             });
     }
     
+    /**
+     * 
+     * A class to collect storage group information
+     *
+     */
     private static class StorageGroupInfo
     {    
         int volCount = 0;
@@ -101,19 +133,42 @@ public class StorageGroups
         long freeMB = 0;
         long largestMB = 0;
         
+        // collect information for the volumes in this storage group
         List<VolumeInfo> volumes = new ArrayList<>();
         
-        void add(SmsVolume ds)
+        /**
+         * Add information for a volume to this storage group
+         * @param smsVolumeRecord the SMS volume record
+         */
+        void add(SmsVolume smsVolumeRecord)
         {
+            // extract the volume information
+            VolumeInfo volumeInfo = new VolumeInfo(smsVolumeRecord);
+            
+            // also add the information to the storage group totals
             volCount++;
-            VolumeInfo volumeInfo = new VolumeInfo(ds);
             spaceMB += volumeInfo.spaceMB;
             freeMB += volumeInfo.freeMB;
             largestMB = Math.max(largestMB, volumeInfo.largestMB);
+            
             volumes.add(volumeInfo);
+        }
+        
+        /**
+         * Calculate the percent used for the storage group
+         * @return double the percent used
+         */
+        double usedPct()
+        {
+            return (double)(spaceMB - freeMB) / spaceMB * 100;
         }
     }
     
+    /**
+     * 
+     * Collect information for a volume
+     *
+     */
     private static class VolumeInfo
     {
         String volser;
@@ -121,12 +176,21 @@ public class StorageGroups
         long freeMB;
         long largestMB;
         
-        public VolumeInfo(SmsVolume ds)
+        public VolumeInfo(SmsVolume smsVolumeRecord)
         {
-            volser = ds.dvlvser();
-            spaceMB = ds.dvlntcpy();
-            freeMB = ds.dvlnfree();
-            largestMB = ds.dvlnlext();
+            volser = smsVolumeRecord.dvlvser();
+            spaceMB = smsVolumeRecord.dvlntcpy();
+            freeMB = smsVolumeRecord.dvlnfree();
+            largestMB = smsVolumeRecord.dvlnlext();
+        }
+        
+        /**
+         * Calculate the percent used for the volume
+         * @return double the percent used
+         */
+        double usedPct()
+        {
+            return (double)(spaceMB - freeMB) / spaceMB * 100;
         }
     }
 }

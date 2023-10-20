@@ -6,6 +6,12 @@ import java.util.*;
 import com.blackhillsoftware.dcollect.*;
 import com.blackhillsoftware.smf.*;
 
+/**
+ * 
+ * Report Level 0, Level 1 and Level 2 space by high level qualifier using
+ * Active Dataset and Migrated Dataset DCOLLECT records.
+ *
+ */
 public class MbByHlq
 {
     public static void main(String[] args) throws IOException
@@ -17,29 +23,37 @@ public class MbByHlq
             return;
         }
         
-        Map<String, Summary> totalsByHlq = new HashMap<>();
+        // Create a Map to keep the summaries by HLQ
+        Map<String, SpaceInformation> totalsByHlq = new HashMap<>();
         
+        // open the file/dataset name passed on the command line
         try (VRecordReader reader = VRecordReader.fromName(args[0]))
         {
             reader.stream()
-                .map(DcollectRecord::from)
-                .filter(r -> r.dcurctyp().equals(DcollectType.D) || r.dcurctyp().equals(DcollectType.M))
+                .map(DcollectRecord::from) // create DCOLLECT record
                 .forEach(record -> 
                 {
+                    // process Active Dataset and Migrated Dataset records, ignore others
                     switch (record.dcurctyp())
                     {
                     case D:
                     {
                         ActiveDataset dataset = ActiveDataset.from(record);
-                        String[] qualifiers = dataset.dcddsnam().split("\\.", 2);
-                        totalsByHlq.computeIfAbsent(qualifiers[0], key -> new Summary())
+                        // create new entry for HLQ if it doesn't exist
+                        totalsByHlq.computeIfAbsent( 
+                                hlq(dataset.dcddsnam()), 
+                                    key -> new SpaceInformation())
+                            // add dataset information
                             .add(dataset);                  
                         break;
                     }
                     case M:
                         MigratedDataset dataset = MigratedDataset.from(record);
-                        String[] qualifiers = dataset.umdsnam().split("\\.", 2);
-                        totalsByHlq.computeIfAbsent(qualifiers[0], key -> new Summary())
+                       // create new entry for HLQ if it doesn't exist
+                        totalsByHlq.computeIfAbsent(
+                                hlq(dataset.umdsnam()), 
+                                    key -> new SpaceInformation())
+                            // add dataset information
                             .add(dataset);                          
                         break;
                     default:
@@ -49,6 +63,7 @@ public class MbByHlq
                 });
         }
         
+        // Write headings
         System.out.format("%-8s %8s %10s %8s %10s %10s %8s %10s %8s %10s%n", 
                 "HLQ",
                 "Count",
@@ -61,8 +76,10 @@ public class MbByHlq
                 "ML2",
                 "ML2 MB");
         
+        // Write report
         totalsByHlq.entrySet().stream()
-            .sorted((a,b) -> Double.compare(b.getValue().level0Alloc, a.getValue().level0Alloc))
+            // sort output comparing total space, a and b reversed to sort descending 
+            .sorted((a,b) -> Double.compare(b.getValue().totalMB, a.getValue().totalMB))
             .forEachOrdered(entry -> {
                 System.out.format("%-8s %,8d %10.0f %,8d %10.0f %10.0f %,8d %10.0f %,8d %10.0f%n", 
                         entry.getKey(),
@@ -78,45 +95,71 @@ public class MbByHlq
             });
     }
     
-    private static class Summary
+    /**
+     * Extract the hlq from a dataset name
+     * @param dsn the dataset name
+     * @return the high level qualifier
+     */
+    private static String hlq(String dsn)
     {
-        void add(ActiveDataset ds)
+        String[] qualifiers = dsn.split("\\.", 2);
+        return qualifiers[0];
+    }
+    
+    /**
+     * 
+     * Accumulate space information for a group of datasets
+     *
+     */
+    private static class SpaceInformation
+    {
+        /**
+         * Add information for an active dataset
+         * @param datasetRecord the active dataset record
+         */
+        void add(ActiveDataset datasetRecord)
         {
             count++;
             level0Count++;
-            totalMB += ds.dcdallsxMB();
-            level0Alloc += ds.dcdallsxMB();
-            level0UsedMB += ds.dcdusesxMB();
+            totalMB += datasetRecord.dcdallsxMB();
+            level0Alloc += datasetRecord.dcdallsxMB();
+            level0UsedMB += datasetRecord.dcdusesxMB();
         }
         
-        void add(MigratedDataset ds)
+        /**
+         * Add information for a migrated dataset
+         * @param datasetRecord the migrated dataset record
+         */
+        void add(MigratedDataset datasetRecord)
         {
             count++;
-            totalMB += ds.umrecspMB();
+            
             // There are various space values in the record, we
             // will report the estimated space required if this
-            // dataset was recalled to level 0
+            // dataset was recalled to level 0       
+            double space = datasetRecord.umrecspMB();
             
-            switch (ds.umlevel())
+            totalMB += space;
+            // record level 1 or level 2 information according to the record information
+            switch (datasetRecord.umlevel())
             {
             case LEVEL1:
                 level1Count++;
-                level1MB += ds.umrecspMB();
+                level1MB += space;
                 break;
             case LEVEL2:
                 level2Count++;
-                level2MB += ds.umrecspMB();
+                level2MB += space;
                 break;
             default:
-                throw new RuntimeException("Unexpected migration level: " + ds.umlevel());
+                throw new RuntimeException("Unexpected migration level: " + datasetRecord.umlevel());
             }
         }
         
         int count = 0;
-        int level0Count = 0;
-        
         double totalMB = 0;
-        
+
+        int level0Count = 0;      
         double level0Alloc = 0;
         double level0UsedMB = 0;
         
@@ -126,5 +169,4 @@ public class MbByHlq
         int level2Count = 0;
         double level2MB = 0;
     }
-    
 }

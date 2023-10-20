@@ -7,8 +7,22 @@ import java.util.*;
 import com.blackhillsoftware.dcollect.*;
 import com.blackhillsoftware.smf.*;
 
+/**
+ *
+ * Report datasets from the ActiveDataset records with a last reference
+ * date older than the cutoff value (eg 5 years), or creation date
+ * if there is no last reference date.
+ *
+ */
 public class AgedDatasets
 {
+    /**
+     * Filter the datasets so that some datasets can be excluded from the 
+     * report if required. 
+     * 
+     * @param datasetRecord the ActiveDataset record
+     * @return true if the dataset should be included
+     */
     private static boolean includeDataset(ActiveDataset datasetRecord)
     {
         String datasetName = datasetRecord.dcddsnam();
@@ -29,6 +43,7 @@ public class AgedDatasets
 
         LocalDate cutoff = LocalDate.now().minusYears(5); 
 
+        // Write headings
         System.out.format("%-44s %-6s %15s %15s %10s%n",
                 "Dataset",
                 "VOLSER",
@@ -36,12 +51,15 @@ public class AgedDatasets
                 "Last Ref",
                 "Alloc MB");
                 
+        // open the file/dataset name passed on the command line
         try (VRecordReader reader = VRecordReader.fromName(args[0]))
         {
             reader.stream()
-                .map(DcollectRecord::from)
-                .filter(r -> r.dcurctyp().equals(DcollectType.D))
-                .map(ActiveDataset::from)
+                .map(DcollectRecord::from) // create DCOLLECT record
+                .filter(r -> r.dcurctyp().equals(DcollectType.D)) // check type
+                .map(ActiveDataset::from) // create the Active Dataset record
+                
+                // check the last reference date if available, creation date if not
                 .filter(record -> (record.dcdlstrf() != null && record.dcdlstrf().isBefore(cutoff)
                                     || record.dcdlstrf() == null && record.dcdcredt().isBefore(cutoff)))
                 .filter(AgedDatasets::includeDataset)
@@ -61,6 +79,7 @@ public class AgedDatasets
                 
                 .forEach(record -> 
                 {
+                    // Report the datasets
                     System.out.format("%-44s %-6s %15s %15s %,10.1f%n", 
                             record.dcddsnam(),
                             record.dcdvolsr(),

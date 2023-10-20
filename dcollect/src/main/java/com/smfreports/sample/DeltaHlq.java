@@ -7,11 +7,21 @@ import com.blackhillsoftware.dcollect.*;
 import com.blackhillsoftware.smf.*;
 import com.blackhillsoftware.smf.summary.Top;
 
+/**
+ * Compare 2 DCOLLECT runs, showing the top 50 HLQ by change in size.
+ *
+ */
 public class DeltaHlq
 {
+    /**
+     * Filter the datasets to be included in the report
+     * @param datasetRecord an ActiveDataset record
+     * @return true if the dataset should be included
+     */
     private static boolean includeDataset(ActiveDataset datasetRecord)
     {
-        //return true;
+        // Change criteria as required, or simply:
+        // return true;
         
         if (
                 datasetRecord.dcdstogp().equals("SG1")           
@@ -31,18 +41,19 @@ public class DeltaHlq
             return;
         }
         
+        // Create a map to keep information by HLQ
         Map<String, HlqInfo> hlqs = new HashMap<>();
         
         // Stream first DCOLLECT file 
         try (VRecordReader reader = VRecordReader.fromName(args[0]))
         {
             reader.stream()
-                .map(DcollectRecord::from)
-                .filter(record -> record.dcurctyp().equals(DcollectType.D))
-                .map(ActiveDataset::from)
-                .filter(DeltaHlq::includeDataset)
+                .map(DcollectRecord::from) // create Dcollect Record
+                .filter(record -> record.dcurctyp().equals(DcollectType.D)) // check type
+                .map(ActiveDataset::from) // create ActiveDataset record
+                .filter(DeltaHlq::includeDataset) 
                 .forEach(datasetrecord -> {
-                    // Add A values
+                    // Add A values, creating new entry for hlq if required
                     hlqs.computeIfAbsent(hlq(datasetrecord.dcddsnam()), 
                             key -> new HlqInfo())
                         .addA(datasetrecord);
@@ -58,24 +69,35 @@ public class DeltaHlq
                 .map(ActiveDataset::from)
                 .filter(DeltaHlq::includeDataset)                
                 .forEach(datasetrecord -> {
-                    // Add B values
+                    // Add B values, creating new entry for hlq if required
                     hlqs.computeIfAbsent(hlq(datasetrecord.dcddsnam()), 
                             key -> new HlqInfo())
                         .addB(datasetrecord);
                 });
         }
         
+        // Write report
         reportDeltas(hlqs);              
     }
 
+    /**
+     * Extract the hlq from a dataset name
+     * @param dsn the dataset name
+     * @return the high level qualifier
+     */
     private static String hlq(String dsn)
     {
         String[] qualifiers = dsn.split("\\.", 2);
         return qualifiers[0];
     }
     
+    /**
+     * Write the report for the top HLQ by change in space
+     * @param datasets the map containing HLQ information
+     */
     private static void reportDeltas(Map<String, HlqInfo> hlqs) 
-    {        
+    {
+        // Write headings
         System.out.format("%-8s %10s %10s %10s %12s %12s %12s%n",
                 "HLQ",
                 "Count A",
@@ -87,12 +109,16 @@ public class DeltaHlq
                 );
         
         hlqs.entrySet().stream()
-            .filter(entry -> entry.getValue().absChange() > 0)
-            .collect(Top.values(20, 
+            .filter(entry -> entry.getValue().absChange() > 0) // discard entries with no change
+            
+           // collect top 50 values by absChange i.e. positive or negative
+            .collect(Top.values(50, 
                     Comparator.comparing(entry -> entry.getValue().absChange())))
-            .forEach(entry -> {
+            .forEach(entry -> 
+            {
                 HlqInfo hlqinfo = entry.getValue();             
 
+                // Write detail
                 System.out.format("%-8s %,10d %,10d %+,10d %,12d %,12d %+,12d%n",
                         entry.getKey(),
                         hlqinfo.countA,
@@ -104,6 +130,16 @@ public class DeltaHlq
             });
     }
     
+    /**
+     * 
+     * Collect information for a high level qualifier.
+     * 
+     * A and B entries are collected using separate methods for simplicity.
+     * 
+     * If an entry only exists in the A data or B data, the values for the 
+     * other run will be zero.
+     *
+     */
     private static class HlqInfo
     {    
         int countA = 0;
