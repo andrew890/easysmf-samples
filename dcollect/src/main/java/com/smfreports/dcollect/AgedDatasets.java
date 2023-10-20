@@ -1,4 +1,4 @@
-package com.smfreports.sample;
+package com.smfreports.dcollect;
 
 import java.io.*;
 import java.time.LocalDate;

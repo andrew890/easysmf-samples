@@ -94,7 +94,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>lib/</classpathPrefix>
-							<mainClass>com.smfreports.sample.Dcollect2Json</mainClass>
+							<mainClass>com.smfreports.dollect2json.Dcollect2Json</mainClass>
 						</manifest>
 					</archive>
 				</configuration>

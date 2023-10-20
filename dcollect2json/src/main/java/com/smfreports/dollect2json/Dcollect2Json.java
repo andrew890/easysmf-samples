@@ -1,4 +1,4 @@
-package com.smfreports.sample;
+package com.smfreports.dollect2json;
 
 import java.io.*;
 
