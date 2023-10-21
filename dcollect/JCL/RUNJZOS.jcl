@@ -8,29 +8,22 @@
 //*
 // EXPORT SYMLIST=*
 //*
-//* Class to run with empty JAR and JARDIR, or
-//* CLASS='-jar' with JARDIR and JAR values for an executable jar.
+//  SET CLASS='com.smfreports.dcollect.StorageGroups'
+//* SET CLASS='com.smfreports.dcollect.MbByHlq'
+//* SET CLASS='com.smfreports.dcollect.DatasetsByLastRef'
+//* SET CLASS='com.smfreports.dcollect.AgedDatasets'
+//* SET CLASS='com.smfreports.dcollect.DatasetsByMigratedDate'
+//* SET CLASS='com.smfreports.dcollect.MigrationFrequency'
+//* SET CLASS='com.smfreports.dcollect.ZedcByHlq'
 //*
-// SET CLASS='com.smfreports.RecordCount'
-// SET JARDIR=''
-// SET JAR=''
+//* DCOLLECT comparison reports
 //*
-//*SET CLASS='-jar'
-//*SET JARDIR='./easysmf-je-2.1.3/samples/jar/'
-//*SET JAR='smf-report-dups-1.2.0.jar'
-//*
-//* Java target directory
-//* As distributed, relative to user's home directory
-//* The target directory will be searched first for
-//* classes and dependencies, then target/lib, then the
-//* &EZSMFDIR./jar, &EZSMFDIR./samples/jar and
-//* &EZSMFDIR./samples/jar/lib directories
-//* All CLASSPATH values are ignored for an executable jar.
-//*
-// SET TGT='./java/target'
+//* SET CLASS='com.smfreports.dcollect.DeltaStorageGroups'
+//* SET CLASS='com.smfreports.dcollect.DeltaHlq'
+//* SET CLASS='com.smfreports.dcollect.DeltaDatasets'
 //*
 //* EasySMF directory:
-// SET EZSMFDIR='./easysmf-je-2.1.3'
+// SET EZSMFDIR='./easysmf-je-2.2.0'
 //*
 //* Location of JZOS batch launcher module JVMLDM80:
 // SET JZOSLIB=JZOS.LINKLIBE
@@ -38,20 +31,24 @@
 //* Location of Java:
 // SET JAVA='/usr/lpp/java/J8.0'
 //*
-//* SMF data to process
-// SET SMFDATA=SMF.RECORDS
+//* DCOLLECT data to process
+// SET DCDATA=DCOLLECT.DATA
+//*
+//* Uncomment second DCOLLECT data and DD below for comparison reports
+//* SET DCDATA2=DCOLLECT.DATA2
 //*
 //* Run a Java program under JZOS Batch Launcher
 //*
 //G        EXEC PGM=JVMLDM80,REGION=0M,
-// PARM='/ &CLASS &JARDIR.&JAR.'
+// PARM='/ &CLASS'
 //*
 //STEPLIB  DD DISP=SHR,DSN=&JZOSLIB
 //*
 //MAINARGS DD *,DLM=$$,SYMBOLS=JCLONLY
- //DD:INPUT
+ //DD:INPUT //DD:INPUT2
 $$
-//INPUT    DD DISP=SHR,DSN=&SMFDATA
+//INPUT    DD DISP=SHR,DSN=&DCDATA
+//*INPUT2   DD DISP=SHR,DSN=&DCDATA2
 //SYSPRINT DD SYSOUT=*
 //SYSOUT   DD SYSOUT=*
 //STDOUT   DD SYSOUT=*
@@ -85,13 +82,6 @@ LIBPATH="${LIBPATH}":"${JAVA_HOME}"/lib/s390/j9vm
 LIBPATH="${LIBPATH}":"${JAVA_HOME}"/bin/classic
 export LIBPATH="${LIBPATH}":
 
-CLASSPATH="${CLASSPATH}":"&TGT."
-for i in "&TGT."/*.jar; do
-    CLASSPATH="${CLASSPATH}":"${i}"
-    done
-for i in "&TGT./lib"/*.jar; do
-    CLASSPATH="${CLASSPATH}":"${i}"
-    done
 for i in "&EZSMFDIR./jar"/*.jar; do
     CLASSPATH="${CLASSPATH}":"${i}"
     done
