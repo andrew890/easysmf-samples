@@ -120,3 +120,12 @@ MVS1.SMF.RECORDS.G####V##                              34           40          
 ```
 
 [DeltaDatasets.java](./src/main/java/com/smfreports/dcollect/DeltaDatasets.java)
+
+## JCL
+
+JCL to run the reports is provided:
+
+* Run from compiled jar files under JZOS : [RUNJZOS.jcl](./JCL/RUNJZOS.jcl)
+* Run from source code under Java 11 : [J11BPXB.txt](./JCL/J11BPXB.txt)
+
+Running from source code under Java 11 is recommended, because several samples contain filter steps that can be modified between runs of the program. The Java 11 single file source code feature means that you can modify and run the programs without a separate compile step.
