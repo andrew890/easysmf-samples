@@ -65,6 +65,13 @@ public class InternalThroughputRatio
             );    
     
     /**
+     * Local date/time for before/after time processing. Set to null to 
+     * use only the SMFID + machine combinations  
+     */
+    private static LocalDateTime time = null;
+    //private static LocalDateTime time = LocalDateTime.of(2025, 11, 06, 12, 0);
+    
+    /**
      * Shifts for grouping the data. Add or remove shifts and 
      * update the selection logic as required.
      */
@@ -189,7 +196,7 @@ public class InternalThroughputRatio
                 // first group data by system name+CPC 
                 Map<String, List<IntervalData>> groupedBySystemCpc = 
                         shift.getValue().stream()
-                            .collect(Collectors.groupingBy(entry -> entry.systemCpc));
+                            .collect(Collectors.groupingBy(entry -> entry.groupBy));
                 
                 // then create a new map with the cumulative data for the groups
                 Map<String, CumulativeData> cumulativeData = groupedBySystemCpc.entrySet().stream()
@@ -292,12 +299,24 @@ public class InternalThroughputRatio
     {
         public IntervalData(Smf70Record r70)
         {
-            // format the system and CPC information, e.g. "SYSA 3931-401"
-            systemCpc = String.format("%s %04X-%s",
-                    r70.productSection().smf70snm(), 
-                    r70.cpuControlSection().smf70mod(), 
-                    r70.cpuControlSection().smf70mdl()
-                    );
+            // if we are reporting by before/after time, 
+            // set groupBy to system name + before/after
+            if (time != null)
+            {
+                groupBy = r70.productSection().smf70snm() +
+                        (r70.smfDateTime().isBefore(time) ?
+                                " Before"
+                                : "  After");
+            }
+            // otherwise format the system and CPC information, e.g. "SYSA 3931-401"
+            else
+            {
+                groupBy = String.format("%s %04X-%s",
+                        r70.productSection().smf70snm(), 
+                        r70.cpuControlSection().smf70mod(), 
+                        r70.cpuControlSection().smf70mdl()
+                        );
+            }
 
             intervalLength = r70.productSection().smf70int();
             
@@ -316,10 +335,10 @@ public class InternalThroughputRatio
                         .filter(id -> id.smf70cin().equals("CP"))
                         .findFirst()
                         .map(idSection -> cpCount = idSection.smf70ctn())
-                        .orElseThrow(() -> new RuntimeException("Could not find CP count, system: " + systemCpc));
+                        .orElseThrow(() -> new RuntimeException("Could not find CP count, system: " + groupBy));
         }
         
-        private String systemCpc;
+        private String groupBy;
         private LocalDateTime intervalEnd;        
         private int cpCount;
         private Duration intervalLength;
