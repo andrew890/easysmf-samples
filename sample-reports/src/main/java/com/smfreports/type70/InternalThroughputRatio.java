@@ -3,6 +3,7 @@ package com.smfreports.type70;
 import java.io.*;
 import java.time.*;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.*;
 import java.util.stream.*;
 
@@ -31,22 +32,6 @@ import com.blackhillsoftware.smf.smf70.subtype1.*;
  */
 public class InternalThroughputRatio 
 {
-    public static void main(String[] args) throws IOException 
-    {
-        if (args.length < 1)
-        {
-            System.out.println("Usage: InternalThroughputRatio <input-name1> [<input-name2> ...]");
-            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
-            return;
-        }
-        
-        // read and process the input data
-        List<IntervalData> intervals = processInput(args);
-        
-        // write the reports
-        writeReport(intervals);
-    }
-    
     /**
      * SMFIDs for the systems to include. All systems will be included if
      * empty.
@@ -68,8 +53,8 @@ public class InternalThroughputRatio
      * Local date/time for before/after time processing. Set to null to 
      * use only the SMFID + machine combinations  
      */
-    private static LocalDateTime time = null;
-    //private static LocalDateTime time = LocalDateTime.of(2025, 11, 06, 12, 0);
+    //private static LocalDateTime time = null;
+    private static LocalDateTime time = LocalDateTime.of(2025, 11, 06, 12, 0);
     
     /**
      * Shifts for grouping the data. Add or remove shifts and 
@@ -77,13 +62,17 @@ public class InternalThroughputRatio
      */
     private static enum Shift
     {
-        PRIME,
-        AFTER_HOURS,
-        WEEKEND;
+        ALL,
+        SHIFT_1,
+        SHIFT_2,
+        SHIFT_3,
+        WEEKEND_1,
+        WEEKEND_2,
+        WEEKEND_3;
         
-        private static final LocalTime primeStart = LocalTime.of(9, 00);
-        private static final LocalTime primeEnd = LocalTime.of(17, 00);
-        private static final List<DayOfWeek> weekend = Arrays.asList(
+        private static final LocalTime S1_END = LocalTime.of(8, 00);
+        private static final LocalTime S2_END = LocalTime.of(16, 00);
+        private static final List<DayOfWeek> WEEKEND = Arrays.asList(
                 DayOfWeek.SATURDAY, 
                 DayOfWeek.SUNDAY
         );
@@ -95,25 +84,30 @@ public class InternalThroughputRatio
          */
         public static Shift from(LocalDateTime time)
         {
-            if (weekend.contains(time.getDayOfWeek()))     
-            {
-                return Shift.WEEKEND;
-            }
-            else if (time.toLocalTime().isAfter(primeStart) 
-                    && time.toLocalTime().isBefore(primeEnd))
-            {
-                return Shift.PRIME;
-            }
-            else
-            {
-                return Shift.AFTER_HOURS;
-            }
+            return ALL;
+//            if (time.toLocalTime().isBefore(S1_END)) 
+//                return WEEKEND.contains(time.getDayOfWeek()) ? WEEKEND_1 : SHIFT_1;
+//            if (time.toLocalTime().isBefore(S2_END)) 
+//                return WEEKEND.contains(time.getDayOfWeek()) ? WEEKEND_2 : SHIFT_2;            
+//            return WEEKEND.contains(time.getDayOfWeek()) ? WEEKEND_3 : SHIFT_3;
         }
     }
 
-    // Useful constant for conversion to seconds
-    private static final long NANOSPERSECOND = Duration.ofSeconds(1).toNanos(); 
-
+    public static void main(String[] args) throws IOException 
+    {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: InternalThroughputRatio <input-name1> [<input-name2> ...]");
+            System.out.println("<input-name> can be filename, //DD:DDNAME or //'DATASET.NAME'");          
+            return;
+        }
+        
+        // read and process the input data
+        List<IntervalData> intervals = processInput(args);
+        
+        // write the reports
+        writeReport(intervals);
+    }
 
     /**
      * Process the input data
@@ -193,104 +187,135 @@ public class InternalThroughputRatio
             .sorted(Map.Entry.comparingByKey())
             .forEachOrdered(shift ->
             {   
-                // first group data by system name+CPC 
-                Map<String, List<IntervalData>> groupedBySystemCpc = 
-                        shift.getValue().stream()
-                            .collect(Collectors.groupingBy(entry -> entry.groupBy));
-                
-                // then create a new map with the cumulative data for the groups
-                Map<String, CumulativeData> cumulativeData = groupedBySystemCpc.entrySet().stream()
-                    .collect(Collectors.toMap(entry -> entry.getKey(), 
-                            entry -> new CumulativeData(entry.getValue())));
-
                 // Write Shift header
-                System.out.format("%nShift: %s%n%n", shift.getKey());        
-                
-                // header for system/CPC summary 
-                System.out.format("%20s %5s %10s %10s %10s %10s %10s %11s %10s %11s%n", 
-                        "System/CPC",
-                        "GCP#",
-                        "Int/s",
-                        "IO/s",
-                        "Int/s/CP",
-                        "IO/s/CP",
-                        "LPAR CP",
-                        "LPAR CP%",
-                        "All CP",
-                        "All CP%");
-                
-                // get the list of names to process from the keys in the Map
-                List<String> systemCpcNames = cumulativeData.keySet().stream()
-                        .sorted()
-                        .collect(Collectors.toList());
-                
-                // write a summary for each system/CPC
-                for (String name: systemCpcNames)
-                {
-                    CumulativeData totals = cumulativeData.get(name);
-                    System.out.format("%20s %5.0f %10d %10d %10d %10d %10.1f %10.1f%% %10.1f %10.1f%%%n", 
-                            name,
-                            totals.avgCps(),
-                            totals.getIoInterruptsPerSecond(),
-                            totals.getIosPerSecond(),
-                            totals.getIoInterruptsPerSecondPerCp(),
-                            totals.getIosPerSecondPerCp(),
-                            totals.lparBusyCps(),
-                            totals.lparCpuPct(),
-                            totals.allBusyCps(),
-                            totals.allCpuPct());   
-                }   
+                System.out.format("%nShift: %s%n%n", shift.getKey());  
 
-                // generate tables of the ITRR values, based on different fields
-                
-                System.out.format("%n  ITRR: LPAR, I/O Interrupts per second%n%n");
-                ItrrTable(cumulativeData, systemCpcNames, CumulativeData::getIoInterruptsPerSecond);
+                // group data by system name+CPC and create cumulative data
+                Map<Group, CumulativeData> cumulativeData = shift.getValue().stream()
+                    .collect(Collectors.groupingBy(
+                        entry -> entry.group,
+                        Collectors.collectingAndThen(
+                            Collectors.toList(),
+                            CumulativeData::new
+                        )
+                    ));
 
-                System.out.format("%n  ITRR: LPAR, I/Os per second%n%n");
-                ItrrTable(cumulativeData, systemCpcNames, CumulativeData::getIosPerSecond);
+                reportShift(cumulativeData);
                 
-                System.out.format("%n  ITRR: CP, I/O Interrupts per second%n%n");
-                ItrrTable(cumulativeData, systemCpcNames, CumulativeData::getIoInterruptsPerSecondPerCp);
+                // group data by CPC (machine), merging smfids with the same CPC
+                Map<Group, CumulativeData> cumulativeDataByCpc = shift.getValue().stream()
+                    .collect(Collectors.groupingBy(
+                        entry -> new Group(
+                            "CPC", // use literal "CPC" as smfid
+                            entry.group.machine(),
+                            entry.group.csc(),
+                            entry.group.split()
+                        ),
+                        Collectors.collectingAndThen(
+                            Collectors.toList(),
+                            CumulativeData::new
+                        )
+                    ));
 
-                System.out.format("%n  ITRR: CP, I/Os per second%n%n");
-                ItrrTable(cumulativeData, systemCpcNames, CumulativeData::getIosPerSecondPerCp);
+                reportShift(cumulativeDataByCpc);
             });
     }
 
-    /**
-     * Generate a table of ITRR data. The specific method used to get the value for the calculation
-     * is passed as a parameter.
-     * @param cumulativeDataBySystemCpc the Cumulative data for each system/cpc
-     * @param systemCpcNames the system/cpc names to process (the keys in the Map)
-     * @param getValue a method to get the value used in the ratio calculation
-     */
-    private static void ItrrTable(Map<String, CumulativeData> cumulativeDataBySystemCpc,
-            List<String> systemCpcNames,
-            ToLongFunction<CumulativeData> getValue)
-    {        
-        System.out.format("%20s", ""); // empty first column heading
-        for (String column : systemCpcNames) // column headings
+    private static void reportShift(Map<Group, CumulativeData> cumulativeData) 
+    {
+        // Convert to list and sort by smfid, then by latestInterval
+        List<Map.Entry<Group, CumulativeData>> sortedGroups = cumulativeData.entrySet().stream()
+            .sorted(Comparator
+                .comparing((Map.Entry<Group, CumulativeData> entry) -> entry.getKey().smfid)
+                .thenComparing(entry -> entry.getValue().getLatestInterval(), 
+                    Comparator.nullsLast(Comparator.naturalOrder())))
+            .collect(Collectors.toList());
+        
+        // Print calculated values table header
+        System.out.format("%n%-30s %10s %12s %12s %10s %10s %12s %15s %10s %12s%n",
+            "Group",
+            "Avg CPs",
+            "LPAR Busy",
+            "All Busy",
+            "LPAR CPU%",
+            "All CPU%",
+            "IO Int/sec",
+            "IO Int/sec/CP",
+            "IOs/sec",
+            "IOs/sec/CP");
+        System.out.println("-".repeat(140));
+        
+        // Report each group and its calculated values in table format
+        for (Map.Entry<Group, CumulativeData> entry : sortedGroups)
         {
-            System.out.format("%20s", column);
+            Group group = entry.getKey();
+            CumulativeData data = entry.getValue();
+            
+            System.out.format("%-30s %10.2f %12.2f %12.2f %10.2f %10.2f %12d %15d %10d %12d%n",
+                group.toString(),
+                data.avgCps(),
+                data.lparBusyCps(),
+                data.allBusyCps(),
+                data.lparCpuPct(),
+                data.allCpuPct(),
+                data.getIoInterruptsPerSecond(),
+                data.getIoInterruptsPerSecondPerCp(),
+                data.getIosPerSecond(),
+                data.getIosPerSecondPerCp());
         }
         
-        // Iterate the list of names for both rows and columns, to compare 
-        // each system with each other system.
-        // We get a diagonal of 1.0 values where a system is compared with
-        // itself.
-        for (String row : systemCpcNames)
+        // Calculate ratios for consecutive groups with the same smfid
+        boolean headerPrinted = false;
+        for (int i = 0; i < sortedGroups.size() - 1; i++)
         {
-            System.out.format("%n%20s", row);
-            for (String column : systemCpcNames)
+            Map.Entry<Group, CumulativeData> entry1 = sortedGroups.get(i);
+            Map.Entry<Group, CumulativeData> entry2 = sortedGroups.get(i + 1);
+            
+            // Only calculate ratios if both groups have the same smfid
+            if (entry1.getKey().smfid.equals(entry2.getKey().smfid))
             {
-                // divide row vs column values to get ratio
-                System.out.format("%20.2f", 
-                        (double)getValue.applyAsLong(cumulativeDataBySystemCpc.get(column))
-                            /(double)getValue.applyAsLong(cumulativeDataBySystemCpc.get(row)));  
+                // Print header on first ratio pair
+                if (!headerPrinted)
+                {
+                    System.out.format("%nRatios:%n");
+                    System.out.format("%-30s %-30s %12s %12s %10s %10s %12s %15s %10s %12s%n",
+                        "Group 1",
+                        "Group 2",
+                        "LPAR Busy",
+                        "All Busy",
+                        "LPAR CPU%",
+                        "All CPU%",
+                        "IO Int/sec",
+                        "IO Int/sec/CP",
+                        "IOs/sec",
+                        "IOs/sec/CP");
+                    System.out.println("-".repeat(170));
+                    headerPrinted = true;
+                }
+                
+                Group group1 = entry1.getKey();
+                Group group2 = entry2.getKey();
+                CumulativeData data1 = entry1.getValue();
+                CumulativeData data2 = entry2.getValue();
+                
+                System.out.format("%-30s %-30s %12.4f %12.4f %10.4f %10.4f %12.4f %15.4f %10.4f %12.4f%n",
+                    group1.toString(),
+                    group2.toString(),
+                    data1.lparBusyCps() != 0 ? data2.lparBusyCps() / data1.lparBusyCps() : 0,
+                    data1.allBusyCps() != 0 ? data2.allBusyCps() / data1.allBusyCps() : 0,
+                    data1.lparCpuPct() != 0 ? data2.lparCpuPct() / data1.lparCpuPct() : 0,
+                    data1.allCpuPct() != 0 ? data2.allCpuPct() / data1.allCpuPct() : 0,
+                    data1.getIoInterruptsPerSecond() != 0 ? 
+                        (double)data2.getIoInterruptsPerSecond() / data1.getIoInterruptsPerSecond() : 0,
+                    data1.getIoInterruptsPerSecondPerCp() != 0 ? 
+                        (double)data2.getIoInterruptsPerSecondPerCp() / data1.getIoInterruptsPerSecondPerCp() : 0,
+                    data1.getIosPerSecond() != 0 ? 
+                        (double)data2.getIosPerSecond() / data1.getIosPerSecond() : 0,
+                    data1.getIosPerSecondPerCp() != 0 ? 
+                        (double)data2.getIosPerSecondPerCp() / data1.getIosPerSecondPerCp() : 0);
             }
         }
-        System.out.println();
-    }   
+    }
     
     /**
      * A class to collect the data from a system for an interval. 
@@ -299,24 +324,18 @@ public class InternalThroughputRatio
     {
         public IntervalData(Smf70Record r70)
         {
-            // if we are reporting by before/after time, 
-            // set groupBy to system name + before/after
-            if (time != null)
-            {
-                groupBy = r70.productSection().smf70snm() +
-                        (r70.smfDateTime().isBefore(time) ?
-                                " Before"
-                                : "  After");
-            }
-            // otherwise format the system and CPC information, e.g. "SYSA 3931-401"
-            else
-            {
-                groupBy = String.format("%s %04X-%s",
-                        r70.productSection().smf70snm(), 
-                        r70.cpuControlSection().smf70mod(), 
-                        r70.cpuControlSection().smf70mdl()
-                        );
-            }
+            group = new Group(r70.system(),
+                    String.format("%04X-%s",
+                            r70.cpuControlSection().smf70mod(), 
+                            r70.cpuControlSection().smf70mdl()),
+                    r70.cpuControlSection().smf70csc().replaceAll("^0+", ""), // strip leading zeros
+                    (time == null) ? 
+                            null 
+                            : r70.smfDateTime().isBefore(time) ? 
+                                    Split.BEFORE 
+                                    : Split.AFTER
+                            
+                    ); 
 
             intervalLength = r70.productSection().smf70int();
             
@@ -325,8 +344,7 @@ public class InternalThroughputRatio
             intervalEnd = r70.productSection().smf70dat()
                     .atTime(r70.productSection().smf70ist())
                     .plus(intervalLength);
-            
-            
+                    
             // find the GCP count for the interval by searching
             // CPU Identification sections for the section with
             // value "CP"
@@ -335,10 +353,10 @@ public class InternalThroughputRatio
                         .filter(id -> id.smf70cin().equals("CP"))
                         .findFirst()
                         .map(idSection -> cpCount = idSection.smf70ctn())
-                        .orElseThrow(() -> new RuntimeException("Could not find CP count, system: " + groupBy));
+                        .orElseThrow(() -> new RuntimeException("Could not find CP count, system: " + r70.system()));
         }
         
-        private String groupBy;
+        private Group group;
         private LocalDateTime intervalEnd;        
         private int cpCount;
         private Duration intervalLength;
@@ -418,8 +436,9 @@ public class InternalThroughputRatio
         private long io = 0;
         private double myEdt = 0;
         private double allEdt = 0;
+        private LocalDateTime latestInterval = null;
         
-        CumulativeData (Iterable<IntervalData> data)
+        CumulativeData (List<IntervalData> data)
         {
             for (IntervalData entry : data)
             {
@@ -434,6 +453,10 @@ public class InternalThroughputRatio
                 io += entry.io;
                 myEdt += entry.myEdt;
                 allEdt += entry.allEdt;
+                if (latestInterval == null || entry.intervalEnd.isAfter(latestInterval))
+                {
+                    latestInterval = entry.intervalEnd;
+                }
             }
         }
         
@@ -510,5 +533,29 @@ public class InternalThroughputRatio
         public long getIosPerSecondPerCp() {
             return (long)(io / totalseconds / lparBusyCps());
         }
-    }     
+        
+        /**
+         * Get the latest interval end time
+         * @return the latest interval end time
+         */
+        public LocalDateTime getLatestInterval() {
+            return latestInterval;
+        }
+    }
+    
+    private static enum Split{BEFORE, AFTER};
+    private static record Group(String smfid, String machine, String csc, Split split) 
+    {
+        @Override
+        public String toString()
+        {
+            String result = String.format("%s %s %s", smfid, machine, csc);
+            if (split != null) result = result + " " + split; 
+            return result;
+        }
+    };
+    
+    
+    // Useful constant for conversion to seconds
+    private static final long NANOSPERSECOND = Duration.ofSeconds(1).toNanos(); 
 }
