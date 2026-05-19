@@ -1,6 +1,6 @@
 ## How fast can you process SMF Data from 1 billion CICS transactions?
 
-See related Youtube video
+These are  sample programs for the video: [How fast can you process SMF data from 1 billion CICS transactions?](https://www.youtube.com/watch?v=5bw58tfiZuk)
 
 ### [Cics1B.java](./src/main/java/Cics1B.java)
 
@@ -8,7 +8,7 @@ Process CICS monitoring performance records from an input file and produce a rep
 
 ### [Cics1BParallel.java](./src/main/java/Cics1BParallel.java)
 
-Process CICS monitoring performance records from an input file using Streams and parallel threads and produce a report.
+Process CICS monitoring performance records from an input file using Java Streams with parallel threads and produce a report.
 
 ### [GenerateInput.java](./src/main/java/GenerateInput.java)
 
